@@ -1,0 +1,69 @@
+---
+title: "AMBIENT MONITORING DATA NEAR PINEY POINT"
+output: 
+  flexdashboard::flex_dashboard:
+    logo: www/tarponlogo.png
+social: menu
+source_code: "https://github.com/tbep-tech/piney-point"
+css: styles.css
+---
+  
+```{r setup, include=F}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+
+# libraries
+library(flexdashboard)
+library(mapview)
+library(tidyverse)
+library(sf)
+library(plotly)
+library(leafem)
+
+load('data/wqdat.RData')
+load('data/statloc.RData')
+
+```
+
+Column {data-width=275}
+-----------------------------------------------------------------------
+
+### Station locations
+
+```{r}
+mapview(statloc, zcol = 'source', homebutton = F, layer.name = 'Data source') %>% 
+  addStaticLabels(label = statloc$station,
+                  noHide = TRUE,
+                  direction = 'top',
+                  textOnly = TRUE,
+                  textsize = "20px", 
+                  offset = c(0, 1))
+```
+
+Column {.tabset .tabset-fade data-width=650}
+-----------------------------------------------------------------------
+
+### STATION 90
+
+```{r plot_otb, fig.height = 8, fig.width = 10}
+# thrplototb
+```
+
+### STATION 336 
+
+```{r plot_hb, fig.height = 8, fig.width = 10}
+# thrplothb
+```
+
+### STATION 357
+
+```{r plot_mtb, fig.height = 8, fig.width = 10}
+# thrplotmtb
+```
+
+### STATION 362
+
+```{r plot_ltb, fig.height = 8, fig.width = 10}
+# thrplotltb
+```
+
+### STATION 365
