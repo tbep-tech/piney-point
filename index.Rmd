@@ -18,11 +18,19 @@ library(tidyverse)
 library(sf)
 library(plotly)
 library(leafem)
+library(colorspace)
+
+source('R/funcs.R')
 
 load('data/wqdat.RData')
+load('data/wqdatsub.RData')
 load('data/statloc.RData')
 
+cols <- qualitative_hcl(length(unique(wqdat$var)), palette = "Dynamic")
 ```
+
+COMPLETE TIME SERIES
+=======================================================================
 
 Column {data-width=275}
 -----------------------------------------------------------------------
@@ -44,26 +52,80 @@ Column {.tabset .tabset-fade data-width=650}
 
 ### STATION 90
 
-```{r plot_otb, fig.height = 8, fig.width = 10}
-# thrplototb
+```{r}
+plo_fun(wqdat, '90', cols)
 ```
 
 ### STATION 336 
 
-```{r plot_hb, fig.height = 8, fig.width = 10}
-# thrplothb
+```{r}
+plo_fun(wqdat, '336', cols)
 ```
 
 ### STATION 357
 
-```{r plot_mtb, fig.height = 8, fig.width = 10}
-# thrplotmtb
+```{r}
+plo_fun(wqdat, '357', cols)
 ```
 
 ### STATION 362
 
-```{r plot_ltb, fig.height = 8, fig.width = 10}
-# thrplotltb
+```{r}
+plo_fun(wqdat, '362', cols)
 ```
 
 ### STATION 365
+```{r}
+plo_fun(wqdat, '365', cols)
+```
+
+
+MARCH, APRIL ONLY
+=======================================================================
+
+Column {data-width=275}
+-----------------------------------------------------------------------
+
+### Station locations
+
+```{r}
+mapview(statloc, zcol = 'source', homebutton = F, layer.name = 'Data source') %>% 
+  addStaticLabels(label = statloc$station,
+                  noHide = TRUE,
+                  direction = 'top',
+                  textOnly = TRUE,
+                  textsize = "20px", 
+                  offset = c(0, 1))
+```
+
+Column {.tabset .tabset-fade data-width=650}
+-----------------------------------------------------------------------
+
+### STATION 90
+
+```{r}
+plo_fun(wqdatsub, '90', cols)
+```
+
+### STATION 336 
+
+```{r}
+plo_fun(wqdatsub, '336', cols)
+```
+
+### STATION 357
+
+```{r}
+plo_fun(wqdatsub, '357', cols)
+```
+
+### STATION 362
+
+```{r}
+plo_fun(wqdatsub, '362', cols)
+```
+
+### STATION 365
+```{r}
+plo_fun(wqdatsub, '365', cols)
+```

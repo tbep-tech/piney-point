@@ -98,7 +98,31 @@ manraw <- mandat %>%
   ) %>% 
   tibble
   
-wqdat <- bind_rows(epcraw, manraw)
+wqdat <- bind_rows(epcraw, manraw) %>% 
+  arrange(station, date) %>% 
+  filter(yr > 1995) %>% 
+  mutate(date = floor_date(date, unit = 'month')) %>% 
+  group_by(station, date, mo, yr, source, var, uni, latitude, longitude) %>% 
+  summarise(
+    val = mean(val, na.rm = T), 
+    .groups = 'drop'
+  )
+
+wqdatsub <- wqdat %>% 
+  filter(mo %in% c(3, 4)) %>% 
+  mutate(
+    molab = month(date, label = T, abbr = T)
+  ) %>% 
+  unite('datesub', molab, yr, sep = ' ') 
+
+levs <- wqdatsub %>% 
+  select(date, datesub) %>% 
+  unique %>% 
+  arrange(date) %>% 
+  pull(datesub)
+
+wqdatsub <- wqdatsub %>% 
+  mutate(date = factor(datesub, levels = levs, ordered = T))
 
 statloc <- wqdat %>% 
   select(station, source, latitude, longitude) %>% 
@@ -107,3 +131,4 @@ statloc <- wqdat %>%
 
 save(statloc, file = 'data/statloc.RData', version = 2)
 save(wqdat, file = 'data/wqdat.RData', version = 2)
+save(wqdatsub,file = 'data/wqdatsub.RData', version = 2)
