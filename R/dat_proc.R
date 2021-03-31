@@ -13,9 +13,11 @@ epcraw <- read_excel('data/epcdat.xlsx', sheet = 'RWMDataSpreadsheet')
 # manatee co data ---------------------------------------------------------
 
 # raw data from https://tampabay.wateratlas.usf.edu/datadownload/Default.aspx
-# search by surface water quality, by site Info (station name/ID), then STORET_21FLMANA
-# selected stations close to Piney Point from map (have to select 'hydrology and samples' and then 'sampling location' form hamburger layer selectoin)
-mandat <- read.table('data/DataDownload_2339399_row.txt', sep = '\t', header = T)
+# search by surface water quality, by site Info (station name/ID), then STORET_21FLMANA (first file) and WIN_21FLMANATEE (second file)
+# the two files are for the same stations just separated before/after 2018
+# selected stations close to Piney Point from map (have to select 'hydrology and samples' and then 'sampling location' form hamburger layer selection)
+mandat1 <- read.table('data/DataDownload_2339399_row.txt', sep = '\t', header = T)
+mandat2 <- read.table('data/DataDownload_2339492_row.txt', sep = '\t', header = T)
 
 # combine data ------------------------------------------------------------
 
@@ -61,48 +63,73 @@ epcraw <- epcraw %>%
     )
   )
 
-manraw <- mandat %>% 
-  clean_names %>% 
-  select(
-    station = station_name,
-    date = sample_date,
-    latitude = actual_latitude, 
-    longitude = actual_longitude,
-    var = parameter, 
-    val = result_value, 
-    uni = result_unit
+# chloropyll includes chla and chlac for pheophytin
+manraw <- list(
+    mandat1 = mandat1,
+    mandat2 = mandat2
   ) %>% 
-  filter(var %in% c('Chla_ugl', 'TN_ugl', 'TP_ugl', 'pH', 'Salinity_ppt')) %>% 
+  enframe %>% 
   mutate(
-    date = as.Date(mdy_hms(date)), 
-    yr = year(date), 
-    mo = month(date), 
-    station = as.character(station),
-    source = 'manco', 
-    var = case_when(
-      var == 'Chla_ugl' ~ 'chla', 
-      var == 'TN_ugl' ~ 'tn', 
-      var == 'TP_ugl' ~ 'tp', 
-      var == 'pH' ~ 'ph', 
-      var == 'Salinity_ppt' ~ 'sal'
-    ), 
-    val = case_when(
-      var %in% c('tn', 'tp') ~ val / 1000, 
-      T ~ val
-    ), 
-    uni = case_when(
-      var %in% c('tn', 'tp') ~ 'mg/l', 
-      T ~ uni
-    ), 
-    uni = tolower(uni)
+    dat = purrr::map(value, function(x){
+
+      out <- x %>% 
+        clean_names %>% 
+        select(
+          station = station_id,
+          date = sample_date,
+          latitude = actual_latitude, 
+          longitude = actual_longitude,
+          var = parameter, 
+          val = result_value, 
+          uni = result_unit
+        ) %>% 
+        mutate(
+          var = case_when(
+            var == 'ChlaC_ugl' ~ 'Chla_ugl', 
+            T ~ var
+          )
+        ) %>% 
+        filter(var %in% c('Chla_ugl', 'TN_ugl', 'TP_ugl', 'pH', 'Salinity_ppt')) %>% 
+        mutate(
+          station = gsub('\\=', '', station), 
+          date = as.Date(mdy_hms(date)), 
+          yr = year(date), 
+          mo = month(date), 
+          station = as.character(station),
+          source = 'manco', 
+          var = case_when(
+            var == 'Chla_ugl' ~ 'chla', 
+            var == 'TN_ugl' ~ 'tn', 
+            var == 'TP_ugl' ~ 'tp', 
+            var == 'pH' ~ 'ph', 
+            var == 'Salinity_ppt' ~ 'sal'
+          ), 
+          val = case_when(
+            var %in% c('tn', 'tp') ~ val / 1000, 
+            T ~ val
+          ), 
+          uni = case_when(
+            var %in% c('tn', 'tp') ~ 'mg/l', 
+            T ~ uni
+          ), 
+          uni = tolower(uni)
+        ) %>% 
+        tibble
+      
+      return(out)
+      
+    })
+    
   ) %>% 
-  tibble
+  select(-value) %>% 
+  unnest(dat) %>% 
+  select(-name)
   
 wqdat <- bind_rows(epcraw, manraw) %>% 
   arrange(station, date) %>% 
   filter(yr > 1995) %>% 
   mutate(date = floor_date(date, unit = 'month')) %>% 
-  group_by(station, date, mo, yr, source, var, uni, latitude, longitude) %>% 
+  group_by(station, date, mo, yr, source, var, uni) %>% 
   summarise(
     val = mean(val, na.rm = T), 
     .groups = 'drop'
@@ -124,9 +151,14 @@ levs <- wqdatsub %>%
 wqdatsub <- wqdatsub %>% 
   mutate(date = factor(datesub, levels = levs, ordered = T))
 
-statloc <- wqdat %>% 
+statloc <- bind_rows(epcraw, manraw) %>% 
   select(station, source, latitude, longitude) %>% 
-  unique %>% 
+  group_by(station, source) %>% 
+  summarise(
+    latitude = mean(latitude), 
+    longitude = mean(longitude), 
+    .groups = 'drop'
+  ) %>% 
   st_as_sf(coords = c('longitude', 'latitude'), crs = 4326)
 
 save(statloc, file = 'data/statloc.RData', version = 2)
