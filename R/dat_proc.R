@@ -13,11 +13,10 @@ epcraw <- read_excel('data/epcdat.xlsx', sheet = 'RWMDataSpreadsheet')
 # manatee co data ---------------------------------------------------------
 
 # raw data from https://tampabay.wateratlas.usf.edu/datadownload/Default.aspx
-# search by surface water quality, by site Info (station name/ID), then STORET_21FLMANA (first file) and WIN_21FLMANATEE (second file)
-# the two files are for the same stations just separated before/after 2018
+# search by surface water quality, by site Info (data source/provider), then STORET_21FLMANA (legacy) and WIN_21FLMANATEE (new)
+# then select stations 336, 357, 361, 362
 # selected stations close to Piney Point from map (have to select 'hydrology and samples' and then 'sampling location' form hamburger layer selection)
-mandat1 <- read.table('data/DataDownload_2339399_row.txt', sep = '\t', header = T)
-mandat2 <- read.table('data/DataDownload_2339492_row.txt', sep = '\t', header = T)
+mandat <- read.table('data/DataDownload_2339909_row.txt', sep = '\t', header = T)
 
 # combine data ------------------------------------------------------------
 
@@ -64,67 +63,51 @@ epcraw <- epcraw %>%
   )
 
 # chloropyll includes chla and chlac for pheophytin
-manraw <- list(
-    mandat1 = mandat1,
-    mandat2 = mandat2
+# chloropyll includes chla and chlac for pheophytin
+manraw <- mandat %>% 
+  clean_names %>% 
+  select(
+    station = station_id,
+    date = sample_date,
+    latitude = actual_latitude, 
+    longitude = actual_longitude,
+    var = parameter, 
+    val = result_value, 
+    uni = result_unit
   ) %>% 
-  enframe %>% 
   mutate(
-    dat = purrr::map(value, function(x){
-
-      out <- x %>% 
-        clean_names %>% 
-        select(
-          station = station_id,
-          date = sample_date,
-          latitude = actual_latitude, 
-          longitude = actual_longitude,
-          var = parameter, 
-          val = result_value, 
-          uni = result_unit
-        ) %>% 
-        mutate(
-          var = case_when(
-            var == 'ChlaC_ugl' ~ 'Chla_ugl', 
-            T ~ var
-          )
-        ) %>% 
-        filter(var %in% c('Chla_ugl', 'TN_ugl', 'TP_ugl', 'pH', 'Salinity_ppt')) %>% 
-        mutate(
-          station = gsub('\\=', '', station), 
-          date = as.Date(mdy_hms(date)), 
-          yr = year(date), 
-          mo = month(date), 
-          station = as.character(station),
-          source = 'manco', 
-          var = case_when(
-            var == 'Chla_ugl' ~ 'chla', 
-            var == 'TN_ugl' ~ 'tn', 
-            var == 'TP_ugl' ~ 'tp', 
-            var == 'pH' ~ 'ph', 
-            var == 'Salinity_ppt' ~ 'sal'
-          ), 
-          val = case_when(
-            var %in% c('tn', 'tp') ~ val / 1000, 
-            T ~ val
-          ), 
-          uni = case_when(
-            var %in% c('tn', 'tp') ~ 'mg/l', 
-            T ~ uni
-          ), 
-          uni = tolower(uni)
-        ) %>% 
-        tibble
-      
-      return(out)
-      
-    })
-    
+    var = case_when(
+      var == 'ChlaC_ugl' ~ 'Chla_ugl', 
+      T ~ var
+    )
   ) %>% 
-  select(-value) %>% 
-  unnest(dat) %>% 
-  select(-name)
-  
+  filter(var %in% c('Chla_ugl', 'TN_ugl', 'TP_ugl', 'pH', 'Salinity_ppt')) %>% 
+  mutate(
+    station = gsub('\\=', '', station), 
+    date = as.Date(mdy_hms(date)), 
+    yr = year(date), 
+    mo = month(date), 
+    station = as.character(station),
+    source = 'manco', 
+    var = case_when(
+      var == 'Chla_ugl' ~ 'chla', 
+      var == 'TN_ugl' ~ 'tn', 
+      var == 'TP_ugl' ~ 'tp', 
+      var == 'pH' ~ 'ph', 
+      var == 'Salinity_ppt' ~ 'sal'
+    ), 
+    val = case_when(
+      var %in% c('tn', 'tp') ~ val / 1000, 
+      T ~ val
+    ), 
+    uni = case_when(
+      var %in% c('tn', 'tp') ~ 'mg/l', 
+      T ~ uni
+    ), 
+    uni = tolower(uni)
+  ) %>% 
+  tibble
+
 wqdat <- bind_rows(epcraw, manraw) %>% 
   arrange(station, date) %>% 
   filter(yr > 1995) %>% 

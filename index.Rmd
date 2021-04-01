@@ -68,15 +68,15 @@ plo_fun(wqdat, '336', cols)
 plo_fun(wqdat, '357', cols)
 ```
 
-### STATION 362
+### STATION 361
 
 ```{r}
-plo_fun(wqdat, '362', cols)
+plo_fun(wqdat, '361', cols)
 ```
 
-### STATION 365
+### STATION 362
 ```{r}
-plo_fun(wqdat, '365', cols)
+plo_fun(wqdat, '362', cols)
 ```
 
 
@@ -119,13 +119,13 @@ plo_fun(wqdatsub, '336', cols)
 plo_fun(wqdatsub, '357', cols)
 ```
 
-### STATION 362
+### STATION 361
 
 ```{r}
-plo_fun(wqdatsub, '362', cols)
+plo_fun(wqdatsub, '361', cols)
 ```
 
-### STATION 365
+### STATION 362
 ```{r}
-plo_fun(wqdatsub, '365', cols)
+plo_fun(wqdatsub, '362', cols)
 ```
