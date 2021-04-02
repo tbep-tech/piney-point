@@ -49,15 +49,16 @@ mapview(statloc, zcol = 'source', homebutton = F, layer.name = 'Data source') %>
 
 Column {.tabset .tabset-fade data-width=650}
 -----------------------------------------------------------------------
-### STATION 20
-
-```{r}
-plo_fun(wqdat, '20', cols)
-```
 ### STATION 21
 
 ```{r}
 plo_fun(wqdat, '21', cols)
+```
+
+### STATION 22
+
+```{r}
+plo_fun(wqdat, '22', cols)
 ```
 
 ### STATION 90
@@ -110,16 +111,18 @@ mapview(statloc, zcol = 'source', homebutton = F, layer.name = 'Data source') %>
 
 Column {.tabset .tabset-fade data-width=650}
 -----------------------------------------------------------------------
-### STATION 20
-
-```{r}
-plo_fun(wqdatsub, '20', cols)
-```
 ### STATION 21
 
 ```{r}
 plo_fun(wqdatsub, '21', cols)
 ```
+
+### STATION 22
+
+```{r}
+plo_fun(wqdatsub, '22', cols)
+```
+
 ### STATION 90
 
 ```{r}

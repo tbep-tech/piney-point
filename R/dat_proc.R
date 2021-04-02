@@ -22,7 +22,7 @@ mandat <- read.table('data/DataDownload_2339909_row.txt', sep = '\t', header = T
 
 epcraw <- epcraw %>% 
   clean_names %>% 
-  filter(station_number %in% 90) %>% 
+  filter(station_number %in% c(21, 22, 90)) %>% 
   select(
     station = station_number,
     date = sample_time,
