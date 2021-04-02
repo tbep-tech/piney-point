@@ -29,6 +29,7 @@ epcraw <- epcraw %>%
     latitude, 
     longitude,
     tn = total_nitrogen_mg_l, 
+    nh3 = ammonia_mg_l,
     tp = total_phosphorus_mg_l, 
     chla = chlorophyll_a_uncorr_ug_l, 
     p_h_bottom, 
@@ -57,12 +58,11 @@ epcraw <- epcraw %>%
     uni = case_when(
       var == 'sal' ~ 'ppt', 
       var == 'ph' ~ 'none', 
-      var %in% c('tp', 'tn') ~ 'mg/l', 
+      var %in% c('tp', 'tn', 'nh3') ~ 'mg/l', 
       var %in% 'chla' ~ 'ug/l'
     )
   )
 
-# chloropyll includes chla and chlac for pheophytin
 # chloropyll includes chla and chlac for pheophytin
 manraw <- mandat %>% 
   clean_names %>% 
@@ -81,7 +81,7 @@ manraw <- mandat %>%
       T ~ var
     )
   ) %>% 
-  filter(var %in% c('Chla_ugl', 'TN_ugl', 'TP_ugl', 'pH', 'Salinity_ppt')) %>% 
+  filter(var %in% c('Chla_ugl', 'TN_ugl', 'NH3_N_ugl', 'TP_ugl', 'pH', 'Salinity_ppt')) %>% 
   mutate(
     station = gsub('\\=', '', station), 
     date = as.Date(mdy_hms(date)), 
@@ -92,12 +92,13 @@ manraw <- mandat %>%
     var = case_when(
       var == 'Chla_ugl' ~ 'chla', 
       var == 'TN_ugl' ~ 'tn', 
+      var == 'NH3_N_ugl' ~ 'nh3',
       var == 'TP_ugl' ~ 'tp', 
       var == 'pH' ~ 'ph', 
       var == 'Salinity_ppt' ~ 'sal'
     ), 
     val = case_when(
-      var %in% c('tn', 'tp') ~ val / 1000, 
+      var %in% c('tn', 'tp', 'nh3') ~ val / 1000, 
       T ~ val
     ), 
     uni = case_when(
