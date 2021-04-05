@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Piney Point Pinellas sampling</name>
+    <description/>
+    <Style id="icon-1899-0288D1-nodesc-normal">
+      <IconStyle>
+        <color>ffd18802</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <Style id="icon-1899-0288D1-nodesc-highlight">
+      <IconStyle>
+        <color>ffd18802</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>1</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <StyleMap id="icon-1899-0288D1-nodesc">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#icon-1899-0288D1-nodesc-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#icon-1899-0288D1-nodesc-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Folder>
+      <name>Untitled layer</name>
+      <Placemark>
+        <name>Joe Bay 1</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.608252,27.5876892,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Joe Bay 2</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.6049301,27.5872384,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Joe Bay 3</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.6012266,27.587013,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Clambar Bay 1</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5994258,27.5969301,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Clambar Bay 2</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5962787,27.5966766,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Clambar Bay 3</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5922255,27.5966202,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Clambar Bay 4</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5758245,27.5973683,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Joe Bay 4</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5945012,27.5882401,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Clambar Bay 5</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5799701,27.6001599,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Clambar Bay 6</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5862114,27.6007818,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Clambar Bay 7</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5797226,27.6038394,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Clambar Bay 8</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5859968,27.5976517,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Joe Bay 5</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5913732,27.5899338,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Joe Bay 6</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5873305,27.592756,0
+          </coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+  </Document>
+</kml>

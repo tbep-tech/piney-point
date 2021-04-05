@@ -197,10 +197,7 @@ txt <- HTML('Data on this dashboard are from the <a href="http://tampabay.lobovi
 
 m <- mapview(loc, homebutton = F, legend = F)@map
 
-fillCol(flex = c(NA, 1),
-        txt,
-        m
-        )
+fillCol(flex = c(NA, 1), txt, m)
 ```
 
 

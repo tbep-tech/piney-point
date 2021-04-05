@@ -7,8 +7,8 @@ library(sf)
 
 # get epc data ------------------------------------------------------------
 
-epcdat <- read_importwq('data/epcdat.xlsx', download_latest = T)
-epcraw <- read_excel('data/epcdat.xlsx', sheet = 'RWMDataSpreadsheet')
+epcdat <- read_importwq('data/raw/epcdat.xlsx', download_latest = T)
+epcraw <- read_excel('data/raw/epcdat.xlsx', sheet = 'RWMDataSpreadsheet')
 
 # manatee co data ---------------------------------------------------------
 
@@ -16,7 +16,7 @@ epcraw <- read_excel('data/epcdat.xlsx', sheet = 'RWMDataSpreadsheet')
 # search by surface water quality, by site Info (data source/provider), then STORET_21FLMANA (legacy) and WIN_21FLMANATEE (new)
 # then select stations 336, 357, 361, 362
 # selected stations close to Piney Point from map (have to select 'hydrology and samples' and then 'sampling location' form hamburger layer selection)
-mandat <- read.table('data/DataDownload_2339909_row.txt', sep = '\t', header = T)
+mandat <- read.table('data/raw/DataDownload_2339909_row.txt', sep = '\t', header = T)
 
 # combine data ------------------------------------------------------------
 
@@ -109,7 +109,7 @@ manraw <- mandat %>%
   ) %>% 
   tibble
 
-wqdat <- bind_rows(epcraw, manraw) %>% 
+bswqdat <- bind_rows(epcraw, manraw) %>% 
   arrange(station, date) %>% 
   filter(yr > 1995) %>% 
   mutate(date = floor_date(date, unit = 'month')) %>% 
@@ -119,23 +119,23 @@ wqdat <- bind_rows(epcraw, manraw) %>%
     .groups = 'drop'
   )
 
-wqdatsub <- wqdat %>% 
+bswqdatsub <- bswqdat %>% 
   filter(mo %in% c(3, 4)) %>% 
   mutate(
     molab = month(date, label = T, abbr = T)
   ) %>% 
   unite('datesub', molab, yr, sep = ' ') 
 
-levs <- wqdatsub %>% 
+levs <- bswqdatsub %>% 
   select(date, datesub) %>% 
   unique %>% 
   arrange(date) %>% 
   pull(datesub)
 
-wqdatsub <- wqdatsub %>% 
+bswqdatsub <- bswqdatsub %>% 
   mutate(date = factor(datesub, levels = levs, ordered = T))
 
-statloc <- bind_rows(epcraw, manraw) %>% 
+bsstatloc <- bind_rows(epcraw, manraw) %>% 
   select(station, source, latitude, longitude) %>% 
   group_by(station, source) %>% 
   summarise(
@@ -143,8 +143,71 @@ statloc <- bind_rows(epcraw, manraw) %>%
     longitude = mean(longitude), 
     .groups = 'drop'
   ) %>% 
+  mutate(
+    source = case_when(
+      source == 'epchc' ~ 'Hillsborough Co.', 
+      source == 'manco' ~ 'Manatee Co.'
+    )
+  ) %>% 
   st_as_sf(coords = c('longitude', 'latitude'), crs = 4326)
 
-save(statloc, file = 'data/statloc.RData', version = 2)
-save(wqdat, file = 'data/wqdat.RData', version = 2)
-save(wqdatsub,file = 'data/wqdatsub.RData', version = 2)
+save(bsstatloc, file = 'data/bsstatloc.RData', version = 2)
+save(bswqdat, file = 'data/bswqdat.RData', version = 2)
+save(bswqdatsub,file = 'data/bswqdatsub.RData', version = 2)
+
+# station location processing ---------------------------------------------
+
+# these are stations actively being monitoring by four agencies
+
+epchc <- read.csv('data/raw/epc.csv') %>% 
+  mutate(
+    source = 'epchc', 
+    comment = NA_character_, 
+    station = as.character(station)
+  ) %>% 
+  select(source, station, lat, lon, comment)
+fldep <- read_excel('data/raw/FLDEP.xlsx') %>% 
+  mutate(
+    source = 'fldep', 
+    comment = Description
+  ) %>% 
+  select(source, station = Name, lat = Latitude, lon = Longitude, comment)
+mpnrd <- read.csv('data/raw/manco_stations.csv') %>% 
+  mutate(
+    source = 'mpnrd'
+  )
+pinco1 <- read_excel('data/raw/PinellasCo20210404.xlsx') %>% 
+  mutate(
+    source = 'pinco',
+    comment = 'visited 20210404'
+  ) %>% 
+  select(source, station = Site, lat = Lat, lon = Long, comment)
+pinco2 <- st_read('data/raw/PinellasCo20210405.kml') %>% 
+  mutate(
+    source = 'pinco', 
+    lon = st_coordinates(.)[, 1],
+    lat = st_coordinates(.)[, 2], 
+    comment = 'visited 20210405'
+  ) %>% 
+  st_set_geometry(NULL) %>% 
+  select(source, station = Name, lat, lon, comment)
+
+rsstatloc <- bind_rows(epchc, fldep, mpnrd, pinco1, pinco2) %>% 
+  mutate(
+    source_abbr = source,
+    source = case_when(
+      source == 'pinco' ~ 'Pinellas Co.', 
+      source == 'epchc' ~ 'Hillsborough Co.', 
+      source == 'fldep' ~ 'Florida DEP', 
+      source == 'mpnrd' ~ 'Manatee Co.'
+    )
+  ) %>% 
+  select(source, source_abbr, everything())
+
+write.csv(rsstatloc, 'data/raw/rsstatloc.csv', row.names = F)
+
+rsstatloc <- rsstatloc %>% 
+  st_as_sf(coords = c('lon', 'lat'), crs = 4326)
+
+save(rsstatloc, file = 'data/rsstatloc.RData', version = 2)
+

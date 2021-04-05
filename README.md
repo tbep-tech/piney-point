@@ -4,6 +4,6 @@ LOBO build: [![lobo build](https://github.com/tbep-tech/piney-point/actions/work
 
 Materials for eval of Piney Point water quality data:
 
-* Hillsborough, Manatee Co. ambient monitoring: [https://tbep-tech.github.io/piney-point/](https://tbep-tech.github.io/piney-point/)
-* LOBO monitoring: [https://shiny.tbep.org/piney-point/lobo.Rmd](https://shiny.tbep.org/piney-point/lobo.Rmd)
+* Coordinated response monitoring: [https://shiny.tbep.org/piney-point/index.Rmd](https://shiny.tbep.org/piney-point/index.Rmd)
+* LOBO continuous monitoring: [https://shiny.tbep.org/piney-point/lobo.Rmd](https://shiny.tbep.org/piney-point/lobo.Rmd)
 

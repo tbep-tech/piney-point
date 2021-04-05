@@ -1,10 +1,11 @@
 ---
-title: "AMBIENT MONITORING DATA NEAR PINEY POINT"
+title: "TAMPA BAY DATA NEAR PINEY POINT"
 output: 
   flexdashboard::flex_dashboard:
     logo: www/tarponlogo.png
 social: menu
 source_code: "https://github.com/tbep-tech/piney-point"
+runtime: shiny
 css: styles.css
 ---
   
@@ -22,14 +23,76 @@ library(colorspace)
 
 source('R/funcs.R')
 
-load('data/wqdat.RData')
-load('data/wqdatsub.RData')
-load('data/statloc.RData')
+load('data/bswqdat.RData')
+load('data/bswqdatsub.RData')
+load('data/bsstatloc.RData')
+load('data/rsstatloc.RData')
 
-cols <- qualitative_hcl(length(unique(wqdat$var)), palette = "Dynamic")
+cols <- qualitative_hcl(length(unique(bswqdat$var)), palette = "Dynamic")
+stacols <- qualitative_hcl(length(unique(rsstatloc$source)), palette = "Dark2")
+names(stacols) <- sort(unique(rsstatloc$source))
 ```
 
-COMPLETE TIME SERIES
+```{r reactives}
+# complete time series, baseline data
+baseplo1 <- reactive({
+  
+  # inputs
+  stasel1 <- input$stasel1
+  
+  out <- plo_fun(bswqdat, stasel1, cols)
+  
+  return(out)
+  
+})
+
+# march/april time series, baseline data
+baseplo2 <- reactive({
+  
+  # inputs
+  stasel1 <- input$stasel1
+  
+  out <- plo_fun(bswqdatsub, stasel1, cols)
+  
+  return(out)
+  
+})
+```
+
+OVERVIEW
+=======================================================================
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### DASHBOARD INFORMATION
+
+<div class = "row">
+<div class = "col-md-2"></div>
+<div class = "col-md-8">
+
+#### WELCOME TO THE PINEY POINT WATER QUALITY DASHBOARD
+
+The Tampa Bay Estuary Program is working with regional partners to coordinate and synthesize water quality, benthic, seagrass, and fisheries monitoring data. We are also consulting with USF to model forecasted plume trajectory from the Piney Point discharge. 
+
+The primary pollutants of concern for this discharge are phosphorus and nitrogen (primarily ammonia nitrogen), which may stimulate an algae response and cause adverse effects on seagrass, fish, and other wildlife.
+
+The dashboard is a synthesis of data that can be used to assess baseline conditions prior to discharge and to evaluate changing water quality conditions as new data become available. The dashboard is arranged as follows:
+
+1) __BASELINE DATA__: Long-term water quality data over a 25 year period.  These represent "baseline" conditions.
+1) __COORDINATED RESPONSE DATA__: Real time monitoring data at sites near Piney Point.  These represent current conditions.
+
+#### Website information
+
+The page source content can be viewed on [Github](https://github.com/tbep-tech/piney-point).
+
+Questions and comments about the dashboard can be sent to [Marcus Beck](mailto:mbeck@tbep.org).
+
+</div>
+<div class = "col-md-2"></div>
+</div>
+
+BASELINE DATA
 =======================================================================
 
 Column {data-width=275}
@@ -38,8 +101,9 @@ Column {data-width=275}
 ### Station locations
 
 ```{r}
-mapview(statloc, zcol = 'source', homebutton = F, layer.name = 'Data source') %>% 
-  addStaticLabels(label = statloc$station,
+colsin <- stacols[unique(bsstatloc$source)]
+mapview(bsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = colsin) %>% 
+  addStaticLabels(label = bsstatloc$station,
                   noHide = TRUE,
                   direction = 'top',
                   textOnly = TRUE,
@@ -49,105 +113,48 @@ mapview(statloc, zcol = 'source', homebutton = F, layer.name = 'Data source') %>
 
 Column {.tabset .tabset-fade data-width=650}
 -----------------------------------------------------------------------
-### STATION 21
 
 ```{r}
-plo_fun(wqdat, '21', cols)
+column(12, 
+  selectInput('stasel1', 'Select station:', choices = c('21', '22', '90', '336', '357', '361', '362'))
+)
 ```
 
-### STATION 22
+### COMPLETE TIME SERIES
 
 ```{r}
-plo_fun(wqdat, '22', cols)
+output$baseplo1 <- renderPlotly(baseplo1())
+plotlyOutput('baseplo1')
 ```
 
-### STATION 90
+### MARCH, APRIL ONLY
 
 ```{r}
-plo_fun(wqdat, '90', cols)
+output$baseplo2 <- renderPlotly(baseplo2())
+plotlyOutput('baseplo2')
 ```
 
-### STATION 336 
-
-```{r}
-plo_fun(wqdat, '336', cols)
-```
-
-### STATION 357
-
-```{r}
-plo_fun(wqdat, '357', cols)
-```
-
-### STATION 361
-
-```{r}
-plo_fun(wqdat, '361', cols)
-```
-
-### STATION 362
-```{r}
-plo_fun(wqdat, '362', cols)
-```
-
-
-MARCH, APRIL ONLY
+COORDINATED RESPONSE DATA
 =======================================================================
 
 Column {data-width=275}
 -----------------------------------------------------------------------
 
-### Station locations
+### Station locations 
 
 ```{r}
-mapview(statloc, zcol = 'source', homebutton = F, layer.name = 'Data source') %>% 
-  addStaticLabels(label = statloc$station,
-                  noHide = TRUE,
-                  direction = 'top',
-                  textOnly = TRUE,
-                  textsize = "20px", 
-                  offset = c(0, 1))
+mapview(rsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = stacols) # %>% 
+  # addStaticLabels(label = rsstatloc$station,
+  #                 noHide = TRUE,
+  #                 direction = 'top',
+  #                 textOnly = TRUE,
+  #                 textsize = "20px", 
+  #                 offset = c(0, 1))
 ```
 
 Column {.tabset .tabset-fade data-width=650}
 -----------------------------------------------------------------------
-### STATION 21
 
-```{r}
-plo_fun(wqdatsub, '21', cols)
-```
+### Results
 
-### STATION 22
-
-```{r}
-plo_fun(wqdatsub, '22', cols)
-```
-
-### STATION 90
-
-```{r}
-plo_fun(wqdatsub, '90', cols)
-```
-
-### STATION 336 
-
-```{r}
-plo_fun(wqdatsub, '336', cols)
-```
-
-### STATION 357
-
-```{r}
-plo_fun(wqdatsub, '357', cols)
-```
-
-### STATION 361
-
-```{r}
-plo_fun(wqdatsub, '361', cols)
-```
-
-### STATION 362
-```{r}
-plo_fun(wqdatsub, '362', cols)
-```
+Data forthcoming.
