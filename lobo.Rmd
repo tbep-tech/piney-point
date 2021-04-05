@@ -1,0 +1,193 @@
+---
+title: "LOBO CONTINUOUS MONITORING"
+output: 
+  flexdashboard::flex_dashboard:
+  logo: www/tarponlogo.png
+social: menu
+source_code: "https://github.com/tbep-tech/piney-point"
+runtime: shiny
+css: styles.css
+---
+  
+```{r setup, include=F}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+
+# libraries
+library(flexdashboard)
+library(tidyverse)
+library(shiny)
+library(patchwork)
+library(stargazer)
+
+source('R/funcs.R')
+
+# data
+load(url('https://tbep-tech.github.io/piney-point/data/lobodat.RData'))
+
+# log
+log <- readLines('lobolog.txt')
+
+# variables to select
+vrs <- list(
+  `Salinity (psu)` = 'sal', 
+  `Temp (C)` = 'temp', 
+  `CO2 (ppm)` = 'co2', 
+  `DO (mg/L)` = 'do', 
+  `pH` = 'ph',
+  `PAR (um/m2/s)` = 'par',
+  `Pressure (dbar)` = 'press'
+)
+
+# date range on input data
+dtrng <- range(lobodat$datetime) %>% 
+  as.Date
+```
+
+```{r reactives}
+# data selection
+datsel <- reactive({
+  
+  # inputs
+  varsel1 <- input$varsel1
+  varsel2 <- input$varsel2
+  dtsel <- input$dtsel
+  
+  out <- lobodat %>% 
+    select(datetime, !!varsel1, !!varsel2) %>% 
+    filter(as.Date(datetime) >= dtsel[1] & as.Date(datetime) <= dtsel[2])
+
+  return(out)
+  
+})
+
+# time series and scatter plot
+tsplo <- reactive({
+  
+  # inputs
+  varsel1 <- input$varsel1
+  varsel2 <- input$varsel2
+  datsel <- datsel()
+  
+  lb1 <- names(vrs)[which(unlist(vrs) == varsel1)]
+  lb2 <- names(vrs)[which(unlist(vrs) == varsel2)]
+    
+  p1 <- ggplot(datsel, aes_string(x = 'datetime', y = varsel1)) + 
+    geom_line() + 
+    geom_point() + 
+    theme_minimal(base_size = 16) + 
+    labs(y = lb1) + 
+    theme(
+      axis.title.x = element_blank()
+    )
+  
+  p2 <- ggplot(datsel, aes_string(x = 'datetime', y = varsel2)) + 
+    geom_line() + 
+    geom_point() + 
+    theme_minimal(base_size = 16) + 
+    labs(y = lb2) + 
+    theme(
+      axis.title.x = element_blank()
+    )
+  
+  p3 <- ggplot(datsel, aes_string(x = varsel1, y = varsel2))+ 
+    geom_point()+ 
+    theme_minimal(base_size = 16) + 
+    labs(x = lb1, y = lb2) + 
+    geom_smooth(method = 'lm')
+  
+  p <- (p1 / p2) | p3
+  
+  return(p)
+  
+})
+
+# linear mod
+lmstat <- reactive({
+  
+  # inputs
+  varsel1 <- input$varsel1
+  varsel2 <- input$varsel2
+  datsel <- datsel()
+
+  frm <- paste(varsel2, varsel1, sep = '~') %>% 
+    as.formula
+  
+  out <- lm(frm, datsel)
+  
+  return(out)
+  
+})
+
+# pearson
+corstat <- reactive({
+ 
+  # inputs
+  varsel1 <- input$varsel1
+  varsel2 <- input$varsel2
+  datsel <- datsel()
+
+  corv <- cor.test(datsel[[varsel1]], datsel[[varsel2]])
+  
+  out <- paste0('r = ', round(corv$estimate, 2), ', p ', format.pval(corv$p.value))
+  
+  return(out) 
+  
+})
+
+output$lmstat <- renderText(stargazer(lmstat(), type = 'html', digits = 2))
+output$corstat <- renderText(corstat())
+
+```
+
+
+TIME SERIES COMPARISONS
+=======================================================================
+  
+Column {data-width=200}
+-----------------------------------------------------------------------
+  
+### Data selection
+
+```{r}
+column(12, 
+    paste0('Data current as of ', log)
+    )
+
+column(12, 
+  selectInput('varsel1', 'Select first variable:', choices = vrs, selected = vrs[4])
+)
+
+column(12, 
+  selectInput('varsel2', 'Select second variable:', choices = vrs, selected = vrs[5])
+)
+
+column(12, 
+  sliderInput('dtsel', 'Select date range:', min = dtrng[1], max =  dtrng[2], value = dtrng, timeFormat="%Y-%m-%d")
+)
+
+HTML('<br>')
+fillCol(flex = c(NA, NA),
+  column(12,
+    'Regression summary:',
+    uiOutput('lmstat')
+  ),
+
+  column(12, 
+    'Correlation summary:', 
+    uiOutput('corstat')
+  ) 
+  
+)
+```
+
+
+Column {.tabset .tabset-fade data-width=700}
+-----------------------------------------------------------------------
+
+### Plots
+
+```{r}
+output$tsplo <- renderPlot(tsplo())
+plotOutput('tsplo')
+```
+

@@ -23,3 +23,11 @@ datraw <- read.table(url, skip = 2, sep = '\t', header = T) %>%
 
 lobodat <- datraw
 save(lobodat, file = 'data/lobodat.RData', version = 2)
+
+# for log
+tms <- Sys.time()
+attr(tms, 'tzone') <- 'America/Jamaica'
+tms <- as.character(tms)
+
+writeLines(tms, 'lobolog.txt')
+
