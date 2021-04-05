@@ -21,4 +21,5 @@ datraw <- read.table(url, skip = 2, sep = '\t', header = T) %>%
     datetime = ymd_hms(datetime, tz = 'America/Jamaica') 
   )
 
-save(datraw, file = 'data/lobo.RDtaa', version = 2)
+lobodat <- datraw
+save(lobodat, file = 'data/lobodat.RData', version = 2)
