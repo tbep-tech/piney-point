@@ -18,6 +18,9 @@ library(tidyverse)
 library(shiny)
 library(patchwork)
 library(stargazer)
+library(plotly)
+library(mapview)
+library(sf)
 
 source('R/funcs.R')
 
@@ -70,7 +73,7 @@ tsplo <- reactive({
   
   lb1 <- names(vrs)[which(unlist(vrs) == varsel1)]
   lb2 <- names(vrs)[which(unlist(vrs) == varsel2)]
-    
+  browser()
   p1 <- ggplot(datsel, aes_string(x = 'datetime', y = varsel1)) + 
     geom_line() + 
     geom_point() + 
@@ -143,7 +146,7 @@ output$corstat <- renderText(corstat())
 TIME SERIES COMPARISONS
 =======================================================================
   
-Column {data-width=200}
+Column {data-width=200 .tabset .tabset-fade}
 -----------------------------------------------------------------------
   
 ### Data selection
@@ -178,6 +181,26 @@ fillCol(flex = c(NA, NA),
   ) 
   
 )
+```
+
+### About
+
+
+```{r}
+loc <- data.frame(
+  lat = 27.6594677,
+  lon = -82.6043877
+  ) %>% 
+  st_as_sf(coords = c('lon', 'lat'), crs = 4326)
+
+txt <- HTML('Data on this dashboard are from the <a href="http://tampabay.loboviz.com/">Tampa Bay LOBO</a> (Land/Ocean Biogeochemical Observatory) continuous monitoring buoy, located in Lower Tampa Bay. All data are preliminary or provisional and are subject to revision. The data have not received final approval by the USGS and are provided on the condition that neither the USGS nor the U.S. Government shall be held liable for any damages resulting from the authorized or unauthorized use of the data.  Approximate buoy location:')
+
+m <- mapview(loc, homebutton = F, legend = F)@map
+
+fillCol(flex = c(NA, 1),
+        txt,
+        m
+        )
 ```
 
 
