@@ -34,8 +34,8 @@ jobs:
         run: |
           install.packages(c("janitor", "tidyverse"))
         shell: Rscript {0}
-      - name: Build water atlas content
-        run: Rscript -e 'source("lobo_dat_proc.R")'
+      - name: Build lobo data
+        run: Rscript -e 'source("R/lobo_dat_proc.R")'
       - name: Commit results
         run: |
           git config --local user.email "actions@github.com"
