@@ -20,7 +20,7 @@ plo_fun <- function(wqdat, station, cols){
     filter(station %in% !!station) %>% 
     spread(var, val)
   
-  ylbsz <- 18
+  ylbsz <- 16
   
   p1 <- plot_ly(toplo) %>% 
     add_markers(x = ~date, y = ~tp, type = 'scatter', color = I(cols[6]), mode = 'markers', line = list(shape = 'linear'), showlegend = F) %>% 

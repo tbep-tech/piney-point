@@ -1,5 +1,5 @@
 ---
-title: "TAMPA BAY DATA NEAR PINEY POINT"
+title: "PINEY POINT ENVIRONMENTAL MONITORING DASHBOARD"
 output: 
   flexdashboard::flex_dashboard:
     logo: www/tarponlogo.png
@@ -71,7 +71,11 @@ Column {data-width=650}
 <div class = "col-md-2"></div>
 <div class = "col-md-8">
 
-#### WELCOME TO THE PINEY POINT WATER QUALITY DASHBOARD
+####
+
+```{r out.width='100%', fig.align='center'}
+knitr::include_graphics('www/Piney_Dashboard_Header.png')
+```
 
 The Tampa Bay Estuary Program is working with regional partners to coordinate and synthesize water quality, benthic, seagrass, and fisheries monitoring data. We are also consulting with USF to model forecasted plume trajectory from the Piney Point discharge. 
 
