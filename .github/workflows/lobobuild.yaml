@@ -1,0 +1,45 @@
+on:
+  push:
+    branches:
+      - main
+      - master
+  schedule:
+    - cron: "0 12 * * *"
+    
+name: lobo build 
+
+jobs:
+  render:
+    name: lobo build
+    runs-on: ubuntu-20.04
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: r-lib/actions/setup-r@v1
+        with: 
+          r-version: '4.0.2'
+      - uses: r-lib/actions/setup-pandoc@v1
+      - name: Install Ubuntu dependencies
+        run: |
+          sudo apt-get install libcurl4-openssl-dev
+          sudo apt-get install libpoppler-cpp-dev
+          sudo apt-get install libudunits2-dev
+          sudo apt-get install libgdal-dev
+          sudo apt-get install libgeos-dev
+          sudo apt-get install libproj-dev
+          sudo apt-get install libharfbuzz-dev
+          sudo apt-get install libfribidi-dev
+      - name: Install dependencies
+        run: |
+          install.packages(c("janitor", "tidyverse"))
+        shell: Rscript {0}
+      - name: Build water atlas content
+        run: Rscript -e 'source("lobo_dat_proc.R")'
+      - name: Commit results
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add -A
+          git commit -m 'Re-build lobo data' || echo "No changes to commit"
+          git push origin || echo "No changes to commit"
