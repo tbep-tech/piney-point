@@ -25,7 +25,7 @@ source('R/funcs.R')
 load(url('https://tbep-tech.github.io/piney-point/data/lobodat.RData'))
 
 # log
-log <- readLines('lobolog.txt')
+log <- readLines('https://tbep-tech.github.io/piney-point/lobolog.txt')
 
 # variables to select
 vrs <- list(
