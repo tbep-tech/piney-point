@@ -3,8 +3,8 @@ title: "TAMPA BAY DATA NEAR PINEY POINT"
 output: 
   flexdashboard::flex_dashboard:
     logo: www/tarponlogo.png
-social: menu
-source_code: "https://github.com/tbep-tech/piney-point"
+    social: menu
+    source_code: "https://github.com/tbep-tech/piney-point"
 runtime: shiny
 css: styles.css
 ---
@@ -80,7 +80,7 @@ The primary pollutants of concern for this discharge are phosphorus and nitrogen
 The dashboard is a synthesis of data that can be used to assess baseline conditions prior to discharge and to evaluate changing water quality conditions as new data become available. The dashboard is arranged as follows:
 
 1) __BASELINE DATA__: Long-term water quality data over a 25 year period.  These represent "baseline" conditions.
-1) __COORDINATED RESPONSE DATA__: Real time monitoring data at sites near Piney Point.  These represent current conditions.
+1) __COORDINATED RESPONSE DATA__: Locations being sampled by our partners in response to current events.
 
 #### Website information
 
