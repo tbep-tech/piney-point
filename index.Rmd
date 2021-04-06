@@ -160,6 +160,8 @@ Questions and comments about the dashboard can be sent to [Marcus Beck](mailto:m
 
 <a rel='license' href='http://creativecommons.org/licenses/by/4.0/'><img alt='Creative Commons License' style='border-width:0' src='https://i.creativecommons.org/l/by/4.0/88x31.png' /></a>&nbsp;&nbsp;This dashboard is licensed under a <a rel='license' href='http://creativecommons.org/licenses/by/4.0/'>Creative Commons Attribution 4.0 International License</a>.
 
+[![DOI](https://zenodo.org/badge/353409644.svg)](https://zenodo.org/badge/latestdoi/353409644)
+
 </div>
 <div class = "col-md-2"></div>
 </div>
