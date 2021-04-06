@@ -139,7 +139,7 @@ Column {data-width=650}
 
 ####
 
-```{r out.width='75%', fig.align='center'}
+```{r out.width='80%', fig.align='center'}
 knitr::include_graphics('www/Piney_Dashboard_Header.png')
 ```
 
@@ -157,6 +157,8 @@ The dashboard is a synthesis of data that can be used to assess baseline conditi
 The page source content can be viewed on [Github](https://github.com/tbep-tech/piney-point).
 
 Questions and comments about the dashboard can be sent to [Marcus Beck](mailto:mbeck@tbep.org).
+
+<a rel='license' href='http://creativecommons.org/licenses/by/4.0/'><img alt='Creative Commons License' style='border-width:0' src='https://i.creativecommons.org/l/by/4.0/88x31.png' /></a>&nbsp;&nbsp;This dashboard is licensed under a <a rel='license' href='http://creativecommons.org/licenses/by/4.0/'>Creative Commons Attribution 4.0 International License</a>.
 
 </div>
 <div class = "col-md-2"></div>
@@ -199,6 +201,14 @@ plotlyOutput('baseplo1')
 output$baseplo2 <- renderPlotly(baseplo2())
 plotlyOutput('baseplo2')
 ```
+
+SEAGRASSES {data-navmenu="BASELINE DATA"}
+=======================================================================
+
+Column {data-width=275}
+-----------------------------------------------------------------------
+
+
 
 WATER QUALITY OVERVIEW {data-navmenu="CURRENT DATA"}
 =======================================================================
@@ -246,4 +256,8 @@ valueBox(stsm, 'Sites with data', color = boxcol, icon = 'fa-map-marker')
 knitr::kable(rslocs)
 ```
 
+WATER QUALITY RESULTS {data-navmenu="CURRENT DATA"}
+=======================================================================
 
+Column {data-width=400}
+-----------------------------------------------------------------------
