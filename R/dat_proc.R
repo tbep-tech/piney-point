@@ -15,9 +15,9 @@ gs4_deauth()
 
 # parameter names, units
 parms <- tibble(
-  var = c('chla', 'nh3', 'ph', 'sal', 'secchi', 'temp', 'tn', 'tp'),
-  uni = c('ugl', 'mgl', 'none', 'ppt', 'm', 'c', 'mgl', 'mgl'), 
-  lbs = c('Chl-a (ug/L)', 'NH3 (mg/L)', 'pH', 'Sal (ppt)', 'Secchi (m)', 'Temp (C)', 'TN (mg/L)', 'TP (mg/L)')
+  var = c('chla', 'color', 'nh3', 'no23', 'ph', 'sal', 'secchi', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
+  uni = c('ugl', 'pcu', 'mgl', 'mgl', 'none', 'ppt', 'm', 'c', 'mgl', 'mgl', 'mgl', 'mgl', 'ntu'), 
+  lbs = c('Chl-a (ug/L)', 'Color (PCU)', 'NH3 (mg/L)', 'Nitrate/Nitrite (mg/L)', 'pH', 'Sal (ppt)', 'Secchi (m)', 'Temp (C)', 'TKN (mg/L)', 'TN (mg/L)', 'TP (mg/L)', 'TSS (mg/l)', 'Turb (NTU)')
 )
 
 save(parms, file = 'data/parms.RData', version = 2)
@@ -263,8 +263,10 @@ gdrive_pth <- 'https://drive.google.com/drive/folders/1SWlBbZtjZ8SF43MCz5nv5YLCW
 # csv files must be opened/saved as spreadsheet in google sheets
 fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
+##
 # fldep dump 20210405
-fldep1 <- read_sheet(fls$id[1]) %>% clean_names %>%
+fl <- fls[which(fls$name == 'FDEP_20210405'), 'id'] %>% pull(id)
+fldep1 <- read_sheet(fl) %>% 
   clean_names %>% 
   select(
     station = station_id, 
@@ -297,12 +299,140 @@ fldep1 <- read_sheet(fls$id[1]) %>% clean_names %>%
     ), 
     source = 'fldep', 
     yr = year(date), 
+    mo = month(date), 
+    qual = NA_character_
+  ) %>% 
+  select(station, date, mo, yr, source, var, uni, val, qual) %>% 
+  filter(!is.na(val))
+
+##
+# mpnrd dump 2021-04-06
+
+# mpnrd, creek and outfall samples
+ids <- fls[grep('Comp', fls$name), 'id'] %>% pull(id)
+out1 <- NULL
+for(id in ids) {
+  
+  tmp <- read_sheet(id)
+  
+  sta <- tmp[[1, 7]][[1]]
+  dt <- as.Date(tmp[[2, 7]][[1]])
+  
+  tmp <- tmp[5:nrow(tmp), c(2, 5, 8, 9)] 
+  
+  names(tmp) <- c('var', 'val', 'qual', 'uni')
+  
+  tmp <- tmp %>% 
+    mutate_if(is.list, as.numeric) %>%
+    mutate(
+      var = case_when(
+        var == 'Color' ~ 'color',
+        var == 'Turbidity' ~ 'turb',
+        var == 'Total Suspended Solids' ~ 'tss',
+        var == 'Phosphorus, Total' ~ 'tp',
+        var == 'Nitrate + Nitrite as N' ~ 'no23', 
+        var == 'Chlorophyll-a' ~ 'chla',
+        var == 'Total Kjedahl Nitrogen - Saltwater' ~ 'tkn',
+        var == 'Ammonia as N' ~ 'nh3'
+      ),
+      uni = case_when(
+        uni == 'PCU' ~ 'pcu',
+        uni == 'NTU' ~ 'ntu', 
+        uni == 'mg/L' ~ 'mgl', 
+        uni == 'mg/m3' ~ 'ugl', 
+        T ~ uni
+      ), 
+      val = case_when(
+        uni == 'ugl' ~ val/1000,
+        T ~ val
+      ), 
+      station = sta, 
+      date = dt,
+      source = 'mpnrd'
+    )
+  
+  out1 <- bind_rows(out1, tmp)
+  
+}
+
+out1 <- out1 %>% 
+  mutate(
+    station = case_when(
+      grepl('^\\(Piney\\sPoint\\sOutfall|^\\(PP\\sOutfall', station) ~ 'PM Out', 
+      grepl('^\\(Piney\\sPoint\\sCreek|^\\(PP\\sCreek', station) ~ 'PPC41'
+    ), 
+    yr = year(date), 
     mo = month(date)
   ) %>% 
-  select(station, date, mo, yr, source, var, uni, val) %>% 
-  na.omit()
+  select(station, date, mo, yr, source, var, uni, val, qual)
 
-rswqdat <- bind_rows(fldep1)
+
+# mpnrd, estuary samples
+ids <- fls[grep('Results_By_Test_Param', fls$name), 'id'] %>% pull(id)
+out2 <- NULL
+for(id in ids) {
+  
+  var <- fls[fls$id == id, 'name'] %>% pull('name')
+  
+  tmp <- read_sheet(id) %>% 
+    clean_names() %>% 
+    select(
+      station = sample_location, 
+      date = sampled_date, 
+      val = reported_result, 
+      qual = qual, 
+      uni = unit
+    ) %>% 
+    mutate(
+      station = as.character(station), 
+      var = var
+    )
+  
+  out2 <- bind_rows(out2, tmp)
+  
+}
+
+out2 <- out2 %>% 
+  mutate(
+    source = 'mpnrd',
+    date = as.Date(date), 
+    yr =  year(date), 
+    mo = month(date), 
+    var = gsub('\\sResults_By_Test_Param', '', var), 
+    var = case_when(
+      grepl('NH4$', var) ~ 'nh3',
+      grepl('NN$', var) ~ 'no23',
+      grepl('TKN$', var) ~ 'tkn',
+      grepl('TP$', var) ~ 'tp',
+      grepl('TSS$', var) ~ 'tss',
+      grepl('turb$', var) ~ 'turb'
+    ), 
+    uni = case_when(
+      uni == 'PCU' ~ 'pcu',
+      uni == 'NTU' ~ 'ntu', 
+      uni == 'mg/L' ~ 'mgl', 
+      uni == 'mg/m3' ~ 'ugl', 
+      T ~ uni
+    ),
+    val = case_when(
+      uni == 'ugl' ~ val/1000,
+      T ~ val
+    ), 
+    station = case_when(
+      grepl('^PMB\\s', station) ~ gsub('^PMB\\s', 'PMB', station), 
+      T ~ station
+    )
+  ) %>% 
+  select(station, date, mo, yr, source, var, uni, val, qual)
+
+mpnrd1 <- bind_rows(out1, out2)
+
+##
+# combine all
+
+rswqdat <- bind_rows(fldep1, mpnrd1) %>% 
+  arrange(source, station, date, var)
+
 save(rswqdat, file = 'data/rswqdat.RData', version = 2)
 
 # for log
