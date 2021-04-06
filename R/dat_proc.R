@@ -11,6 +11,18 @@ library(googldrive)
 drive_deauth()
 gs4_deauth()
 
+
+# parameter data dict -----------------------------------------------------
+
+# parameter names, units
+parms <- tibble(
+  var = c('chla', 'nh3', 'ph', 'sal', 'secchi', 'temp', 'tn', 'tp'),
+  uni = c('ugl', 'mgl', 'none', 'ppt', 'm', 'c', 'mgl', 'mgl'), 
+  lbs = c('Chl-a (ug/L)', 'NH3 (mg/L)', 'pH', 'Sal (ppt)', 'Secchi (m)', 'Temp (C)', 'TN (mg/L)', 'TP (mg/L)')
+)
+
+save(parms, file = 'data/parms.RData', version = 2)
+
 # baseline wq data --------------------------------------------------------
 
 # epc
