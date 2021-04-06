@@ -33,9 +33,11 @@ load('data/parms.RData')
 # log
 log <- readLines('https://tbep-tech.github.io/piney-point/logs/indexlog.txt')
 
+# globals
 cols <- qualitative_hcl(length(unique(bswqdat$var)), palette = "Dynamic")
 stacols <- qualitative_hcl(length(unique(rsstatloc$source)), palette = "Dark2")
 names(stacols) <- sort(unique(rsstatloc$source))
+boxcol <- '#00806E'
 ```
 
 ```{r reactives}
@@ -65,6 +67,20 @@ baseplo2 <- reactive({
 ```
 
 ```{r statics}
+# response sampling locations
+rslocs <- rsstatloc %>% 
+  mutate(
+    lon = st_coordinates(.)[, 1],
+    lat = st_coordinates(.)[, 2]
+  ) %>% 
+  st_set_geometry(NULL) %>% 
+  select(
+    `Data source` = source, 
+    `Station name` = station, 
+    lon, 
+    lat
+  )
+
 # baseline wq map
 colsin <- stacols[unique(bsstatloc$source)]
 bswqmap <- mapview(bsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = colsin) %>% 
@@ -76,13 +92,32 @@ bswqmap <- mapview(bsstatloc, zcol = 'source', homebutton = F, layer.name = 'Dat
                   offset = c(0, 1))
 
 # response wqmap
-rswqmap <- mapview(rsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = stacols) # %>% 
-  # addStaticLabels(label = rsstatloc$station,
-  #                 noHide = TRUE,
-  #                 direction = 'top',
-  #                 textOnly = TRUE,
-  #                 textsize = "20px", 
-  #                 offset = c(0, 1))
+rswqmap <- mapview(rsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = stacols)
+
+# summary of agencies reporting for value boxes
+agns <- rswqdat %>% 
+  pull(source) %>% 
+  unique %>% 
+  length
+
+# summary of variables measured for value boxes
+vars <- rswqdat %>% 
+  pull(var) %>% 
+  unique %>% 
+  length
+
+# summary of days of sampling for values boxes
+dysm <- rswqdat %>% 
+  pull(date) %>% 
+  unique %>% 
+  length
+
+# summary of sites being monitored
+stsm <- rswqdat %>% 
+  pull(station) %>% 
+  unique %>% 
+  length #%>% 
+  # paste(., 'of', length(unique(rsstatloc$station)))
 ```
 
 OVERVIEW
@@ -163,7 +198,7 @@ plotlyOutput('baseplo2')
 WATER QUALITY OVERVIEW {data-navmenu="COORDINATED RESPONSE DATA"}
 =======================================================================
 
-Column {data-width=275}
+Column {data-width=400}
 -----------------------------------------------------------------------
 
 ### STATION LOCATIONS 
@@ -172,9 +207,38 @@ Column {data-width=275}
 rswqmap
 ```
 
-Column {.tabset .tabset-fade data-width=650}
+
+Row
 -----------------------------------------------------------------------
 
-### RESULTS
+### 
 
-Data forthcoming.
+```{r}
+valueBox(agns, 'Agencies reporting', color = boxcol, icon = 'fa-ship')
+```
+
+### 
+
+```{r}
+valueBox(vars, 'Parameters monitored', color = boxcol, icon = 'fa-vial')
+```
+
+### 
+
+```{r}
+valueBox(dysm, 'Days of sampling', color = boxcol, icon = 'fa-calendar')
+```
+
+### 
+
+```{r}
+valueBox(stsm, 'Sites with data', color = boxcol, icon = 'fa-map-marker')
+```
+
+### Last data update `r log`
+
+```{r}
+knitr::kable(rslocs)
+```
+
+

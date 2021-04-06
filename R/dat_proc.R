@@ -11,7 +11,6 @@ library(googldrive)
 drive_deauth()
 gs4_deauth()
 
-
 # parameter data dict -----------------------------------------------------
 
 # parameter names, units
@@ -228,7 +227,6 @@ rsstatloc <- rsstatloc %>%
 save(rsstatloc, file = 'data/rsstatloc.RData', version = 2)
 
 # coordinated response data -----------------------------------------------
-
 
 gdrive_pth <- 'https://drive.google.com/drive/folders/1SWlBbZtjZ8SF43MCz5nv5YLCWDvn7T_x'
 
