@@ -4,21 +4,25 @@ library(readxl)
 library(janitor)
 library(tbeptools)
 library(sf)
+library(googlesheets4)
+library(googldrive)
 
-# get epc data ------------------------------------------------------------
+# deauth all so it can build with gh actions
+drive_deauth()
+gs4_deauth()
 
+# baseline wq data --------------------------------------------------------
+
+# epc
 epcdat <- read_importwq('data/raw/epcdat.xlsx', download_latest = T)
 epcraw <- read_excel('data/raw/epcdat.xlsx', sheet = 'RWMDataSpreadsheet')
 
-# manatee co data ---------------------------------------------------------
-
+# manatee co
 # raw data from https://tampabay.wateratlas.usf.edu/datadownload/Default.aspx
 # search by surface water quality, by site Info (data source/provider), then STORET_21FLMANA (legacy) and WIN_21FLMANATEE (new)
 # then select stations 336, 357, 361, 362
 # selected stations close to Piney Point from map (have to select 'hydrology and samples' and then 'sampling location' form hamburger layer selection)
 mandat <- read.table('data/raw/DataDownload_2339909_row.txt', sep = '\t', header = T)
-
-# combine data ------------------------------------------------------------
 
 epcraw <- epcraw %>% 
   clean_names %>% 
@@ -155,7 +159,7 @@ save(bsstatloc, file = 'data/bsstatloc.RData', version = 2)
 save(bswqdat, file = 'data/bswqdat.RData', version = 2)
 save(bswqdatsub,file = 'data/bswqdatsub.RData', version = 2)
 
-# station location processing ---------------------------------------------
+# coordinated response station locations ----------------------------------
 
 # these are stations actively being monitoring by four agencies
 
@@ -210,4 +214,55 @@ rsstatloc <- rsstatloc %>%
   st_as_sf(coords = c('lon', 'lat'), crs = 4326)
 
 save(rsstatloc, file = 'data/rsstatloc.RData', version = 2)
+
+# coordinated response data -----------------------------------------------
+
+
+gdrive_pth <- 'https://drive.google.com/drive/folders/1SWlBbZtjZ8SF43MCz5nv5YLCWDvn7T_x'
+
+# csv files must be opened/saved as spreadsheet in google sheets
+fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
+
+# fldep dump 20210405
+fldep1 <- read_sheet(fls$id[1]) %>% clean_names %>%
+  clean_names %>% 
+  select(
+    station = station_id, 
+    date = sample_date, 
+    secchi_cm = secchi_depth_cm, 
+    temp_c = water_temperature_c_surface, 
+    sal_ppt = salinity_0_00_surface, 
+    # do_sat = d_o_percent_sat_surface, 
+    ph_none = p_h_surface, 
+    nh3_mgl = ammonia_n_mg_n_l, 
+    orthop_mgl = orthophosphate_p_mg_p_l, 
+    chla_mgl = chlorophyll_a_corrected_mg_l, 
+    turb_ntu = turbidity_ntu
+  ) %>% 
+  mutate_if(is.list, as.character) %>% 
+  gather('var', 'val', -station, -date) %>% 
+  separate(var, c('var', 'uni'), sep = '_') %>% 
+  mutate(
+    date = as.Date(date), 
+    val = as.numeric(val), 
+    val = case_when(
+      var == 'chla' ~ val * 1000, 
+      # var == 'secchi' ~ val / 100, 
+      T ~ val
+    ), 
+    uni = case_when(
+      var == 'chla' ~ 'ugl', 
+      var == 'secchi' ~ 'm', # sheet says cm, but looks like m
+      T ~ uni
+    ), 
+    source = 'fldep', 
+    yr = year(date), 
+    mo = month(date)
+  ) %>% 
+  select(station, date, mo, yr, source, var, uni, val) %>% 
+  na.omit()
+
+rswqdat <- bind_rows(fldep1)
+
+save(rswqdat, file = 'data/rswqdat.RData', version = 2)
 
