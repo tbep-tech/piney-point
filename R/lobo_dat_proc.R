@@ -12,7 +12,7 @@ datraw <- read.table(url, skip = 2, sep = '\t', header = T) %>%
     sal = salinity_psu, 
     temp = temperature_c, 
     co2 = co2_ppm, 
-    do = dissolved_oxygen_mg_l, 
+    do = dissolved_oxygen_ml_l, 
     ph = p_ht, 
     par = par_u_m_m_2_sec,
     press = pressure_d_bar

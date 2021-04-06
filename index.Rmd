@@ -147,7 +147,7 @@ The Tampa Bay Estuary Program is working with regional partners to coordinate an
 
 The primary pollutants of concern for this discharge are phosphorus and nitrogen (primarily ammonia nitrogen), which may stimulate an algae response and cause adverse effects on seagrass, fish, and other wildlife.
 
-The dashboard is a synthesis of data that can be used to assess baseline conditions prior to discharge and to evaluate changing water quality conditions as new data become available. The dashboard is arranged as follows:
+The dashboard is a synthesis of data that can be used to assess baseline conditions prior to discharge and to evaluate changing water quality conditions as new data become available. __All data are preliminary or provisional and are subject to revision.__ The dashboard is arranged as follows:
 
 1) __BASELINE DATA__: Long-term water quality data over a 25 year period.  These represent "baseline" conditions.
 1) __CURRENT DATA__: Locations being sampled by our partners in response to current events.

@@ -26,7 +26,37 @@ save(parms, file = 'data/parms.RData', version = 2)
 
 # epc
 epcdat <- read_importwq('data/raw/epcdat.xlsx', download_latest = T)
-epcraw <- read_excel('data/raw/epcdat.xlsx', sheet = 'RWMDataSpreadsheet')
+epcraw <- readxl::read_xlsx('data/raw/epcdat.xlsx', sheet="RWMDataSpreadsheet",
+                            col_types = c("numeric", "numeric", "text", "text", "text", "text",
+                                          "numeric", "numeric", "text", "numeric", "numeric",
+                                          "text", "date", "text", "numeric", "text", "text",
+                                          "numeric", "numeric", "numeric", "numeric", "text",
+                                          "text", "text", "numeric", "text", "numeric", "text",
+                                          "numeric", "text", "numeric", "text", "numeric",
+                                          "text", "numeric", "text", "numeric", "text",
+                                          "numeric", "text", "numeric", "text", "numeric",
+                                          "text", "numeric", "text", "numeric", "text",
+                                          "numeric", "text", "numeric", "text", "numeric",
+                                          "text", "numeric", "text", "numeric", "text",
+                                          "numeric", "text", "numeric", "text", "numeric",
+                                          "text", "numeric", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text"),
+                            na = '')
 
 # manatee co
 # raw data from https://tampabay.wateratlas.usf.edu/datadownload/Default.aspx
@@ -273,9 +303,13 @@ fldep1 <- read_sheet(fls$id[1]) %>% clean_names %>%
   na.omit()
 
 rswqdat <- bind_rows(fldep1)
-
-rslog <- as.character(Sys.Date())
-writeLines(rslog, 'logs/indexlog.txt')
-
 save(rswqdat, file = 'data/rswqdat.RData', version = 2)
+
+# for log
+tms <- Sys.time()
+attr(tms, 'tzone') <- 'America/Jamaica'
+tms <- as.character(tms)
+
+writeLines(tms, 'logs/indexlog.txt')
+
 
