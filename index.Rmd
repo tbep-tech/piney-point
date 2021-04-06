@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = F, message = F, warning = F)
 # libraries
 library(flexdashboard)
 library(mapview)
+library(leaflet)
 library(tidyverse)
 library(sf)
 library(plotly)
@@ -38,6 +39,7 @@ cols <- qualitative_hcl(length(unique(bswqdat$var)), palette = "Dynamic")
 stacols <- qualitative_hcl(length(unique(rsstatloc$source)), palette = "Dark2")
 names(stacols) <- sort(unique(rsstatloc$source))
 boxcol <- '#00806E'
+pineypoint <- c(-82.52469352586753, 27.629819505234703)
 ```
 
 ```{r reactives}
@@ -77,8 +79,8 @@ rslocs <- rsstatloc %>%
   select(
     `Data source` = source, 
     `Station name` = station, 
-    lon, 
-    lat
+    Longitude = lon, 
+    Latitude = lat
   )
 
 # baseline wq map
@@ -89,10 +91,13 @@ bswqmap <- mapview(bsstatloc, zcol = 'source', homebutton = F, layer.name = 'Dat
                   direction = 'top',
                   textOnly = TRUE,
                   textsize = "20px", 
-                  offset = c(0, 1))
+                  offset = c(0, 1)) %>% 
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
 # response wqmap
-rswqmap <- mapview(rsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = stacols)
+rswqmap <- mapview(rsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = stacols) %>% 
+  .@map %>% 
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
 # summary of agencies reporting for value boxes
 agns <- rswqdat %>% 
@@ -145,7 +150,7 @@ The primary pollutants of concern for this discharge are phosphorus and nitrogen
 The dashboard is a synthesis of data that can be used to assess baseline conditions prior to discharge and to evaluate changing water quality conditions as new data become available. The dashboard is arranged as follows:
 
 1) __BASELINE DATA__: Long-term water quality data over a 25 year period.  These represent "baseline" conditions.
-1) __COORDINATED RESPONSE DATA__: Locations being sampled by our partners in response to current events.
+1) __CURRENT DATA__: Locations being sampled by our partners in response to current events.
 
 #### Website information
 
@@ -163,7 +168,7 @@ WATER QUALITY {data-navmenu="BASELINE DATA"}
 Column {data-width=275}
 -----------------------------------------------------------------------
 
-### STATION LOCATIONS
+### STATION LOCATIONS - PINEY POINT AT MARKER
 
 ```{r}
 bswqmap
@@ -195,13 +200,13 @@ output$baseplo2 <- renderPlotly(baseplo2())
 plotlyOutput('baseplo2')
 ```
 
-WATER QUALITY OVERVIEW {data-navmenu="COORDINATED RESPONSE DATA"}
+WATER QUALITY OVERVIEW {data-navmenu="CURRENT DATA"}
 =======================================================================
 
 Column {data-width=400}
 -----------------------------------------------------------------------
 
-### STATION LOCATIONS 
+### STATION LOCATIONS - PINEY POINT AT MARKER
 
 ```{r}
 rswqmap
