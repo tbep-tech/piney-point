@@ -276,5 +276,8 @@ fldep1 <- read_sheet(fls$id[1]) %>% clean_names %>%
 
 rswqdat <- bind_rows(fldep1)
 
+rslog <- as.character(Sys.Date())
+writeLines(rslog, 'logs/indexlog.txt')
+
 save(rswqdat, file = 'data/rswqdat.RData', version = 2)
 

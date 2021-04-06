@@ -26,7 +26,12 @@ source('R/funcs.R')
 load('data/bswqdat.RData')
 load('data/bswqdatsub.RData')
 load('data/bsstatloc.RData')
+load('data/rswqdat.RData')
 load('data/rsstatloc.RData')
+load('data/parms.RData')
+
+# log
+log <- readLines('https://tbep-tech.github.io/piney-point/logs/indexlog.txt')
 
 cols <- qualitative_hcl(length(unique(bswqdat$var)), palette = "Dynamic")
 stacols <- qualitative_hcl(length(unique(rsstatloc$source)), palette = "Dark2")
@@ -40,7 +45,7 @@ baseplo1 <- reactive({
   # inputs
   stasel1 <- input$stasel1
   
-  out <- plo_fun(bswqdat, stasel1, cols)
+  out <- plo_fun(bswqdat, stasel1, cols, parms)
   
   return(out)
   
@@ -52,11 +57,32 @@ baseplo2 <- reactive({
   # inputs
   stasel1 <- input$stasel1
   
-  out <- plo_fun(bswqdatsub, stasel1, cols)
+  out <- plo_fun(bswqdatsub, stasel1, cols, parms)
   
   return(out)
   
 })
+```
+
+```{r statics}
+# baseline wq map
+colsin <- stacols[unique(bsstatloc$source)]
+bswqmap <- mapview(bsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = colsin) %>% 
+  addStaticLabels(label = bsstatloc$station,
+                  noHide = TRUE,
+                  direction = 'top',
+                  textOnly = TRUE,
+                  textsize = "20px", 
+                  offset = c(0, 1))
+
+# response wqmap
+rswqmap <- mapview(rsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = stacols) # %>% 
+  # addStaticLabels(label = rsstatloc$station,
+  #                 noHide = TRUE,
+  #                 direction = 'top',
+  #                 textOnly = TRUE,
+  #                 textsize = "20px", 
+  #                 offset = c(0, 1))
 ```
 
 OVERVIEW
@@ -96,31 +122,27 @@ Questions and comments about the dashboard can be sent to [Marcus Beck](mailto:m
 <div class = "col-md-2"></div>
 </div>
 
-BASELINE DATA
+WATER QUALITY {data-navmenu="BASELINE DATA"}
 =======================================================================
 
 Column {data-width=275}
 -----------------------------------------------------------------------
 
-### Station locations
+### STATION LOCATIONS
 
 ```{r}
-colsin <- stacols[unique(bsstatloc$source)]
-mapview(bsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = colsin) %>% 
-  addStaticLabels(label = bsstatloc$station,
-                  noHide = TRUE,
-                  direction = 'top',
-                  textOnly = TRUE,
-                  textsize = "20px", 
-                  offset = c(0, 1))
+bswqmap
 ```
 
 Column {.tabset .tabset-fade data-width=650}
 -----------------------------------------------------------------------
 
+<br>
 ```{r}
-column(12, 
-  selectInput('stasel1', 'Select station:', choices = c('21', '22', '90', '336', '357', '361', '362'))
+mainPanel(
+  column(12, 
+    selectInput('stasel1', 'Select station:', choices = c('21', '22', '90', '336', '357', '361', '362'))
+  )
 )
 ```
 
@@ -138,27 +160,21 @@ output$baseplo2 <- renderPlotly(baseplo2())
 plotlyOutput('baseplo2')
 ```
 
-COORDINATED RESPONSE DATA
+WATER QUALITY OVERVIEW {data-navmenu="COORDINATED RESPONSE DATA"}
 =======================================================================
 
 Column {data-width=275}
 -----------------------------------------------------------------------
 
-### Station locations 
+### STATION LOCATIONS 
 
 ```{r}
-mapview(rsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = stacols) # %>% 
-  # addStaticLabels(label = rsstatloc$station,
-  #                 noHide = TRUE,
-  #                 direction = 'top',
-  #                 textOnly = TRUE,
-  #                 textsize = "20px", 
-  #                 offset = c(0, 1))
+rswqmap
 ```
 
 Column {.tabset .tabset-fade data-width=650}
 -----------------------------------------------------------------------
 
-### Results
+### RESULTS
 
 Data forthcoming.

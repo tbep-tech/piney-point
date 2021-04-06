@@ -29,5 +29,5 @@ tms <- Sys.time()
 attr(tms, 'tzone') <- 'America/Jamaica'
 tms <- as.character(tms)
 
-writeLines(tms, 'lobolog.txt')
+writeLines(tms, 'logs/lobolog.txt')
 
