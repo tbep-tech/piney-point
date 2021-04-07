@@ -475,6 +475,40 @@ reactableOutput('rstab1')
 
 ### __INFORMATION__
 
+Use the variable selection menu on the top to view results for a measured water quality parameter of interest.  The map on the left will show results at locations that have been sampled for the parameter for the selected date.  The date is chosen from the slider on the right.  All points on the map are sized and colored by the range of values for the selected parameter in the data that have been collected to date. The data table shows all results for all dates for the selected parameter.
+
+How are the data interpreted? 
+
+As of `r log`, data from `r vars` parameters and `r agns` agencies have been added to this dashboard.  These parameters were chosen primarily to track the flow of nutrients from wastewater being discharged into the bay.  The primary environmental threat is an algae response as a result of high concentrations of nutrients in this wastewater. Excess algal can have adverse effects on seagrass, fish, and other wildlife.  __Nitrogen, either total nitrogen (TN) or ammonia (NH3), is the primary concern for tracking potential impacts of discharge from Piney Point.  Nitrogen concentrations higher than 5-10 mg/L may be problematic.__ 
+
+The parameters being monitored include: 
+
+__Chlorophyll-a (ug/L)__: Chlorophyll is present in algal tissue and concentrations in the water column provide a measure of algae production. 
+
+__Color (PCU)__: Water color in platinum cobalt units, changes in color can suggest a wastewater source with different characteristics from ambient conditions. Higher PCU means darker waters.
+
+__NH3 (mg/L)__: Ammonia concentration as a component of total nitrogen.  Excess ammonia can stimulate algal production.
+
+__Nitrate/Nitrite (mg/L)__: Nitrate/nitrite concentration as a component of total nitrogen.  Excess nitrate/nitrite can stimulate algal production.
+
+__Ortho-P (mg/L)__: Orthophosphate concentration as a component of total phosphorus. Excess orthophosphate can stimulate algal production, although this is less of a concern than nitrogen in Tampa Bay.
+
+__pH__: pH as a measure of water acidity. Normal estuary acidity ranges from 7 - 8.5.  Lower pH values can harm plants and wildife in the Bay. 
+
+__Sal (ppt)__: Salinity in parts per thousand.  Estuaries can range from 0 at freshwater inflows to 32 in marine settings. Lower salinities can indicate a strong freshwater source, potentially from wastewater.
+
+__Secchi (m)__: Secchi depth as a measure of water clarity. Higher values mean clearer water.  Lower values may indicate high algae production.
+
+__Temp (C)__: Water temperature. 
+
+__TKN (mg/L)__: Total Kjeldahl nitrogen concentration as a component of total nitrogen. TKN is the sum of ammonia, organic, and reduced nitrogen.  Excess TKN can stimulate algal production.
+
+__TN (mg/L)__: Total nitrogen concentration is the sum of TKN (ammonia, organic, and reduced nitrogen) and nitrate/nitrite. Excess nitrogen can stimulate algal production.
+
+__TP (mg/L)__: Total phosphorus concentration is the sum of orthophosphate, condensed phosphate, and organic phosphate. Excess phosphorus can stimulate algal production, although this is less of a concern than nitrogen in Tampa Bay.
+
+__TSS (mg/l)__: Total suspended solids is a general measure of water clarity that includes silt and clay particles, plankton, algae, fine organic matter, and other particulate matter. Higher values can indicate algal response or other matter from external sources. 
+
 
 WATER QUALITY OVERVIEW {data-navmenu="CURRENT DATA" data-orientation=rows}
 =======================================================================
