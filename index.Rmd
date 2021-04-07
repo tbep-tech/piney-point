@@ -21,6 +21,8 @@ library(sf)
 library(plotly)
 library(leafem)
 library(colorspace)
+library(scales)
+library(reactable)
 
 source('R/funcs.R')
 
@@ -34,12 +36,43 @@ load('data/parms.RData')
 # log
 log <- readLines('https://tbep-tech.github.io/piney-point/logs/indexlog.txt')
 
+##
 # globals
+
+# map types
+mptyps <- c("CartoDB.Positron", "CartoDB.DarkMatter", "OpenStreetMap", "Esri.WorldImagery", "OpenTopoMap")
+
+# proj
+prj <- 4326
+
+# line colors on baseline
 cols <- qualitative_hcl(length(unique(bswqdat$var)), palette = "Dynamic")
+
+# station colors on maps
 stacols <- qualitative_hcl(length(unique(rsstatloc$source_lng)), palette = "Dark2")
 names(stacols) <- sort(unique(rsstatloc$source_lng))
+
+# variable color on maps
+vrscols <- rev(sequential_hcl(11, palette = 'Blues'))
+
+# value box colors
 boxcol <- '#00806E'
+
+# piney point loc
 pineypoint <- c(-82.52469352586753, 27.629819505234703)
+
+# sources lookup
+srcs <- rsstatloc %>% 
+  st_set_geometry(NULL) %>% 
+  select(source_lng, source) %>% 
+  unique
+
+# variables to select from available
+vrs <- parms %>% 
+  select(lbs, var) %>% 
+  filter(var %in% rswqdat$var) %>% 
+  deframe %>% 
+  as.list
 ```
 
 ```{r reactives}
@@ -66,6 +99,122 @@ baseplo2 <- reactive({
   return(out)
   
 })
+
+# response data
+rsdat1 <- reactive({
+  
+  # input
+  varsel1 <- input$varsel1
+  
+  out <- rswqdat %>% 
+    filter(var %in% varsel1) 
+
+  return(out)
+  
+})
+
+# color palette function
+colfun <- reactive({
+  
+  # input
+  rsdat1 <- rsdat1()
+  
+  req(rsdat1)
+  
+  # color palette function
+  out <- colorNumeric(
+    palette = vrscols,
+    na.color = 'yellow',
+      domain = range(rsdat1$val, na.rm = T)
+    )
+  
+  return(out)
+  
+})
+  
+# response data table
+rstab1 <- reactive({
+  
+  # input
+  rsdat1 <- rsdat1()
+  varsel1 <- input$varsel1
+  
+  req(rsdat1)
+  
+  # variable label
+  vrlb <- names(vrs)[vrs == varsel1]
+  
+  totab <- rsdat1 %>% 
+    left_join(parms, by = 'var') %>% 
+    left_join(srcs, by = 'source') %>% 
+    select(
+      Source = source_lng,
+      Station = station ,
+      Date = date, 
+      val
+    ) %>% 
+    arrange(desc(Date))
+  names(totab)[names(totab) == 'val'] <- vrlb
+  
+  out <- reactable(totab,
+    defaultColDef = colDef(
+      footerStyle = list(fontWeight = "bold"),
+      format = colFormat(digits = 0, separators = F),
+      resizable = TRUE
+    ),
+    filterable = T,
+    defaultPageSize = nrow(totab)
+    )
+  
+  return(out)
+  
+})
+
+# response data map
+rsmap1 <- reactive({
+  
+  # input
+  rsdat1 <- rsdat1()
+  colfun <- colfun()
+  varsel1 <- input$varsel1
+  dyssel1 <- input$dyssel1
+  
+  req(dyssel1)
+
+  # variable label
+  vrlb <- names(vrs)[vrs == varsel1]
+  
+  # point sizing, colors
+  rsdat1 <- rsdat1 %>% 
+    mutate(
+      cols = colfun(val),
+      cexs = scales::rescale(val, to = c(4, 17))
+    ) 
+  
+  # make sf
+  tomap <- rsdat1 %>% 
+    filter(date %in% dyssel1) %>% 
+    inner_join(rsstatloc, ., by = c('source', 'station'))
+  
+  # hover pt labels
+  labs <- paste0('Source: ', tomap$source_lng, ', Station: ', tomap$station, ', ', vrlb, ': ', round(tomap$val, 2))
+  leglab <- vrlb
+
+  if(nrow(tomap) == 0)
+    m <- mapview()
+   
+  if(nrow(tomap) != 0)
+    m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, map.types = mptyps)
+  
+  # add legend
+  out <- m@map %>% 
+    addLegend("bottomright", pal = colfun, title = leglab, opacity = 1, values = rsdat1$val) %>% 
+    setView(pineypoint[1], pineypoint[2], zoom = 12) %>% 
+    addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
+  
+  return(out)
+  
+})
 ```
 
 ```{r statics}
@@ -78,14 +227,14 @@ rslocs <- rsstatloc %>%
   st_set_geometry(NULL) %>% 
   select(
     `Data source` = source_lng, 
-    `Station name` = station, 
+    `Station` = station, 
     Longitude = lon, 
     Latitude = lat
   )
 
 # baseline wq map
 colsin <- stacols[unique(bsstatloc$source)]
-bswqmap <- mapview(bsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = colsin) %>% 
+bswqmap <- mapview(bsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = colsin, map.types = mptyps) %>% 
   addStaticLabels(label = bsstatloc$station,
                   noHide = TRUE,
                   direction = 'top',
@@ -95,7 +244,7 @@ bswqmap <- mapview(bsstatloc, zcol = 'source', homebutton = F, layer.name = 'Dat
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
 # response wqmap
-rswqmap <- mapview(rsstatloc, zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = stacols) %>% 
+rswqmap <- mapview(rsstatloc, zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = stacols, map.types = mptyps) %>% 
   .@map %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
@@ -183,10 +332,8 @@ Column {.tabset .tabset-fade data-width=650}
 
 <br>
 ```{r}
-mainPanel(
-  column(12, 
-    selectInput('stasel1', 'Select station:', choices = c('21', '22', '90', '336', '357', '361', '362'))
-  )
+column(12, 
+  selectInput('stasel1', 'Select station:', choices = c('21', '22', '90', '336', '357', '361', '362'))
 )
 ```
 
@@ -223,7 +370,7 @@ rswqmap
 ```
 
 
-Row
+Column
 -----------------------------------------------------------------------
 
 ### 
@@ -250,10 +397,18 @@ valueBox(dysm, 'Days of sampling', color = boxcol, icon = 'fa-calendar')
 valueBox(stsm, 'Sites with data', color = boxcol, icon = 'fa-map-marker')
 ```
 
-### Last data update `r log`
+### Last data update `r log`            
 
 ```{r}
-knitr::kable(rslocs)
+reactable(rslocs,
+    defaultColDef = colDef(
+      footerStyle = list(fontWeight = "bold"),
+      format = colFormat(digits = 0, separators = F),
+      resizable = TRUE
+    ),
+    filterable = T,
+    defaultPageSize = nrow(rslocs)
+    )
 ```
 
 WATER QUALITY RESULTS {data-navmenu="CURRENT DATA"}
@@ -261,4 +416,45 @@ WATER QUALITY RESULTS {data-navmenu="CURRENT DATA"}
 
 Column {data-width=400}
 -----------------------------------------------------------------------
+
+### STATION LOCATIONS - PINEY POINT AT MARKER
+
+```{r}
+output$rsmap1 <- renderLeaflet(rsmap1())
+leafletOutput('rsmap1')
+```
+
+Column {.tabset .tabset-fade}
+-----------------------------------------------------------------------
+
+<br>
+```{r}
+column(12,
+  column(5, 
+    selectInput('varsel1', 'Select variable:', choices = vrs, selected = 'nh3')       
+  ), 
+  column(7, 
+    renderUI({
+      
+      # inputs
+      varsel1 <- input$varsel1
+      rsdat1 <- rsdat1()
+      
+      req(rsdat1)
+      
+      dys <- unique(rsdat1$date)
+      
+      sliderInput('dyssel1', 'Select date:', min = min(dys), max = max(dys), value = max(dys), animate = T, timeFormat="%m-%d", width = '600px')
+  
+    })     
+  )
+)
+```
+
+### COMPILED DATA
+
+```{r}
+output$rstab1 <- renderReactable(rstab1())
+reactableOutput('rstab1')
+```
 

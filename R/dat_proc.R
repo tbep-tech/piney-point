@@ -247,7 +247,7 @@ rsstatloc <- bind_rows(epchc, fldep, mpnrd, pinco1, pinco2) %>%
       source == 'mpnrd' ~ 'Manatee Co.'
     )
   ) %>% 
-  select(source_lng, source, everything())
+  select(source_lng, source, station, lat, lon, comment)
 
 write.csv(rsstatloc, 'data/raw/rsstatloc.csv', row.names = F)
 
@@ -278,7 +278,7 @@ fldep1 <- read_sheet(fl) %>%
     ph_none = p_h_surface, 
     nh3_mgl = ammonia_n_mg_n_l, 
     orthop_mgl = orthophosphate_p_mg_p_l, 
-    chla_mgl = chlorophyll_a_corrected_mg_l, 
+    chla_mgl = chlorophyll_a_corrected_mg_l, # this is ugl, janitor think mu is m
     turb_ntu = turbidity_ntu
   ) %>% 
   mutate_if(is.list, as.character) %>% 
@@ -287,11 +287,6 @@ fldep1 <- read_sheet(fl) %>%
   mutate(
     date = as.Date(date), 
     val = as.numeric(val), 
-    val = case_when(
-      var == 'chla' ~ val * 1000, 
-      # var == 'secchi' ~ val / 100, 
-      T ~ val
-    ), 
     uni = case_when(
       var == 'chla' ~ 'ugl', 
       var == 'secchi' ~ 'm', # sheet says cm, but looks like m
@@ -430,7 +425,9 @@ mpnrd1 <- bind_rows(out1, out2)
 ##
 # combine all
 
-rswqdat <- bind_rows(fldep1, mpnrd1) %>% 
+rswqdat <- bind_rows(fldep1, mpnrd1) %>%
+  unique %>% 
+  filter(!is.na(val)) %>% 
   arrange(source, station, date, var)
 
 save(rswqdat, file = 'data/rswqdat.RData', version = 2)
