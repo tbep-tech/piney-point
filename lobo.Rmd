@@ -54,7 +54,7 @@ datsel <- reactive({
   varsel1 <- input$varsel1
   varsel2 <- input$varsel2
   dtsel <- input$dtsel
-  
+  browser()
   out <- lobodat %>% 
     select(datetime, !!varsel1, !!varsel2) %>% 
     filter(as.Date(datetime) >= dtsel[1] & as.Date(datetime) <= dtsel[2])
