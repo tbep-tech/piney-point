@@ -23,6 +23,7 @@ library(leafem)
 library(colorspace)
 library(scales)
 library(reactable)
+library(tbeptools)
 
 source('R/funcs.R')
 
@@ -32,6 +33,10 @@ load('data/bsstatloc.RData')
 load('data/rswqdat.RData')
 load('data/rsstatloc.RData')
 load('data/parms.RData')
+load('data/bstransect.RData')
+load('data/bstransectocc.RData')
+load('data/trnpts.RData')
+load('data/trnlns.RData')
 
 # log
 log <- readLines('https://tbep-tech.github.io/piney-point/logs/indexlog.txt')
@@ -44,6 +49,9 @@ mptyps <- c("CartoDB.Positron", "CartoDB.DarkMatter", "OpenStreetMap", "Esri.Wor
 
 # proj
 prj <- 4326
+
+# font
+fml <- 'Lato Light'
 
 # line colors on baseline
 cols <- qualitative_hcl(length(unique(bswqdat$var)), palette = "Dynamic")
@@ -61,6 +69,16 @@ boxcol <- '#00806E'
 # piney point loc
 pineypoint <- c(-82.52469352586753, 27.629819505234703)
 
+# seagrass transect prj
+st_crs(trnpts) <- 4326
+st_crs(trnlns) <- 4326
+
+# seagrass species
+spp <- c("Halodule", "Syringodium", "Thalassia", "Halophila", "Ruppia", "Caulerpa")
+
+# seagrass transects near pp
+trns <- sort(unique(bstransect$Transect))
+
 # sources lookup
 srcs <- rsstatloc %>% 
   st_set_geometry(NULL) %>% 
@@ -73,6 +91,89 @@ vrs <- parms %>%
   filter(var %in% rswqdat$var) %>% 
   deframe %>% 
   as.list
+```
+
+```{r statics}
+# response sampling locations
+rslocs <- rsstatloc %>% 
+  mutate(
+    lon = st_coordinates(.)[, 1],
+    lat = st_coordinates(.)[, 2]
+  ) %>% 
+  st_set_geometry(NULL) %>% 
+  select(
+    `Data source` = source_lng, 
+    `Station` = station, 
+    Longitude = lon, 
+    Latitude = lat
+  )
+
+# baseline wq map
+colsin <- stacols[unique(bsstatloc$source)]
+bswqmap <- mapview(bsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = colsin, map.types = mptyps) %>% 
+  addStaticLabels(label = bsstatloc$station,
+                  noHide = TRUE,
+                  direction = 'top',
+                  textOnly = TRUE,
+                  textsize = "20px", 
+                  offset = c(0, 1)) %>% 
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
+
+# response wqmap
+rswqmap <- mapview(rsstatloc, zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = stacols, map.types = mptyps) %>% 
+  .@map %>% 
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
+
+# summary of agencies reporting for value boxes
+agns <- rswqdat %>% 
+  pull(source) %>% 
+  unique %>% 
+  length
+
+# summary of variables measured for value boxes
+vars <- rswqdat %>% 
+  pull(var) %>% 
+  unique %>% 
+  length
+
+# summary of days of sampling for values boxes
+dysm <- rswqdat %>% 
+  pull(date) %>% 
+  unique %>% 
+  length
+
+# summary of sites being monitored
+stsm <- rswqdat %>% 
+  pull(station) %>% 
+  unique %>% 
+  length
+
+# seagrass base map
+sgmap <- mapview(trnpts, homebutton = F, legend = F) %>% 
+  .@map %>% 
+  clearMarkers() %>% 
+  addCircleMarkers(
+    data = trnpts,
+    layerId = ~TRAN_ID,
+    stroke = TRUE,
+    color = 'black',
+    fill = TRUE,
+    fillColor = 'grey',
+    weight = 1,
+    fillOpacity = 1,
+    radius= 4,
+    label = ~paste0('Transect ', TRAN_ID, ' (Agency responsible: ', MonAgency, ')')
+  ) %>% 
+  addLabelOnlyMarkers(data = trnpts, ~0.99995 * LONG_DD, ~LAT_DD, label = ~TRAN_ID, labelOptions = labelOptions(
+    noHide = T, 
+    direction = 'auto', 
+    textOnly = T,
+    textsize = '15px',
+    style = list(
+      'color' = 'darkgreen'
+    )
+  )) %>% 
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 ```
 
 ```{r reactives}
@@ -215,63 +316,67 @@ rsmap1 <- reactive({
   return(out)
   
 })
-```
 
-```{r statics}
-# response sampling locations
-rslocs <- rsstatloc %>% 
-  mutate(
-    lon = st_coordinates(.)[, 1],
-    lat = st_coordinates(.)[, 2]
-  ) %>% 
-  st_set_geometry(NULL) %>% 
-  select(
-    `Data source` = source_lng, 
-    `Station` = station, 
-    Longitude = lon, 
-    Latitude = lat
-  )
+# seagrass map selection
+bssgmap1 <- reactive({
+  
+  # input
+  trnsel1 <- input$trnsel1
+  
+  toadd <- trnpts %>% 
+    filter(TRAN_ID %in% trnsel1)
+  mout <- sgmap %>% 
+    addCircleMarkers(
+      data = toadd,
+      layerId = ~TRAN_ID,
+      stroke = TRUE,
+      color = 'black',
+      fill = TRUE,
+      fillColor = 'red',
+      weight = 1,
+      fillOpacity = 1,
+      radius= 6,
+      label = ~paste0('Transect ', TRAN_ID)
+    ) %>% 
+    setView(pineypoint[1], pineypoint[2], zoom = 12)
+  
+  return(mout)
+  
+})
 
-# baseline wq map
-colsin <- stacols[unique(bsstatloc$source)]
-bswqmap <- mapview(bsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = colsin, map.types = mptyps) %>% 
-  addStaticLabels(label = bsstatloc$station,
-                  noHide = TRUE,
-                  direction = 'top',
-                  textOnly = TRUE,
-                  textsize = "20px", 
-                  offset = c(0, 1)) %>% 
-  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
+# seagrass transect plot over time
+bssgtrnplo1 <- reactive({
+  
+  # input
+  trnsel1 <- input$trnsel1
+  
+  p <- show_transect(bstransect, site = trnsel1, species = spp, varplo = 'Abundance', plotly = T, base_size = 11, yrrng = c(1998, 2021)) %>% 
+    layout(
+      title = list(text = NA), 
+      legend = list(title = list(text = 'Abundance (BB)'))
+    )
+  
+  
+  return(p)
+  
+})
 
-# response wqmap
-rswqmap <- mapview(rsstatloc, zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = stacols, map.types = mptyps) %>% 
-  .@map %>% 
-  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
-
-# summary of agencies reporting for value boxes
-agns <- rswqdat %>% 
-  pull(source) %>% 
-  unique %>% 
-  length
-
-# summary of variables measured for value boxes
-vars <- rswqdat %>% 
-  pull(var) %>% 
-  unique %>% 
-  length
-
-# summary of days of sampling for values boxes
-dysm <- rswqdat %>% 
-  pull(date) %>% 
-  unique %>% 
-  length
-
-# summary of sites being monitored
-stsm <- rswqdat %>% 
-  pull(station) %>% 
-  unique %>% 
-  length #%>% 
-  # paste(., 'of', length(unique(rsstatloc$station)))
+# seagrass summary plot over time
+bssgsumplo1 <- reactive({
+  
+  # input
+  trnsel1 <- input$trnsel1
+  
+  p <- show_transectsum(bstransectocc, site = trnsel1, species = spp, yrrng = c(1998, 2021)) %>% 
+    layout(
+      title = list(text = NA),
+      legend = list(title = list(text = NA)),
+      xaxis = list(title = list(text = 'Year'))
+    )
+  
+  return(p)
+  
+})
 ```
 
 OVERVIEW
@@ -351,11 +456,35 @@ output$baseplo2 <- renderPlotly(baseplo2())
 plotlyOutput('baseplo2')
 ```
 
-<!-- SEAGRASSES {data-navmenu="BASELINE DATA"} -->
-<!-- ======================================================================= -->
+SEAGRASSES {data-navmenu="BASELINE DATA"}
+=======================================================================
 
-<!-- Column {data-width=275} -->
-<!-- ----------------------------------------------------------------------- -->
+Column {data-width=275}
+-----------------------------------------------------------------------
+
+### TRANSECT LOCATIONS - PINEY POINT AT MARKER
+
+```{r}
+output$bssgmap1 <- renderLeaflet(bssgmap1())
+leafletOutput('bssgmap1')
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### TRANSECT DATA
+
+```{r}
+fillCol(flex = c(0.1, 1),
+  column(12, 
+    selectInput(inputId = 'trnsel1', label = 'Select transect:', choices = trns, selected = trns[1])
+  ),
+  fillCol(flex = c(1, 1),
+    renderPlotly(bssgtrnplo1()),
+    renderPlotly(bssgsumplo1())
+  )
+)
+```
 
 WATER QUALITY OVERVIEW {data-navmenu="CURRENT DATA"}
 =======================================================================
@@ -444,7 +573,7 @@ column(12,
       
       dys <- unique(rsdat1$date)
       
-      sliderInput('dyssel1', 'Select date:', min = min(dys), max = max(dys), value = max(dys), animate = T, timeFormat="%m-%d", width = '600px')
+      sliderInput('dyssel1', 'Select date:', min = min(dys), max = max(dys), value = max(dys), animate = T, timeFormat="%m-%d", width = '100%')
   
     })     
   )

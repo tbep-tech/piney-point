@@ -200,6 +200,30 @@ save(bsstatloc, file = 'data/bsstatloc.RData', version = 2)
 save(bswqdat, file = 'data/bswqdat.RData', version = 2)
 save(bswqdatsub,file = 'data/bswqdatsub.RData', version = 2)
 
+# seagrass baseline -------------------------------------------------------
+
+# import entire transect dataset as JSON, filter sites near PP
+bstransect <- read_transect(training = FALSE) %>% 
+  dplyr::select(-Crew, -MonitoringAgency) %>% 
+  filter(Transect %in% c('S3T5', 'S3T6', 'S4T1', 'S4T2', 'S4T3'))
+
+# get transect species occurrence summaries
+bstransectocc <- anlz_transectocc(bstransect)
+
+# transect points, lines
+trnpts <- trnpts %>% 
+  filter(TRAN_ID %in% unique(bstransect$Transect)) %>% 
+  filter(!duplicated(TRAN_ID))
+trnlns <- trnlns %>% 
+  filter(Site %in% unique(bstransect$Transect)) %>% 
+  filter(Site %in% trnpts$TRAN_ID) %>% 
+  filter(!duplicated(Site))
+
+save(bstransect, file = 'data/bstransect.RData', version = 2)
+save(bstransectocc, file = 'data/bstransectocc.RData', version = 2)
+save(trnpts, file = 'data/trnpts.RData', version = 2)
+save(trnlns, file = 'data/trnlns.RData', version = 2)
+
 # coordinated response station locations ----------------------------------
 
 # these are stations actively being monitoring by four agencies
