@@ -36,8 +36,8 @@ log <- readLines('https://tbep-tech.github.io/piney-point/logs/indexlog.txt')
 
 # globals
 cols <- qualitative_hcl(length(unique(bswqdat$var)), palette = "Dynamic")
-stacols <- qualitative_hcl(length(unique(rsstatloc$source)), palette = "Dark2")
-names(stacols) <- sort(unique(rsstatloc$source))
+stacols <- qualitative_hcl(length(unique(rsstatloc$source_lng)), palette = "Dark2")
+names(stacols) <- sort(unique(rsstatloc$source_lng))
 boxcol <- '#00806E'
 pineypoint <- c(-82.52469352586753, 27.629819505234703)
 ```
@@ -77,7 +77,7 @@ rslocs <- rsstatloc %>%
   ) %>% 
   st_set_geometry(NULL) %>% 
   select(
-    `Data source` = source, 
+    `Data source` = source_lng, 
     `Station name` = station, 
     Longitude = lon, 
     Latitude = lat
@@ -95,7 +95,7 @@ bswqmap <- mapview(bsstatloc, zcol = 'source', homebutton = F, layer.name = 'Dat
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
 # response wqmap
-rswqmap <- mapview(rsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = stacols) %>% 
+rswqmap <- mapview(rsstatloc, zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = stacols) %>% 
   .@map %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
@@ -261,3 +261,4 @@ WATER QUALITY RESULTS {data-navmenu="CURRENT DATA"}
 
 Column {data-width=400}
 -----------------------------------------------------------------------
+

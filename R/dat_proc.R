@@ -239,15 +239,15 @@ pinco2 <- st_read('data/raw/PinellasCo20210405.kml') %>%
 
 rsstatloc <- bind_rows(epchc, fldep, mpnrd, pinco1, pinco2) %>% 
   mutate(
-    source_abbr = source,
-    source = case_when(
+    source = source,
+    source_lng = case_when(
       source == 'pinco' ~ 'Pinellas Co.', 
       source == 'epchc' ~ 'Hillsborough Co.', 
       source == 'fldep' ~ 'Florida DEP', 
       source == 'mpnrd' ~ 'Manatee Co.'
     )
   ) %>% 
-  select(source, source_abbr, everything())
+  select(source_lng, source, everything())
 
 write.csv(rsstatloc, 'data/raw/rsstatloc.csv', row.names = F)
 
@@ -405,7 +405,7 @@ out2 <- out2 %>%
       grepl('TKN$', var) ~ 'tkn',
       grepl('TP$', var) ~ 'tp',
       grepl('TSS$', var) ~ 'tss',
-      grepl('turb$', var) ~ 'turb'
+      grepl('Turb$', var) ~ 'turb'
     ), 
     uni = case_when(
       uni == 'PCU' ~ 'pcu',
