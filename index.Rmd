@@ -159,7 +159,7 @@ rstab1 <- reactive({
   out <- reactable(totab,
     defaultColDef = colDef(
       footerStyle = list(fontWeight = "bold"),
-      format = colFormat(digits = 0, separators = F),
+      format = colFormat(separators = F),
       resizable = TRUE
     ),
     filterable = T,
@@ -403,7 +403,7 @@ valueBox(stsm, 'Sites with data', color = boxcol, icon = 'fa-map-marker')
 reactable(rslocs,
     defaultColDef = colDef(
       footerStyle = list(fontWeight = "bold"),
-      format = colFormat(digits = 0, separators = F),
+      format = colFormat(separators = F),
       resizable = TRUE
     ),
     filterable = T,

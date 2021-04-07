@@ -5,7 +5,7 @@ library(janitor)
 library(tbeptools)
 library(sf)
 library(googlesheets4)
-library(googldrive)
+library(googledrive)
 
 # deauth all so it can build with gh actions
 drive_deauth()
@@ -15,9 +15,9 @@ gs4_deauth()
 
 # parameter names, units
 parms <- tibble(
-  var = c('chla', 'color', 'nh3', 'no23', 'ph', 'sal', 'secchi', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
-  uni = c('ugl', 'pcu', 'mgl', 'mgl', 'none', 'ppt', 'm', 'c', 'mgl', 'mgl', 'mgl', 'mgl', 'ntu'), 
-  lbs = c('Chl-a (ug/L)', 'Color (PCU)', 'NH3 (mg/L)', 'Nitrate/Nitrite (mg/L)', 'pH', 'Sal (ppt)', 'Secchi (m)', 'Temp (C)', 'TKN (mg/L)', 'TN (mg/L)', 'TP (mg/L)', 'TSS (mg/l)', 'Turb (NTU)')
+  var = c('chla', 'color', 'nh3', 'no23', 'ortho', 'ph', 'sal', 'secchi', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
+  uni = c('ugl', 'pcu', 'mgl', 'mgl', 'mgl', 'none', 'ppt', 'm', 'c', 'mgl', 'mgl', 'mgl', 'mgl', 'ntu'), 
+  lbs = c('Chl-a (ug/L)', 'Color (PCU)', 'NH3 (mg/L)', 'Nitrate/Nitrite (mg/L)', 'Ortho-P (mg/L)', 'pH', 'Sal (ppt)', 'Secchi (m)', 'Temp (C)', 'TKN (mg/L)', 'TN (mg/L)', 'TP (mg/L)', 'TSS (mg/l)', 'Turb (NTU)')
 )
 
 save(parms, file = 'data/parms.RData', version = 2)
@@ -309,7 +309,7 @@ out1 <- NULL
 for(id in ids) {
   
   tmp <- read_sheet(id)
-  
+ 
   sta <- tmp[[1, 7]][[1]]
   dt <- as.Date(tmp[[2, 7]][[1]])
   
@@ -336,11 +336,7 @@ for(id in ids) {
         uni == 'mg/L' ~ 'mgl', 
         uni == 'mg/m3' ~ 'ugl', 
         T ~ uni
-      ), 
-      val = case_when(
-        uni == 'ugl' ~ val/1000,
-        T ~ val
-      ), 
+      ),
       station = sta, 
       date = dt,
       source = 'mpnrd'
@@ -409,10 +405,6 @@ out2 <- out2 %>%
       uni == 'mg/m3' ~ 'ugl', 
       T ~ uni
     ),
-    val = case_when(
-      uni == 'ugl' ~ val/1000,
-      T ~ val
-    ), 
     station = case_when(
       grepl('^PMB\\s', station) ~ gsub('^PMB\\s', 'PMB', station), 
       T ~ station
@@ -423,9 +415,76 @@ out2 <- out2 %>%
 mpnrd1 <- bind_rows(out1, out2)
 
 ##
+# pinellas co dump 2021-04-06
+ids <- fls[grep('^Preliminary\\sSample\\sResults', fls$name), 'id'] %>% pull(id)
+out1 <- NULL
+for(id in ids) {
+  
+  dat <- read_sheet(id)
+  
+  tmp <- dat %>% 
+    clean_names() %>% 
+    select(
+      station = collection_site, 
+      date = collect_date, 
+      var = analyte_name, 
+      val = formatted_result, 
+      uni = result_units, 
+      qual = qualifiers
+    ) %>% 
+    mutate(
+      station = case_when(
+        station == 'CB-1' ~ 'Clambar Bay 1', 
+        station == 'CB-2' ~ 'Clambar Bay 2', 
+        station == 'CB-3' ~ 'Clambar Bay 3', 
+        station == 'CB-4' ~ 'Clambar Bay 4', 
+        station == 'CB-5' ~ 'Clambar Bay 5', 
+        station == 'CB-6' ~ 'Clambar Bay 6', 
+        station == 'CB-7' ~ 'Clambar Bay 7', 
+        station == 'CB-8' ~ 'Clambar Bay 8', 
+        station == 'JB-1' ~ 'Joe Bay 1', 
+        station == 'JB-2' ~ 'Joe Bay 2', 
+        station == 'JB-3' ~ 'Joe Bay 3', 
+        station == 'JB-4' ~ 'Joe Bay 4',
+        station == 'JB-5' ~ 'Joe Bay 5', 
+        station == 'JB-6' ~ 'Joe Bay 6', 
+        T ~ station
+      ), 
+      station = gsub('^PC\\s', 'PC', station),
+      station = gsub('^MC\\s', 'MC', station),
+      var = case_when(
+        var == 'Ammonia' ~ 'nh3', 
+        var == 'Nitrate+Nitrite (N)' ~ 'no23', 
+        var == 'Orthophosphate as P(Dissolved)' ~ 'orthop', 
+        var == 'Total Phosphorus' ~ 'tp', 
+        var == 'Total Suspended Solids' ~ 'tss', 
+        var == 'Turbidity' ~ 'turb', 
+        var == 'Chlorophyll a (Corrected)' ~ 'chla',
+        T ~ var
+      ), 
+      val = as.numeric(gsub('[^0-9.-]', '', val)), 
+      uni = case_when(
+        uni == 'mg/L' ~ 'mgl', 
+        uni == 'NTU' ~ 'ntu', 
+        uni == 'mg/m3' ~ 'ugl',
+        T ~ uni
+      ), 
+      source = 'pinco', 
+      date = as.Date(date)
+    ) %>% 
+    filter(var %in% parms$var)
+  
+  out1 <- bind_rows(out1, tmp)
+  
+}
+
+pinco1 <- out1 %>% 
+  filter(station %in% rsstatloc$station)
+
+##
 # combine all
 
-rswqdat <- bind_rows(fldep1, mpnrd1) %>%
+rswqdat <- bind_rows(fldep1, mpnrd1, pinco1) %>%
   unique %>% 
   filter(!is.na(val)) %>% 
   arrange(source, station, date, var)
