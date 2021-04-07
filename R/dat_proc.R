@@ -319,6 +319,10 @@ fldep1 <- read_sheet(fl) %>%
     ),
     qual = gsub('^\\d+\\.\\d+|^\\d+', '', val),
     qual = gsub('^\\s+', '', qual),
+    qual = case_when(
+      qual == '' ~ NA_character_, 
+      T ~ qual
+    ),
     val = gsub('(^\\d+\\.\\d+|^\\d+)\\s.*$', '\\1', val),
     val = as.numeric(val),
     source = 'fldep', 

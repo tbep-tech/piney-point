@@ -136,17 +136,21 @@ vars <- rswqdat %>%
   unique %>% 
   length
 
-# summary of days of sampling for values boxes
+# summary of days of sampling for value boxes
 dysm <- rswqdat %>% 
   pull(date) %>% 
   unique %>% 
   length
 
-# summary of sites being monitored
+# summary of sites being monitored for value boxes
 stsm <- rswqdat %>% 
   pull(station) %>% 
   unique %>% 
   length
+
+# summary of samples for value boxes
+smsm <- rswqdat %>% 
+  nrow
 
 # seagrass base map
 sgmap <- mapview(trnpts, homebutton = F, legend = F) %>% 
@@ -385,7 +389,7 @@ OVERVIEW
 Column {data-width=650}
 -----------------------------------------------------------------------
 
-### DASHBOARD INFORMATION
+### __DASHBOARD INFORMATION__
 
 <div class = "row">
 <div class = "col-md-2"></div>
@@ -397,7 +401,7 @@ Column {data-width=650}
 knitr::include_graphics('www/Piney_Dashboard_Header.png')
 ```
 
-[__JUMP TO LATEST DATA__](https://shiny.tbep.org/piney-point/#section-water-quality-results)
+[__JUMP TO LATEST DATA__](https://shiny.tbep.org/piney-point/#section-water-quality-results), last update `r log`
 
 The Tampa Bay Estuary Program is working with regional partners to coordinate and synthesize water quality, benthic, seagrass, and fisheries monitoring data. We are also consulting with USF to model forecasted plume trajectory from the Piney Point discharge. 
 
@@ -422,133 +426,13 @@ Questions and comments about the dashboard can be sent to [Marcus Beck](mailto:m
 <div class = "col-md-2"></div>
 </div>
 
-WATER QUALITY {data-navmenu="BASELINE DATA"}
-=======================================================================
-
-Column {data-width=275}
------------------------------------------------------------------------
-
-### STATION LOCATIONS - PINEY POINT AT MARKER
-
-```{r}
-bswqmap
-```
-
-Column {.tabset .tabset-fade data-width=650}
------------------------------------------------------------------------
-
-<br>
-```{r}
-column(12, 
-  selectInput('stasel1', 'Select station:', choices = c('21', '22', '90', '336', '357', '361', '362'))
-)
-```
-
-### COMPLETE TIME SERIES
-
-```{r}
-output$baseplo1 <- renderPlotly(baseplo1())
-plotlyOutput('baseplo1')
-```
-
-### MARCH, APRIL ONLY
-
-```{r}
-output$baseplo2 <- renderPlotly(baseplo2())
-plotlyOutput('baseplo2')
-```
-
-SEAGRASSES {data-navmenu="BASELINE DATA"}
-=======================================================================
-
-Column {data-width=275}
------------------------------------------------------------------------
-
-### TRANSECT LOCATIONS - PINEY POINT AT MARKER
-
-```{r}
-output$bssgmap1 <- renderLeaflet(bssgmap1())
-leafletOutput('bssgmap1')
-```
-
-Column {data-width=650}
------------------------------------------------------------------------
-
-### TRANSECT DATA
-
-```{r}
-fillCol(flex = c(0.1, 1),
-  column(12, 
-    selectInput(inputId = 'trnsel1', label = 'Select transect:', choices = trns, selected = trns[1])
-  ),
-  fillCol(flex = c(1, 1),
-    renderPlotly(bssgtrnplo1()),
-    renderPlotly(bssgsumplo1())
-  )
-)
-```
-
-WATER QUALITY OVERVIEW {data-navmenu="CURRENT DATA"}
-=======================================================================
-
-Column {data-width=400}
------------------------------------------------------------------------
-
-### STATION LOCATIONS - PINEY POINT AT MARKER
-
-```{r}
-rswqmap
-```
-
-
-Column
------------------------------------------------------------------------
-
-### 
-
-```{r}
-valueBox(agns, 'Agencies reporting', color = boxcol, icon = 'fa-ship')
-```
-
-### 
-
-```{r}
-valueBox(vars, 'Parameters monitored', color = boxcol, icon = 'fa-vial')
-```
-
-### 
-
-```{r}
-valueBox(dysm, 'Days of sampling', color = boxcol, icon = 'fa-calendar')
-```
-
-### 
-
-```{r}
-valueBox(stsm, 'Sites with data', color = boxcol, icon = 'fa-map-marker')
-```
-
-### Last data update `r log`            
-
-```{r}
-reactable(rslocs,
-    defaultColDef = colDef(
-      footerStyle = list(fontWeight = "bold"),
-      format = colFormat(separators = F),
-      resizable = TRUE
-    ),
-    filterable = T,
-    defaultPageSize = nrow(rslocs)
-    )
-```
-
 WATER QUALITY RESULTS {data-navmenu="CURRENT DATA"}
 =======================================================================
 
 Column {data-width=400}
 -----------------------------------------------------------------------
 
-### STATION LOCATIONS - PINEY POINT AT MARKER
+### __STATION LOCATIONS - PINEY POINT AT MARKER__
 
 ```{r}
 output$rsmap1 <- renderLeaflet(rsmap1())
@@ -582,11 +466,123 @@ column(12,
 )
 ```
 
-
-### __ALL DATA ARE PROVISIONAL__. Last update `r log`.
+### __ALL DATA ARE PROVISIONAL__
 
 ```{r}
 output$rstab1 <- renderReactable(rstab1())
 reactableOutput('rstab1')
 ```
 
+### __INFORMATION__
+
+
+WATER QUALITY OVERVIEW {data-navmenu="CURRENT DATA" data-orientation=rows}
+=======================================================================
+
+Row
+-----------------------------------------------------------------------
+
+### __STATION LOCATIONS - PINEY POINT AT MARKER__
+
+```{r}
+rswqmap
+```
+
+Row
+-----------------------------------------------------------------------
+
+### 
+
+```{r}
+valueBox(agns, 'Agencies reporting', color = boxcol, icon = 'fa-university')
+```
+
+### 
+
+```{r}
+valueBox(vars, 'Parameters monitored', color = boxcol, icon = 'fa-vial')
+```
+
+### 
+
+```{r}
+valueBox(dysm, 'Days of sampling', color = boxcol, icon = 'fa-calendar')
+```
+
+### 
+
+```{r}
+valueBox(stsm, 'Sites with data', color = boxcol, icon = 'fa-map-marked')
+```
+
+### 
+
+```{r}
+valueBox(smsm, 'Samples processed', color = boxcol, icon = 'fa-tint')
+```
+
+WATER QUALITY {data-navmenu="BASELINE DATA"}
+=======================================================================
+
+Column {data-width=275}
+-----------------------------------------------------------------------
+
+### __STATION LOCATIONS - PINEY POINT AT MARKER__
+
+```{r}
+bswqmap
+```
+
+Column {.tabset .tabset-fade data-width=650}
+-----------------------------------------------------------------------
+
+<br>
+```{r}
+column(12, 
+  selectInput('stasel1', 'Select station:', choices = c('21', '22', '90', '336', '357', '361', '362'))
+)
+```
+
+### __COMPLETE TIME SERIES__
+
+```{r}
+output$baseplo1 <- renderPlotly(baseplo1())
+plotlyOutput('baseplo1')
+```
+
+### __MARCH, APRIL ONLY__
+
+```{r}
+output$baseplo2 <- renderPlotly(baseplo2())
+plotlyOutput('baseplo2')
+```
+
+SEAGRASSES {data-navmenu="BASELINE DATA"}
+=======================================================================
+
+Column {data-width=275}
+-----------------------------------------------------------------------
+
+### __TRANSECT LOCATIONS - PINEY POINT AT MARKER__
+
+```{r}
+output$bssgmap1 <- renderLeaflet(bssgmap1())
+leafletOutput('bssgmap1')
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### __TRANSECT DATA__
+
+```{r}
+fillCol(flex = c(0.1, 1),
+  column(12, 
+    selectInput(inputId = 'trnsel1', label = 'Select transect:', choices = trns, selected = trns[1])
+  ),
+  fillCol(flex = c(1, 1),
+    renderPlotly(bssgtrnplo1()),
+    renderPlotly(bssgsumplo1())
+  )
+)
+```
