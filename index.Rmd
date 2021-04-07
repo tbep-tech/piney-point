@@ -69,6 +69,9 @@ boxcol <- '#00806E'
 # piney point loc
 pineypoint <- c(-82.52469352586753, 27.629819505234703)
 
+# map center
+mapcenter <- c(-82.57862105363802, 27.601257082103725)
+
 # seagrass transect prj
 st_crs(trnpts) <- 4326
 st_crs(trnlns) <- 4326
@@ -321,7 +324,7 @@ rsmap1 <- reactive({
   # add legend
   out <- m@map %>% 
     addLegend("bottomright", pal = colfun, title = leglab, opacity = 1, values = rsdat1$val) %>% 
-    setView(pineypoint[1], pineypoint[2], zoom = 12) %>% 
+    setView(mapcenter[1], mapcenter[2], zoom = 12) %>% 
     addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
   
   return(out)
@@ -482,7 +485,7 @@ reactableOutput('rstab1')
 
 ### __INFORMATION__
 
-Use the variable selection menu on the top to view results for a measured water quality parameter of interest.  The map on the left will show results at locations that have been sampled for the parameter for the selected date.  The date is chosen from the slider on the right.  All points on the map are sized and colored by the range of values in the data for the selected parameter. The data table shows all results for all dates for the selected parameter.
+Use the variable selection menu on the top to view results for a measured water quality parameter of interest.  The map on the left will show results at locations that have been sampled for the parameter for the selected date.  The date is chosen from the slider on the right.  All points on the map are sized and colored by the range of values in the data for the selected parameter.  Hit the "play" button below the date slider to view a time lapse of data. The data table shows all results for all dates for the selected parameter.
 
 How are the data interpreted? 
 
