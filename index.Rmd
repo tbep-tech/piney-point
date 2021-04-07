@@ -397,6 +397,8 @@ Column {data-width=650}
 knitr::include_graphics('www/Piney_Dashboard_Header.png')
 ```
 
+[__JUMP TO LATEST DATA__](https://shiny.tbep.org/piney-point/#section-water-quality-results)
+
 The Tampa Bay Estuary Program is working with regional partners to coordinate and synthesize water quality, benthic, seagrass, and fisheries monitoring data. We are also consulting with USF to model forecasted plume trajectory from the Piney Point discharge. 
 
 The primary pollutants of concern for this discharge are phosphorus and nitrogen (primarily ammonia nitrogen), which may stimulate an algae response and cause adverse effects on seagrass, fish, and other wildlife.
@@ -580,7 +582,9 @@ column(12,
 )
 ```
 
-### Last data update `r log`
+
+
+### __ALL DATA ARE PROVISIONAL AND SUBJECT TO CHANGE__. Last update `r log`.
 
 ```{r}
 output$rstab1 <- renderReactable(rstab1())
