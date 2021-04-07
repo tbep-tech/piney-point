@@ -3,7 +3,7 @@ library(janitor)
 library(lubridate)
 
 dt <- Sys.Date()
-url <- paste('http://tampabay.loboviz.com/cgi-data/nph-data.cgi?node=82&min_date=20210328&max_date=', dt, '&y=salinity,temperature,co2,oxygen,pht,par,pressure&data_format=text', sep = '')
+url <- paste('http://tampabay.loboviz.com/cgi-data/nph-data.cgi?node=82&min_date=20210321&max_date=', dt, '&y=salinity,temperature,co2,oxygen,pht,par,pressure&data_format=text', sep = '')
 
 datraw <- read.table(url, skip = 2, sep = '\t', header = T) %>% 
   clean_names() %>% 
