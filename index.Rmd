@@ -109,8 +109,8 @@ rslocs <- rsstatloc %>%
   )
 
 # baseline wq map
-colsin <- stacols[unique(bsstatloc$source)]
-bswqmap <- mapview(bsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = colsin, map.types = mptyps) %>% 
+bscolsin <- stacols[unique(bsstatloc$source)]
+bswqmap <- mapview(bsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = bscolsin, map.types = mptyps) %>% 
   addStaticLabels(label = bsstatloc$station,
                   noHide = TRUE,
                   direction = 'top',
@@ -120,7 +120,14 @@ bswqmap <- mapview(bsstatloc, zcol = 'source', homebutton = F, layer.name = 'Dat
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
 # response wqmap
-rswqmap <- mapview(rsstatloc, zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = stacols, map.types = mptyps) %>% 
+rscolsin <- rswqdat %>% 
+  left_join(rsstatloc, by = 'source') %>% 
+  pull(source_lng) %>% 
+  unique %>% 
+  stacols[.] 
+rswqmap <- rsstatloc %>% 
+  filter(station %in% rswqdat$station) %>% 
+  mapview(zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = rscolsin, map.types = mptyps) %>% 
   .@map %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
@@ -446,7 +453,7 @@ Column {.tabset .tabset-fade}
 ```{r}
 column(12,
   column(5, 
-    selectInput('varsel1', 'Select variable:', choices = vrs, selected = 'nh3')       
+    selectInput('varsel1', HTML('<b>Select variable:</b>'), choices = vrs, selected = 'nh3')       
   ), 
   column(7, 
     renderUI({
@@ -475,7 +482,7 @@ reactableOutput('rstab1')
 
 ### __INFORMATION__
 
-Use the variable selection menu on the top to view results for a measured water quality parameter of interest.  The map on the left will show results at locations that have been sampled for the parameter for the selected date.  The date is chosen from the slider on the right.  All points on the map are sized and colored by the range of values for the selected parameter in the data that have been collected to date. The data table shows all results for all dates for the selected parameter.
+Use the variable selection menu on the top to view results for a measured water quality parameter of interest.  The map on the left will show results at locations that have been sampled for the parameter for the selected date.  The date is chosen from the slider on the right.  All points on the map are sized and colored by the range of values in the data for the selected parameter. The data table shows all results for all dates for the selected parameter.
 
 How are the data interpreted? 
 
@@ -516,7 +523,7 @@ WATER QUALITY OVERVIEW {data-navmenu="CURRENT DATA" data-orientation=rows}
 Row
 -----------------------------------------------------------------------
 
-### __STATION LOCATIONS - PINEY POINT AT MARKER__
+### __STATIONS WITH DATA - PINEY POINT AT MARKER__
 
 ```{r}
 rswqmap
