@@ -434,8 +434,8 @@ save(rswqdat, file = 'data/rswqdat.RData', version = 2)
 
 # for log
 tms <- Sys.time()
-attr(tms, 'tzone') <- 'America/Jamaica'
-tms <- as.character(tms)
+attr(tms, 'tzone') <- 'America/New_York'
+tms <- paste(as.character(tms), 'Eastern')
 
 writeLines(tms, 'logs/indexlog.txt')
 

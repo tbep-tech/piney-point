@@ -451,7 +451,7 @@ column(12,
 )
 ```
 
-### COMPILED DATA
+### Last data update `r log`
 
 ```{r}
 output$rstab1 <- renderReactable(rstab1())
