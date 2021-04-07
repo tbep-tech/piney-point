@@ -264,21 +264,21 @@ gdrive_pth <- 'https://drive.google.com/drive/folders/1SWlBbZtjZ8SF43MCz5nv5YLCW
 fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ##
-# fldep dump 20210405
-fl <- fls[which(fls$name == 'FDEP_20210405'), 'id'] %>% pull(id)
+# fldep dump 20210406
+fl <- fls[which(fls$name == 'FDEP_20210406'), 'id'] %>% pull(id)
 fldep1 <- read_sheet(fl) %>% 
   clean_names %>% 
   select(
     station = station_id, 
     date = sample_date, 
-    secchi_cm = secchi_depth_cm, 
+    secchi_m = secchi_depth_m, 
     temp_c = water_temperature_c_surface, 
     sal_ppt = salinity_0_00_surface, 
     # do_sat = d_o_percent_sat_surface, 
     ph_none = p_h_surface, 
     nh3_mgl = ammonia_n_mg_n_l, 
     orthop_mgl = orthophosphate_p_mg_p_l, 
-    chla_mgl = chlorophyll_a_corrected_mg_l, # this is ugl, janitor think mu is m
+    chla_ugl = chlorophyll_a_corrected_mg_l, # this is ugl, janitor think mu is m
     turb_ntu = turbidity_ntu
   ) %>% 
   mutate_if(is.list, as.character) %>% 
@@ -287,11 +287,6 @@ fldep1 <- read_sheet(fl) %>%
   mutate(
     date = as.Date(date), 
     val = as.numeric(val), 
-    uni = case_when(
-      var == 'chla' ~ 'ugl', 
-      var == 'secchi' ~ 'm', # sheet says cm, but looks like m
-      T ~ uni
-    ), 
     source = 'fldep', 
     yr = year(date), 
     mo = month(date), 
