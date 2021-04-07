@@ -282,14 +282,17 @@ save(rsstatloc, file = 'data/rsstatloc.RData', version = 2)
 
 # coordinated response data -----------------------------------------------
 
+data(parms)
+data(rsstatloc)
+
 gdrive_pth <- 'https://drive.google.com/drive/folders/1SWlBbZtjZ8SF43MCz5nv5YLCWDvn7T_x'
 
 # csv files must be opened/saved as spreadsheet in google sheets
 fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ##
-# fldep dump 20210406
-fl <- fls[which(fls$name == 'FDEP_20210406'), 'id'] %>% pull(id)
+# fldep dump 20210407
+fl <- fls[which(fls$name == 'FDEP_20210407'), 'id'] %>% pull(id)
 fldep1 <- read_sheet(fl) %>% 
   clean_names %>% 
   select(
@@ -310,11 +313,17 @@ fldep1 <- read_sheet(fl) %>%
   separate(var, c('var', 'uni'), sep = '_') %>% 
   mutate(
     date = as.Date(date), 
-    val = as.numeric(val), 
+    val = case_when(
+      val %in% c('NULL', 'not detected') ~ '', 
+      T ~ val
+    ),
+    qual = gsub('^\\d+\\.\\d+|^\\d+', '', val),
+    qual = gsub('^\\s+', '', qual),
+    val = gsub('(^\\d+\\.\\d+|^\\d+)\\s.*$', '\\1', val),
+    val = as.numeric(val),
     source = 'fldep', 
     yr = year(date), 
-    mo = month(date), 
-    qual = NA_character_
+    mo = month(date)
   ) %>% 
   select(station, date, mo, yr, source, var, uni, val, qual) %>% 
   filter(!is.na(val))
