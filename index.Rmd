@@ -215,15 +215,17 @@ baseplo2 <- reactive({
   
 })
 
-# response data
-rsdat1 <- reactive({
+# variable range
+varrng1 <- reactive({
   
   # input
   varsel1 <- input$varsel1
   
   out <- rswqdat %>% 
-    filter(var %in% varsel1) 
-
+    filter(var %in% varsel1) %>% 
+    pull(val) %>% 
+    range(na.rm = T)
+  
   return(out)
   
 })
@@ -232,29 +234,54 @@ rsdat1 <- reactive({
 colfun <- reactive({
   
   # input
-  rsdat1 <- rsdat1()
-  
-  req(rsdat1)
+  varsel1 <- input$varsel1
+  varrng1 <- varrng1()
   
   # color palette function
   out <- colorNumeric(
     palette = vrscols,
     na.color = 'yellow',
-      domain = range(rsdat1$val, na.rm = T)
+    domain = varrng1
     )
   
   return(out)
   
 })
+
+# response data
+rsdat1 <- reactive({
   
+  # input
+  varsel1 <- input$varsel1
+  dyssel1 <- input$dyssel1
+  mapsel1 <- input$mapsel1
+  colfun <- colfun()
+  
+  out <- rswqdat %>% 
+    filter(var %in% varsel1) %>% 
+    mutate(
+      cols = colfun(val),
+      cexs = scales::rescale(val, to = c(4, 17))
+    ) 
+ 
+   # filter by day if provided
+  if(mapsel1 == 'yes'){
+    
+    out <- out %>% 
+      filter(date %in% dyssel1)
+    
+  }
+  
+  return(out)
+  
+})
+
 # response data table
 rstab1 <- reactive({
   
   # input
   rsdat1 <- rsdat1()
   varsel1 <- input$varsel1
-  
-  req(rsdat1)
   
   # variable label
   vrlb <- names(vrs)[vrs == varsel1]
@@ -291,28 +318,20 @@ rsmap1 <- reactive({
   # input
   rsdat1 <- rsdat1()
   colfun <- colfun()
+  varrng1 <- varrng1()
   varsel1 <- input$varsel1
-  dyssel1 <- input$dyssel1
   
-  req(dyssel1)
+  req(rsdat1)
 
   # variable label
   vrlb <- names(vrs)[vrs == varsel1]
-  
-  # point sizing, colors
-  rsdat1 <- rsdat1 %>% 
-    mutate(
-      cols = colfun(val),
-      cexs = scales::rescale(val, to = c(4, 17))
-    ) 
-  
+
   # make sf
   tomap <- rsdat1 %>% 
-    filter(date %in% dyssel1) %>% 
     inner_join(rsstatloc, ., by = c('source', 'station'))
-  
+    
   # hover pt labels
-  labs <- paste0('Source: ', tomap$source_lng, ', Station: ', tomap$station, ', ', vrlb, ': ', round(tomap$val, 2))
+  labs <- paste0('Station: ', tomap$station, ', Date: ', tomap$date, ', ', vrlb, ': ', round(tomap$val, 2))
   leglab <- vrlb
 
   if(nrow(tomap) == 0)
@@ -323,7 +342,7 @@ rsmap1 <- reactive({
   
   # add legend
   out <- m@map %>% 
-    addLegend("bottomright", pal = colfun, title = leglab, opacity = 1, values = rsdat1$val) %>% 
+    addLegend("bottomright", pal = colfun, title = leglab, opacity = 1, values = varrng1) %>% 
     setView(mapcenter[1], mapcenter[2], zoom = 12) %>% 
     addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
   
@@ -417,7 +436,7 @@ The Tampa Bay Estuary Program is working with regional partners to coordinate an
 
 The primary pollutants of concern for this discharge are phosphorus and nitrogen (primarily ammonia nitrogen), which may stimulate an algae response and cause adverse effects on seagrass, fish, and other wildlife.
 
-The dashboard is a synthesis of data that can be used to assess baseline conditions prior to discharge and to evaluate changing water quality conditions as new data become available. __All data are preliminary or provisional and are subject to revision.__ The dashboard is arranged as follows:
+The dashboard is a synthesis of data that can be used to assess baseline conditions prior to discharge and to evaluate changing water quality conditions as new data become available. __All data are provisional and subject to revision.__ The dashboard is arranged as follows:
 
 1) __BASELINE DATA__: Long-term water quality and seagrass data over a 25 year period.  These represent "baseline" conditions.
 1) __CURRENT DATA__: Locations being sampled by our partners in response to current events.
@@ -455,19 +474,27 @@ Column {.tabset .tabset-fade}
 <br>
 ```{r}
 column(12,
-  column(5, 
+  column(12, HTML('<b>ALL DATA ARE PROVISIONAL</b><br></br>')),
+  column(3, 
     selectInput('varsel1', HTML('<b>Select variable:</b>'), choices = vrs, selected = 'nh3')       
   ), 
-  column(7, 
+  column(3, 
+    selectInput('mapsel1', 'Map results by date?', choices = c('yes', 'no'), selected = 'no')
+    ),
+  column(6, 
     renderUI({
       
       # inputs
       varsel1 <- input$varsel1
-      rsdat1 <- rsdat1()
+      mapsel1 <- input$mapsel1
       
-      req(rsdat1)
+      if(mapsel1 == 'no')
+        return(NULL)
       
-      dys <- unique(rsdat1$date)
+      dys <- rswqdat %>% 
+        filter(var %in% varsel1) %>% 
+        pull(date) %>% 
+        unique
       
       sliderInput('dyssel1', 'Select date:', min = min(dys), max = max(dys), value = max(dys), animate = T, timeFormat="%m-%d", width = '100%')
   
@@ -476,7 +503,7 @@ column(12,
 )
 ```
 
-### __ALL DATA ARE PROVISIONAL__
+### __TABLE DATA__
 
 ```{r}
 output$rstab1 <- renderReactable(rstab1())
@@ -485,7 +512,7 @@ reactableOutput('rstab1')
 
 ### __INFORMATION__
 
-Use the variable selection menu on the top to view results for a measured water quality parameter of interest.  The map on the left will show results at locations that have been sampled for the parameter for the selected date.  The date is chosen from the slider on the right.  All points on the map are sized and colored by the range of values in the data for the selected parameter.  Hit the "play" button below the date slider to view a time lapse of data. The data table shows all results for all dates for the selected parameter.
+Use the variable selection menu on the top to view results for a measured water quality parameter of interest.  The map on the left will show results at locations that have been sampled for the parameter.  You can choose to show all dates or filter by a particular date. All points on the map are sized and colored by the range of values in the data for the selected parameter.  If results are filtered by date, hit the "play" button below the date slider to view a time lapse of data. The data table shows all results for the selection.
 
 How are the data interpreted? 
 
