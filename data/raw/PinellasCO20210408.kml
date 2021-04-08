@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Pinellas Sampling Sites</name>
+    <description>Proposed for 4/9/21 in tributary mouths north of Piney Point</description>
+    <Style id="icon-1899-0288D1-nodesc-normal">
+      <IconStyle>
+        <color>ffd18802</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <Style id="icon-1899-0288D1-nodesc-highlight">
+      <IconStyle>
+        <color>ffd18802</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>1</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <StyleMap id="icon-1899-0288D1-nodesc">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#icon-1899-0288D1-nodesc-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#icon-1899-0288D1-nodesc-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Folder>
+      <name>Untitled layer</name>
+      <Placemark>
+        <name>Little Manatee 1</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.4805269,27.7176708,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Little Manatee 2</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.4890529,27.7201599,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Cockroach 1</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5233517,27.6861018,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Cockroach 2</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.527336,27.6870898,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Little Cockroach 1</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.49992,27.7122439,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Little Cockroach 2</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5031506,27.7136686,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>South Cockroach 1</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5311983,27.6780451,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>South Cockroach 2</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5342024,27.6788432,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Big Pass 1</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.515124,27.6966468,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Rock Ponds 1</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5418628,27.662158,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Big Pass 2</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5200807,27.6986036,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Rock Ponds 2</name>
+        <styleUrl>#icon-1899-0288D1-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            -82.5451244,27.6640585,0
+          </coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+  </Document>
+</kml>
