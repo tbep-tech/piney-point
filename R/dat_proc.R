@@ -265,7 +265,7 @@ pinco3 <- st_read('data/raw/PinellasCo20210408.kml') %>%
     source = 'pinco', 
     lon = st_coordinates(.)[, 1],
     lat = st_coordinates(.)[, 2], 
-    comment = 'visited 20210405'
+    comment = 'visited 20210409'
   ) %>% 
   st_set_geometry(NULL) %>% 
   select(source, station = Name, lat, lon, comment)
