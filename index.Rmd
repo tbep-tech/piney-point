@@ -257,6 +257,8 @@ rsdat1 <- reactive({
   mapsel1 <- input$mapsel1
   colfun <- colfun()
   
+  req(colfun)
+  
   out <- rswqdat %>% 
     filter(var %in% varsel1) %>% 
     mutate(
