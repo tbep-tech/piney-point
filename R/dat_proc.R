@@ -15,7 +15,7 @@ gs4_deauth()
 
 # parameter names, units
 parms <- tibble(
-  var = c('chla', 'color', 'nh3', 'no23', 'ortho', 'ph', 'sal', 'secchi', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
+  var = c('chla', 'color', 'nh3', 'no23', 'orthop', 'ph', 'sal', 'secchi', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
   uni = c('ugl', 'pcu', 'mgl', 'mgl', 'mgl', 'none', 'ppt', 'm', 'c', 'mgl', 'mgl', 'mgl', 'mgl', 'ntu'), 
   lbs = c('Chl-a (ug/L)', 'Color (PCU)', 'NH3 (mg/L)', 'Nitrate/Nitrite (mg/L)', 'Ortho-P (mg/L)', 'pH', 'Sal (ppt)', 'Secchi (m)', 'Temp (C)', 'TKN (mg/L)', 'TN (mg/L)', 'TP (mg/L)', 'TSS (mg/l)', 'Turb (NTU)')
 )
@@ -303,7 +303,8 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 ##
 # fldep dump 20210408
 fl <- fls[which(fls$name == 'FLDEP_20210408'), 'id'] %>% pull(id)
-fldep1 <- read_sheet(fl) %>% 
+flsht <- read_sheet(fl)
+fldep1 <- flsht %>% 
   clean_names %>% 
   select(
     station = station_id, 
