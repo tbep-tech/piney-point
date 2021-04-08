@@ -280,7 +280,8 @@ rsstatloc <- bind_rows(epchc, fldep, mpnrd, pinco1, pinco2, pinco3) %>%
       source == 'mpnrd' ~ 'Manatee Co.'
     )
   ) %>% 
-  select(source_lng, source, station, lat, lon, comment)
+  select(source_lng, source, station, lat, lon, comment) %>% 
+  arrange(source_lng, station)
 
 write.csv(rsstatloc, 'data/raw/rsstatloc.csv', row.names = F)
 
@@ -300,8 +301,8 @@ gdrive_pth <- 'https://drive.google.com/drive/folders/1SWlBbZtjZ8SF43MCz5nv5YLCW
 fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ##
-# fldep dump 20210407
-fl <- fls[which(fls$name == 'FDEP_20210407'), 'id'] %>% pull(id)
+# fldep dump 20210408
+fl <- fls[which(fls$name == 'FLDEP_20210408'), 'id'] %>% pull(id)
 fldep1 <- read_sheet(fl) %>% 
   clean_names %>% 
   select(
@@ -397,7 +398,6 @@ out1 <- out1 %>%
     mo = month(date)
   ) %>% 
   select(station, date, mo, yr, source, var, uni, val, qual)
-
 
 # mpnrd, estuary samples
 ids <- fls[grep('Results_By_Test_Param', fls$name), 'id'] %>% pull(id)
