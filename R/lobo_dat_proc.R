@@ -32,6 +32,8 @@ lobodat <- datraw
 # ports data --------------------------------------------------------------
 
 # 8726412 is middle tampa bay station, at LOBO I think
+# PORTS/NOAA API description is here https://api.tidesandcurrents.noaa.gov/api/prod/#units
+# Data can be retrieved here https://tidesandcurrents.noaa.gov/met.html?id=8726412
 
 url <- paste('https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=ENTERVAR&application=NOS.COOPS.TAC.MET&begin_date=20210321&end_date=', dt, '&station=8726412&time_zone=LST&units=metric&format=CSV', sep = '')
 
