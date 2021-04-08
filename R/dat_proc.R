@@ -260,8 +260,17 @@ pinco2 <- st_read('data/raw/PinellasCo20210405.kml') %>%
   ) %>% 
   st_set_geometry(NULL) %>% 
   select(source, station = Name, lat, lon, comment)
+pinco3 <- st_read('data/raw/PinellasCo20210408.kml') %>% 
+  mutate(
+    source = 'pinco', 
+    lon = st_coordinates(.)[, 1],
+    lat = st_coordinates(.)[, 2], 
+    comment = 'visited 20210405'
+  ) %>% 
+  st_set_geometry(NULL) %>% 
+  select(source, station = Name, lat, lon, comment)
 
-rsstatloc <- bind_rows(epchc, fldep, mpnrd, pinco1, pinco2) %>% 
+rsstatloc <- bind_rows(epchc, fldep, mpnrd, pinco1, pinco2, pinco3) %>% 
   mutate(
     source = source,
     source_lng = case_when(
