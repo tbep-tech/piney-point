@@ -198,7 +198,7 @@ loc <- data.frame(
 txt <- HTML('Data on this dashboard are from the <a href="http://tampabay.loboviz.com/">Tampa Bay LOBO</a> (Land/Ocean Biogeochemical Observatory) continuous monitoring buoy, located in Lower Tampa Bay. Co-located weather observations (wind, air temperature, pressure) are from <a href="http://tbports.org/">http://tbports.org/</a>, with data from station <a href="https://tidesandcurrents.noaa.gov/met.html?id=8726412">8726412</a>. All data are preliminary or provisional and are subject to revision. The data have not received final approval by the USGS and are provided on the condition that neither the USGS nor the U.S. Government shall be held liable for any damages resulting from the authorized or unauthorized use of the data.  Approximate buoy location:')
 
 m <- mapview(loc, homebutton = F, legend = F)@map %>% 
-  setView(lat = buoylat, lng = buoylng, zoom = 12)
+  setView(lat = buoylat, lng = buoylng, zoom = 10)
 
 fillCol(flex = c(NA, 1), txt, m)
 ```
