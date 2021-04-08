@@ -345,7 +345,7 @@ rsmap1 <- reactive({
   # add legend
   out <- m@map %>% 
     addLegend("bottomright", pal = colfun, title = leglab, opacity = 1, values = varrng1) %>% 
-    setView(mapcenter[1], mapcenter[2], zoom = 12) %>% 
+    setView(mapcenter[1], mapcenter[2], zoom = 11) %>% 
     addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
   
   return(out)
