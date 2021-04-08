@@ -2,27 +2,73 @@ library(tidyverse)
 library(janitor)
 library(lubridate)
 
-dt <- Sys.Date()
+dt <- Sys.Date() %>% 
+  as.character %>% 
+  gsub('\\-', '', .)
+
+
+# lobo data retrieval -----------------------------------------------------
+
 url <- paste('http://tampabay.loboviz.com/cgi-data/nph-data.cgi?node=82&min_date=20210321&max_date=', dt, '&y=salinity,temperature,co2,oxygen,pht,par,pressure&data_format=text', sep = '')
 
 datraw <- read.table(url, skip = 2, sep = '\t', header = T) %>% 
   clean_names() %>% 
   select(
-    datetime = date_est, 
-    sal = salinity_psu, 
-    temp = temperature_c, 
+    DateTimeStamp = date_est, 
+    Sal = salinity_psu, 
+    Temp = temperature_c, 
     co2 = co2_ppm, 
-    do = dissolved_oxygen_ml_l, 
+    DO_obs = dissolved_oxygen_ml_l, 
     ph = p_ht, 
     par = par_u_m_m_2_sec,
-    press = pressure_d_bar
+    Tide = pressure_d_bar
   ) %>% 
   mutate(
-    datetime = ymd_hms(datetime, tz = 'America/Jamaica') 
+    DateTimeStamp = ymd_hms(DateTimeStamp, tz = 'America/Jamaica') 
   )
 
 lobodat <- datraw
+
+# ports data --------------------------------------------------------------
+
+# 8726412 is middle tampa bay station, at LOBO I think
+
+url <- paste('https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=ENTERVAR&application=NOS.COOPS.TAC.MET&begin_date=20210321&end_date=', dt, '&station=8726412&time_zone=LST&units=metric&format=CSV', sep = '')
+
+# metric units selected, wind is m/2, air temp is C, pressure is mb
+vrs <- c('wind', 'air_temperature', 'air_pressure')
+
+out <-  list()
+for(vr in vrs){
+  
+  url_tmp <- gsub('ENTERVAR', vr, url)
+  
+  dat <- read.table(url_tmp, sep = ',', header = T) %>% 
+    .[, c(1:2)] %>% 
+    gather('var', 'val', -Date.Time)
+  
+  out <- rbind(out, dat)
+  
+}
+
+portsdat <- out %>% 
+  spread(var, val) %>% 
+  select(
+    DateTimeStamp = Date.Time, 
+    ATemp = Air.Temperature, 
+    BP = Pressure, 
+    WSpd = Speed
+  ) %>% 
+  mutate(DateTimeStamp = ymd_hm(DateTimeStamp, tz = 'America/Jamaica'))
+
+# combine ports with lobo -------------------------------------------------
+
+lobodat <- lobodat %>% 
+  left_join(portsdat, by = 'DateTimeStamp')
+
 save(lobodat, file = 'data/lobodat.RData', version = 2)
+
+# log file ----------------------------------------------------------------
 
 # for log
 tms <- Sys.time()
@@ -30,4 +76,5 @@ attr(tms, 'tzone') <- 'America/New_York'
 tms <- paste(as.character(tms), 'Eastern')
 
 writeLines(tms, 'logs/lobolog.txt')
+
 
