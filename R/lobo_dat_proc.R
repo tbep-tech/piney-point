@@ -32,6 +32,7 @@ lobodat <- datraw
 # ports data --------------------------------------------------------------
 
 # 8726412 is middle tampa bay station, at LOBO I think
+# Port Manatee is 8726384
 # PORTS/NOAA API description is here https://api.tidesandcurrents.noaa.gov/api/prod/#units
 # Data can be retrieved here https://tidesandcurrents.noaa.gov/met.html?id=8726412
 

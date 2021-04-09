@@ -207,7 +207,7 @@ fillCol(flex = c(NA, 1), txt, m)
 Column {.tabset .tabset-fade data-width=700}
 -----------------------------------------------------------------------
 
-### `r paste0('Data current as of ', log, ', weather data lags water data')`
+### `r paste0('Data current as of ', log)`
 
 ```{r}
 output$tsplo <- renderPlot(tsplo())
