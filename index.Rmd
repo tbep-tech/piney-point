@@ -133,6 +133,10 @@ rswqmap <- rsstatloc %>%
   mapview(zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = rscolsin, map.types = mptyps) %>% 
   .@map %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
+rswqmapall <- rsstatloc %>% 
+  mapview(zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = stacols, map.types = mptyps) %>% 
+  .@map %>% 
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
 # summary of agencies reporting for value boxes
 agns <- rswqdat %>% 
@@ -552,13 +556,20 @@ __TSS (mg/l)__: Total suspended solids is a general measure of water clarity tha
 WATER QUALITY OVERVIEW {data-navmenu="CURRENT DATA" data-orientation=rows}
 =======================================================================
 
-Row
+Row {.tabset .tabset-fade}
 -----------------------------------------------------------------------
 
 ### __STATIONS WITH DATA - PINEY POINT AT MARKER__
 
 ```{r}
 rswqmap
+```
+
+
+### __ALL STATIONS - PINEY POINT AT MARKER__
+
+```{r}
+rswqmapall
 ```
 
 Row
