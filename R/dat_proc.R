@@ -539,7 +539,7 @@ ncf1 <- flsht %>%
     station = Set, 
     date = Date, 
     temp = Temp_C, 
-    turb = Turbidity_m, 
+    secchi = Turbidity_m, 
     sal = Salinity_ppt
   ) %>% 
   gather('var', 'val', -station, -date) %>% 
@@ -549,7 +549,7 @@ ncf1 <- flsht %>%
     qual = NA_character_, 
     uni = case_when(
       var == 'temp' ~ 'c', 
-      var == 'turb' ~ 'ntu', 
+      var == 'secchi' ~ 'm', 
       var == 'sal' ~ 'ppt'
     )
   )
