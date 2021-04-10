@@ -269,21 +269,33 @@ pinco3 <- st_read('data/raw/PinellasCo20210408.kml') %>%
   ) %>% 
   st_set_geometry(NULL) %>% 
   select(source, station = Name, lat, lon, comment)
+ncf1 <- read.csv('data/raw/ncf_stations.csv') %>% 
+  select(
+    station = Set,
+    lon = Lon, 
+    lat = Lat
+  ) %>% 
+  mutate(
+    source = 'ncf', 
+    comment = NA_character_
+  )
 
-rsstatloc <- bind_rows(epchc, fldep, mpnrd, pinco1, pinco2, pinco3) %>% 
+# combine all
+rsstatloc <- bind_rows(epchc, fldep, mpnrd, pinco1, pinco2, pinco3, ncf1) %>% 
   mutate(
     source = source,
     source_lng = case_when(
       source == 'pinco' ~ 'Pinellas Co.', 
       source == 'epchc' ~ 'Hillsborough Co.', 
       source == 'fldep' ~ 'Florida DEP', 
-      source == 'mpnrd' ~ 'Manatee Co.'
+      source == 'mpnrd' ~ 'Manatee Co.', 
+      source == 'ncf' ~ 'New College Fl.'
     )
   ) %>% 
   select(source_lng, source, station, lat, lon, comment) %>% 
   arrange(source_lng, station)
 
-write.csv(rsstatloc, 'data/raw/rsstatloc.csv', row.names = F)
+write.csv(rsstatloc, 'data/raw/wq_stations_all.csv', row.names = F)
 
 rsstatloc <- rsstatloc %>% 
   st_as_sf(coords = c('lon', 'lat'), crs = 4326)
@@ -336,11 +348,9 @@ fldep1 <- flsht %>%
     ),
     val = gsub('(^\\d+\\.\\d+|^\\d+)\\s.*$', '\\1', val),
     val = as.numeric(val),
-    source = 'fldep', 
-    yr = year(date), 
-    mo = month(date)
+    source = 'fldep'
   ) %>% 
-  select(station, date, mo, yr, source, var, uni, val, qual) %>% 
+  select(station, date, source, var, uni, val, qual) %>% 
   filter(!is.na(val))
 
 ##
@@ -395,10 +405,8 @@ out1 <- out1 %>%
       grepl('^\\(Piney\\sPoint\\sOutfall|^\\(PP\\sOutfall', station) ~ 'PM Out', 
       grepl('^\\(Piney\\sPoint\\sCreek|^\\(PP\\sCreek', station) ~ 'PPC41'
     ), 
-    yr = year(date), 
-    mo = month(date)
   ) %>% 
-  select(station, date, mo, yr, source, var, uni, val, qual)
+  select(station, date, source, var, uni, val, qual)
 
 # mpnrd, estuary samples
 ids <- fls[grep('Results_By_Test_Param', fls$name), 'id'] %>% pull(id)
@@ -429,8 +437,6 @@ out2 <- out2 %>%
   mutate(
     source = 'mpnrd',
     date = as.Date(date), 
-    yr =  year(date), 
-    mo = month(date), 
     var = gsub('\\sResults_By_Test_Param', '', var), 
     var = case_when(
       grepl('NH4$', var) ~ 'nh3',
@@ -452,7 +458,7 @@ out2 <- out2 %>%
       T ~ station
     )
   ) %>% 
-  select(station, date, mo, yr, source, var, uni, val, qual)
+  select(station, date, source, var, uni, val, qual)
 
 mpnrd1 <- bind_rows(out1, out2)
 
@@ -524,9 +530,34 @@ pinco1 <- out1 %>%
   filter(station %in% rsstatloc$station)
 
 ##
+# new college dump 20210410
+
+fl <- fls[which(fls$name == 'TCB_waterquality_Apr2021'), 'id'] %>% pull(id)
+flsht <- read_sheet(fl)
+ncf1 <- flsht %>% 
+  select(
+    station = Set, 
+    date = Date, 
+    temp = Temp_C, 
+    turb = Turbidity_m, 
+    sal = Salinity_ppt
+  ) %>% 
+  gather('var', 'val', -station, -date) %>% 
+  mutate(
+    date = as.Date(date),
+    source = 'ncf', 
+    qual = NA_character_, 
+    uni = case_when(
+      var == 'temp' ~ 'c', 
+      var == 'turb' ~ 'ntu', 
+      var == 'sal' ~ 'ppt'
+    )
+  )
+
+##
 # combine all
 
-rswqdat <- bind_rows(fldep1, mpnrd1, pinco1) %>%
+rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1) %>%
   unique %>% 
   filter(!is.na(val)) %>% 
   arrange(source, station, date, var)
