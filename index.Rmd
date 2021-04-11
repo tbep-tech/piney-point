@@ -37,6 +37,9 @@ load('data/bstransect.RData')
 load('data/bstransectocc.RData')
 load('data/trnpts.RData')
 load('data/trnlns.RData')
+load('data/macropts.RData')
+load('data/macrolns.RData')
+load('data/macrodat.RData')
 
 # log
 log <- readLines('https://tbep-tech.github.io/piney-point/logs/indexlog.txt')
@@ -74,13 +77,15 @@ mapcenter <- c(-82.57862105363802, 27.601257082103725)
 
 # seagrass transect prj
 st_crs(trnpts) <- 4326
-st_crs(trnlns) <- 4326
 
 # seagrass species
 spp <- c("Halodule", "Syringodium", "Thalassia", "Halophila", "Ruppia", "Caulerpa")
 
 # seagrass transects near pp
 trns <- sort(unique(bstransect$Transect))
+
+# macroalgae transect near pp
+mctrns <- sort(unique(macrodat$station))
 
 # sources lookup
 srcs <- rsstatloc %>% 
@@ -169,10 +174,20 @@ smsm <- rswqdat %>%
 # seagrass base map
 sgmap <- mapview(trnpts, homebutton = F, legend = F) %>% 
   .@map %>% 
-  clearMarkers() %>% 
+  clearMarkers()
+for(i in unique(trnlns$station))
+  sgmap <- sgmap %>% 
+    addPolylines(
+      data = trnlns[trnlns$station %in% i, ], 
+      lng = ~lng, 
+      lat = ~lat, 
+      color = 'grey', 
+      label = ~station
+    )
+sgmap <- sgmap %>% 
   addCircleMarkers(
     data = trnpts,
-    layerId = ~TRAN_ID,
+    layerId = ~station,
     stroke = TRUE,
     color = 'black',
     fill = TRUE,
@@ -180,11 +195,48 @@ sgmap <- mapview(trnpts, homebutton = F, legend = F) %>%
     weight = 1,
     fillOpacity = 1,
     radius= 4,
-    label = ~paste0('Transect ', TRAN_ID, ' (Agency responsible: ', MonAgency, ')')
+    label = ~paste0('Transect ', station)
   ) %>% 
-  addLabelOnlyMarkers(data = trnpts, ~0.99995 * LONG_DD, ~LAT_DD, label = ~TRAN_ID, labelOptions = labelOptions(
+  addLabelOnlyMarkers(data = trnpts, ~0.99995 * lng, ~lat, label = ~station, labelOptions = labelOptions(
     noHide = T, 
     direction = 'auto', 
+    textOnly = T,
+    textsize = '15px',
+    style = list(
+      'color' = 'darkgreen'
+    )
+  )) %>% 
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
+
+# macroalgae base map
+mcmap <- mapview(macropts, homebutton = F, legend = F) %>% 
+  .@map %>% 
+  clearMarkers()
+for(i in unique(macrolns$station))
+  mcmap <- mcmap %>% 
+    addPolylines(
+      data = macrolns[macrolns$station %in% i, ], 
+      lng = ~lng, 
+      lat = ~lat, 
+      color = 'grey', 
+      label = ~station
+    )
+mcmap <- mcmap %>% 
+  addCircleMarkers(
+    data = macropts,
+    layerId = ~station,
+    stroke = TRUE,
+    color = 'black',
+    fill = TRUE,
+    fillColor = 'grey',
+    weight = 1,
+    fillOpacity = 1,
+    radius= 4,
+    label = ~paste0('Transect ', station)
+  ) %>% 
+  addLabelOnlyMarkers(data = macropts, ~0.99995 * lng, ~lat, label = ~station, labelOptions = labelOptions(
+    noHide = T, 
+    direction = 'auto',
     textOnly = T,
     textsize = '15px',
     style = list(
@@ -363,11 +415,11 @@ bssgmap1 <- reactive({
   trnsel1 <- input$trnsel1
   
   toadd <- trnpts %>% 
-    filter(TRAN_ID %in% trnsel1)
+    filter(station %in% trnsel1)
   mout <- sgmap %>% 
     addCircleMarkers(
       data = toadd,
-      layerId = ~TRAN_ID,
+      layerId = ~station,
       stroke = TRUE,
       color = 'black',
       fill = TRUE,
@@ -375,7 +427,7 @@ bssgmap1 <- reactive({
       weight = 1,
       fillOpacity = 1,
       radius= 6,
-      label = ~paste0('Transect ', TRAN_ID)
+      label = ~paste0('Transect ', station)
     ) %>% 
     setView(pineypoint[1], pineypoint[2], zoom = 12)
   
@@ -416,6 +468,51 @@ bssgsumplo1 <- reactive({
   return(p)
   
 })
+
+# macroalgae map selection
+bsmcmap1 <- reactive({
+  
+  # input
+  trnsel2 <- input$trnsel2
+  
+  toadd <- macropts %>% 
+    filter(station %in% trnsel2)
+  mout <- mcmap %>% 
+    addCircleMarkers(
+      data = toadd,
+      layerId = ~station,
+      stroke = TRUE,
+      color = 'black',
+      fill = TRUE,
+      fillColor = 'red',
+      weight = 1,
+      fillOpacity = 1,
+      radius= 6,
+      label = ~paste0('Transect ', station)
+    ) %>% 
+    setView(pineypoint[1], pineypoint[2], zoom = 12)
+  
+  return(mout)
+  
+})
+
+# macroalgae baseline plot
+bsmctrnplo1 <- reactive({
+  
+  # input
+  trnsel2 <- input$trnsel2
+  
+  p <- show_macrotransect(macrodat, station = trnsel2, plotly = T, base_size = 11) %>% 
+    layout(
+      title = list(text = NA), 
+      yaxis = list(title = NA),
+      legend = list(title = list(text = 'Weight (g)'))
+    )
+  
+  return(p)
+  
+})
+
 ```
 
 OVERVIEW
@@ -670,3 +767,32 @@ fillCol(flex = c(0.1, 1),
   )
 )
 ```
+
+<!-- MACROALGAE {data-navmenu="BASELINE DATA"} -->
+<!-- ======================================================================= -->
+
+<!-- Column {data-width=275} -->
+<!-- ----------------------------------------------------------------------- -->
+
+<!-- ### __TRANSECT LOCATIONS - PINEY POINT AT MARKER__ -->
+
+<!-- ```{r} -->
+<!-- output$bsmcmap1 <- renderLeaflet(bsmcmap1()) -->
+<!-- leafletOutput('bsmcmap1') -->
+<!-- ``` -->
+
+<!-- Column {data-width=650} -->
+<!-- ----------------------------------------------------------------------- -->
+
+<!-- ### __TRANSECT DATA__ -->
+
+<!-- ```{r} -->
+<!-- fillCol(flex = c(0.1, 0.4), -->
+<!--   column(12,  -->
+<!--     selectInput(inputId = 'trnsel2', label = 'Select transect:', choices = mctrns, selected = mctrns[1]) -->
+<!--   ), -->
+<!--   # fillCol(flex = c(1), -->
+<!--     renderPlotly(bsmctrnplo1()) -->
+<!--   # ) -->
+<!-- ) -->
+<!-- ``` -->

@@ -213,16 +213,78 @@ bstransectocc <- anlz_transectocc(bstransect)
 # transect points, lines
 trnpts <- trnpts %>% 
   filter(TRAN_ID %in% unique(bstransect$Transect)) %>% 
-  filter(!duplicated(TRAN_ID))
+  filter(!duplicated(TRAN_ID)) %>% 
+  select(
+    station = TRAN_ID,
+    lng = LONG_DD, 
+    lat = LAT_DD
+  )
 trnlns <- trnlns %>% 
   filter(Site %in% unique(bstransect$Transect)) %>% 
-  filter(Site %in% trnpts$TRAN_ID) %>% 
-  filter(!duplicated(Site))
+  filter(Site %in% trnpts$station) %>% 
+  filter(!duplicated(Site)) %>% 
+  select(station = Site) %>% 
+  st_cast('POINT') %>% 
+  mutate(
+    lng = st_coordinates(.)[, 1], 
+    lat = st_coordinates(.)[, 2]
+  ) %>% 
+  st_set_geometry(NULL)
 
 save(bstransect, file = 'data/bstransect.RData', version = 2)
 save(bstransectocc, file = 'data/bstransectocc.RData', version = 2)
 save(trnpts, file = 'data/trnpts.RData', version = 2)
 save(trnlns, file = 'data/trnlns.RData', version = 2)
+
+# macroalgae monitoring stations ------------------------------------------
+
+macrofl <- read.csv('data/raw/TBEP_SBEP_Rapid_Macroalgae_Monitoring_Stations.csv')
+
+macropts <- macrofl %>% 
+  filter(!location %in% 'end') %>%
+  select(-location) %>% 
+  mutate(
+    lng = longitude, 
+    lat = latitude
+  ) %>% 
+  st_as_sf(coords = c('longitude', 'latitude'), crs = 4326) %>% 
+  select(station, type, lng, lat)
+
+macrolns <- macrofl %>% 
+  filter(!location %in% '') %>% 
+  select(station, lng = longitude, lat = latitude)
+
+save(macropts, file = 'data/macropts.RData', version = 2)
+save(macrolns, file = 'data/macrolns.RData', version = 2)
+
+# macroalgae data ---------------------------------------------------------
+
+gdrive_pth <- 'https://drive.google.com/drive/u/0/folders/1xiLuuvXQsiOWxLBZKq_81dA8ajVn9w2G'
+
+fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
+fl <- fls[which(fls$name == 'SBEP_TBEP_Rapid_Macroalgae_Weight_Data'), 'id'] %>% pull(id)
+flsht <- read_sheet(fl)
+
+macrodat <- flsht %>% 
+  mutate(
+    date = as.Date(date),
+    genus = case_when(
+      genus == 'ACAN' ~ 'Acan', 
+      genus == 'CODIUM' ~ 'Codium', 
+      genus == 'GRAC' ~ 'Grad', 
+      genus == 'GRAC/ACAN' ~ 'Grac/Acan', 
+      genus == 'GRAC/EUCH' ~ 'Grac/Euch', 
+      genus == 'GRAC/HALY' ~ 'Grac/Haly', 
+      genus == 'HYP/GRAC' ~ 'Hyp/Grac', 
+      genus == 'LAUR' ~ 'Laur', 
+      genus == 'MIXED RED' ~ 'Mixed Red', 
+      genus == 'ULVA' ~ 'Ulva', 
+      genus == 'UNKOWN' ~ 'Unknown',
+      T ~ genus
+    )
+  )
+
+save(macrodat, file = 'data/macrodat.RData', version = 2)
 
 # coordinated response station locations ----------------------------------
 
