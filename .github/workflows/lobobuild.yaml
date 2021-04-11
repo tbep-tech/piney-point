@@ -6,11 +6,11 @@ on:
   schedule:
     - cron: "0 * * * *"
     
-name: lobo build 
+name: build 
 
 jobs:
   render:
-    name: lobo build
+    name: build
     runs-on: ubuntu-20.04
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}

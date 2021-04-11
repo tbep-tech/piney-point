@@ -1,6 +1,6 @@
 # README
 
-LOBO build: [![lobo build](https://github.com/tbep-tech/piney-point/actions/workflows/lobobuild.yaml/badge.svg)](https://github.com/tbep-tech/piney-point/actions/workflows/lobobuild.yaml)
+[![build](https://github.com/tbep-tech/piney-point/actions/workflows/lobobuild.yaml/badge.svg)](https://github.com/tbep-tech/piney-point/actions/workflows/lobobuild.yaml)
 
 Materials for eval of Piney Point water quality data:
 
