@@ -768,31 +768,31 @@ fillCol(flex = c(0.1, 1),
 )
 ```
 
-MACROALGAE {data-navmenu="BASELINE DATA"}
-=======================================================================
+<!-- MACROALGAE {data-navmenu="BASELINE DATA"} -->
+<!-- ======================================================================= -->
 
-Column {data-width=275}
------------------------------------------------------------------------
+<!-- Column {data-width=275} -->
+<!-- ----------------------------------------------------------------------- -->
 
-### __TRANSECT LOCATIONS - PINEY POINT AT MARKER__
+<!-- ### __TRANSECT LOCATIONS - PINEY POINT AT MARKER__ -->
 
-```{r}
-output$bsmcmap1 <- renderLeaflet(bsmcmap1())
-leafletOutput('bsmcmap1')
-```
+<!-- ```{r} -->
+<!-- output$bsmcmap1 <- renderLeaflet(bsmcmap1()) -->
+<!-- leafletOutput('bsmcmap1') -->
+<!-- ``` -->
 
-Column {data-width=650}
------------------------------------------------------------------------
+<!-- Column {data-width=650} -->
+<!-- ----------------------------------------------------------------------- -->
 
-### __TRANSECT DATA__
+<!-- ### __TRANSECT DATA__ -->
 
-```{r}
-fillCol(flex = c(0.1, 0.4),
-  column(12,
-    selectInput(inputId = 'trnsel2', label = 'Select transect:', choices = mctrns, selected = mctrns[1])
-  ),
-  # fillCol(flex = c(1),
-    renderPlotly(bsmctrnplo1())
-  # )
-)
-```
+<!-- ```{r} -->
+<!-- fillCol(flex = c(0.1, 0.4), -->
+<!--   column(12, -->
+<!--     selectInput(inputId = 'trnsel2', label = 'Select transect:', choices = mctrns, selected = mctrns[1]) -->
+<!--   ), -->
+<!--   # fillCol(flex = c(1), -->
+<!--     renderPlotly(bsmctrnplo1()) -->
+<!--   # ) -->
+<!-- ) -->
+<!-- ``` -->
