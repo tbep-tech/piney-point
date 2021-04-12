@@ -741,7 +741,7 @@ plotlyOutput('baseplo2')
 SEAGRASSES {data-navmenu="BASELINE DATA"}
 =======================================================================
 
-Column {data-width=275}
+Column {data-width=275 .tabset .tabset-fade}
 -----------------------------------------------------------------------
 
 ### __TRANSECT LOCATIONS - PINEY POINT AT MARKER__
@@ -750,6 +750,30 @@ Column {data-width=275}
 output$bssgmap1 <- renderLeaflet(bssgmap1())
 leafletOutput('bssgmap1')
 ```
+
+### __USING THIS TAB__
+
+This tab shows results for individual transects near Piney Point.  The plots show detailed information for all dates, species, and sites (quadrats) for the selected transect. 
+
+The locations and names of the transects are shown in the map (transect locations tab, top left). The selected transect is shown as a red dot on the map and is chosen from the dropdown menu at the top left on the right panel. 
+
+<br>
+```{r, fig.align = 'center', out.width = '70%'}
+knitr::include_graphics('www/transectsel.PNG')
+```
+<br>
+
+The seagrass species shown in the plots include the five dominant species found in Tampa Bay: 
+
+* *Halodule wrightii*: shoal grass
+* *Syringodium filiforme*: manatee grass
+* *Thalassia testudinum*: turtle grass
+* *Halophila engalmanii*: star grass
+* *Ruppia maritima*: widgeon grass
+
+The __top plot__ shows seagrass abundances for each species, for each date, and at each location along the selected transect (in meters).  This plot provides a detailed assessment of where species were located on a transect and how those locations may have changed over time.  The species are color-coded as shown in the legend.  Each point is sized by the recorded abundance for a species (as Braun-Blanquet, 0-5).  Points that were sampled but had no seagrass are shown as small grey points.
+
+The __bottom plot__ plot shows similar information as the top plot, except the observations for each species along a transect for a given date are shown as overall frequency occurrence estimates.  This can be conceptualized as aggregating the data in the top plot along the x-axis and rotating the plot ninety degrees.  Each vertical grey line in the plot is a sample date.  The plot provides an aggregated assessment of how species abundances are changing over time and which species are dominant at a transect. 
 
 Column {data-width=650}
 -----------------------------------------------------------------------
