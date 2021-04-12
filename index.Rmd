@@ -117,17 +117,39 @@ rslocs <- rsstatloc %>%
   )
 
 # baseline wq map
-bscolsin <- stacols[unique(bsstatloc$source)]
-bswqmap <- mapview(bsstatloc, zcol = 'source', homebutton = F, layer.name = 'Data source', col.regions = bscolsin, map.types = mptyps) %>% 
-  addStaticLabels(label = bsstatloc$station,
-                  noHide = TRUE,
-                  direction = 'top',
-                  textOnly = TRUE,
-                  textsize = "20px", 
-                  offset = c(0, 1)) %>% 
-  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
+tomap <- as.list(stacols) %>% 
+  enframe('source', 'col') %>% 
+  unnest(col) %>% 
+  left_join(bsstatloc, ., by = 'source')
+tomapcols <- tomap %>% 
+  st_set_geometry(NULL) %>% 
+  select(source, col) %>% 
+  unique
+bswqmap <- mapview(tomap, homebutton = F, layer.name = 'Data source', map.types = mptyps, legend = F) %>%
+  .@map %>% 
+  clearMarkers() %>% 
+  addCircleMarkers(
+    data = tomap,
+    layerId = ~station,
+    stroke = TRUE,
+    color = 'black',
+    fill = TRUE,
+    fillColor = tomap$col,
+    weight = 1,
+    fillOpacity = 1,
+    radius= 6
+  ) %>% 
+  addStaticLabels(
+    data = tomap,
+    label = tomap$station,
+    direction = 'top',
+    textsize = "20px", 
+    offset = c(0, 1)
+  ) %>% 
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point') %>% 
+  addLegend("topright", title = 'Data source', opacity = 1, labels = tomapcols$source, colors = tomapcols$col) 
 
-# response wqmap
+# current base mape
 rscolsin <- rswqdat %>% 
   left_join(rsstatloc, by = 'source') %>% 
   pull(source_lng) %>% 
@@ -247,6 +269,32 @@ mcmap <- mcmap %>%
 ```
 
 ```{r reactives}
+# water quality map, baseline data
+bswqmap1 <- reactive({
+  
+  # inputs
+  stasel1 <- input$stasel1
+
+  toadd <- bsstatloc %>% 
+    filter(station %in% stasel1)
+
+  mout <- bswqmap %>% 
+    addCircleMarkers(
+      data = toadd,
+      layerId = ~station,
+      stroke = TRUE,
+      color = 'black',
+      fill = TRUE,
+      fillColor = 'red',
+      weight = 1,
+      fillOpacity = 1,
+      radius= 6
+    ) %>% 
+    setView(pineypoint[1], pineypoint[2], zoom = 12)
+  
+  return(mout)
+})
+
 # complete time series, baseline data
 baseplo1 <- reactive({
   
@@ -512,7 +560,6 @@ bsmctrnplo1 <- reactive({
   return(p)
   
 })
-
 ```
 
 OVERVIEW
@@ -711,7 +758,8 @@ Column {data-width=275 .tabset .tabset-fade}
 ### __STATION LOCATIONS - PINEY POINT AT MARKER__
 
 ```{r}
-bswqmap
+output$bswqmap1 <- renderLeaflet(bswqmap1())
+leafletOutput('bswqmap1')
 ```
 
 ### __USING THIS TAB__
@@ -740,8 +788,6 @@ When available, each dataset shows results for the following:
 An explanation of these parameters can be found on the *INFORMATION* tab of the [current results](https://shiny.tbep.org/piney-point/#section-water-quality-results) page. 
 
 Each plot is interactive.  Data at each point can be viewed on mouseover and plots can be zoomed or scrolled by dragging the mouse.
-
-
 
 Column {.tabset .tabset-fade data-width=650}
 -----------------------------------------------------------------------
