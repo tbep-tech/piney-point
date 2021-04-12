@@ -705,7 +705,7 @@ valueBox(smsm, 'Samples processed', color = boxcol, icon = 'fa-tint')
 WATER QUALITY {data-navmenu="BASELINE DATA"}
 =======================================================================
 
-Column {data-width=275}
+Column {data-width=275 .tabset .tabset-fade}
 -----------------------------------------------------------------------
 
 ### __STATION LOCATIONS - PINEY POINT AT MARKER__
@@ -713,6 +713,35 @@ Column {data-width=275}
 ```{r}
 bswqmap
 ```
+
+### __USING THIS TAB__
+
+This tab shows approximately 25 years of data at long-term water quality monitoring stations near Piney Point.  __The ranges of values for each of these parameters provide a baseline of comparison for the [current results](https://shiny.tbep.org/piney-point/#section-water-quality-results).__  Data are shown from Hillsborough County Environmental Protection Commission (olive points on map) and Manatee County Parks and Natural Resources Department (green points on map).  Original data can be downloaded from the [USF Water Atlas](https://tampabay.wateratlas.usf.edu/datadownload/disclaimer.aspx).
+
+Data for an individual station can be viewed using the selection menu on the top. 
+
+<br>
+```{r, fig.align = 'center', out.width = '70%'}
+knitr::include_graphics('www/transectsel.PNG')
+```
+<br>
+
+Each station shows data for the complete record available and for March, April months only.  The latter is provided as a baseline of comparison during the same months when discharge occurred at Piney Point to reduce seasonal variation.  Hillsborough County data have been collected monthly, whereas the Manatee County are collected quarterly. 
+
+When available, each dataset shows results for the following: 
+
+* TP: total phosphorus in mg/L
+* TN: total nitrogen in mg/L
+* NH3: ammonia in mg/L
+* Chl-a: chlorophyll-a in ug/L
+* pH: pH, unitless from 0 to 12
+* Sal: salinity in parts per thousand
+
+An explanation of these parameters can be found on the *INFORMATION* tab of the [current results](https://shiny.tbep.org/piney-point/#section-water-quality-results) page. 
+
+Each plot is interactive.  Data at each point can be viewed on mouseover and plots can be zoomed or scrolled by dragging the mouse.
+
+
 
 Column {.tabset .tabset-fade data-width=650}
 -----------------------------------------------------------------------
