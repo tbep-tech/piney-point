@@ -341,9 +341,11 @@ ncf1 <- read.csv('data/raw/ncf_stations.csv') %>%
     source = 'ncf', 
     comment = NA_character_
   )
+usf1 <- read.csv('data/raw/usf_stations.csv')
+tbep1 <- read.csv('data/raw/tbep_stations.csv')
 
 # combine all
-rsstatloc <- bind_rows(epchc, fldep, mpnrd, pinco1, pinco2, pinco3, ncf1) %>% 
+rsstatloc <- bind_rows(epchc, fldep, mpnrd, pinco1, pinco2, pinco3, ncf1, usf1, tbep1) %>% 
   mutate(
     source = source,
     source_lng = case_when(
@@ -351,7 +353,9 @@ rsstatloc <- bind_rows(epchc, fldep, mpnrd, pinco1, pinco2, pinco3, ncf1) %>%
       source == 'epchc' ~ 'Hillsborough Co.', 
       source == 'fldep' ~ 'Florida DEP', 
       source == 'mpnrd' ~ 'Manatee Co.', 
-      source == 'ncf' ~ 'New College Fl.'
+      source == 'ncf' ~ 'New College Fl.', 
+      source == 'tbep' ~ 'TBEP', 
+      source == 'usf-rains' ~ 'USF'
     )
   ) %>% 
   select(source_lng, source, station, lat, lon, comment) %>% 

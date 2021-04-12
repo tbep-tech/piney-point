@@ -1,0 +1,98 @@
+"source_lng","source","station","lat","lon","comment"
+"Florida DEP","fldep","P Port 1",27.63488,-82.56319,NA
+"Florida DEP","fldep","P Port 2",27.63105,-82.55759,NA
+"Florida DEP","fldep","P Port 3",27.63141,-82.54427,NA
+"Florida DEP","fldep","P Port 4",27.6454,-82.53695,NA
+"Florida DEP","fldep","Piney 1",27.64742,-82.56516,NA
+"Florida DEP","fldep","Piney 10",27.572583,-82.629644,"Manatee County - 400"
+"Florida DEP","fldep","Piney 11",27.576508,-82.652494,"Manatee County - 421"
+"Florida DEP","fldep","Piney 12",27.5431,-82.644553,"Manatee County - 432"
+"Florida DEP","fldep","Piney 13",27.552008,-82.6717,"Manatee County - 428"
+"Florida DEP","fldep","Piney 14",27.533,-82.666833,"Manatee County - 435"
+"Florida DEP","fldep","Piney 15",27.545808,-82.70095,"Manatee County - 449"
+"Florida DEP","fldep","Piney 17",27.693399,-82.5559,NA
+"Florida DEP","fldep","Piney 18",27.682529,-82.49677,NA
+"Florida DEP","fldep","Piney 19",27.723801,-82.5338,NA
+"Florida DEP","fldep","Piney 2",27.64948,-82.57845,NA
+"Florida DEP","fldep","Piney 20",27.729,-82.4987,NA
+"Florida DEP","fldep","Piney 21",27.778,-82.5203,NA
+"Florida DEP","fldep","Piney 22",27.781299,-82.4741,NA
+"Florida DEP","fldep","Piney 23",27.7764,-82.43873,NA
+"Florida DEP","fldep","Piney 3",27.6434,-82.5771,"DEP - Piney 3"
+"Florida DEP","fldep","Piney 4",27.6358,-82.5653,NA
+"Florida DEP","fldep","Piney 5",27.62852,-82.59193,NA
+"Florida DEP","fldep","Piney 6",27.626,-82.5915,"DEP - Piney 6"
+"Florida DEP","fldep","Piney 7",27.6625,-82.563904,"Hillsborough County  - 21"
+"Florida DEP","fldep","Piney 8",27.612975,-82.577642,"Manatee County - 362"
+"Florida DEP","fldep","Piney 9",27.605986,-82.601167,"Manatee County - 386"
+"Hillsborough Co.","epchc","21",27.6625,-82.563904,NA
+"Hillsborough Co.","epchc","22",27.608101,-82.571198,NA
+"Hillsborough Co.","epchc","23",27.666,-82.599197,NA
+"Hillsborough Co.","epchc","24",27.5884,-82.619301,NA
+"Hillsborough Co.","epchc","90",27.625999,-82.591499,NA
+"Hillsborough Co.","epchc","91",27.627899,-82.641502,NA
+"Manatee Co.","mpnrd","336",27.647422,-82.565161,NA
+"Manatee Co.","mpnrd","357",27.649478,-82.578453,NA
+"Manatee Co.","mpnrd","361",27.628517,-82.591933,NA
+"Manatee Co.","mpnrd","362",27.612975,-82.577642,NA
+"Manatee Co.","mpnrd","BH01",27.60949,-82.54345,NA
+"Manatee Co.","mpnrd","BH02",27.60739,-82.56236,NA
+"Manatee Co.","mpnrd","PM Out",27.631487,-82.543727,NA
+"Manatee Co.","mpnrd","PMB01",27.63084,-82.5638,NA
+"Manatee Co.","mpnrd","PMB02",27.63403,-82.56072,NA
+"Manatee Co.","mpnrd","PMB03",27.63517,-82.56434,NA
+"Manatee Co.","mpnrd","PPC41",27.640414,-82.531956,NA
+"Manatee Co.","mpnrd","SCI N",27.66504,-82.59946,NA
+"Manatee Co.","mpnrd","SCI S",27.65432,-82.6076,NA
+"New College Fl.","ncf","2021-0409-1",27.5455,-82.6098,NA
+"New College Fl.","ncf","2021-0409-2",27.54269,-82.61128,NA
+"New College Fl.","ncf","2021-0409-3",27.56915,-82.56806,NA
+"New College Fl.","ncf","2021-0409-4",27.57629,-82.56429,NA
+"New College Fl.","ncf","2021-0409-5",27.56489,-82.60939,NA
+"New College Fl.","ncf","2021-0409-6",27.56128,-82.61069,NA
+"New College Fl.","ncf","2021-0409-7",27.55495,-82.5937,NA
+"New College Fl.","ncf","2021-0409-8",27.54826,-82.58231,NA
+"Pinellas Co.","pinco","Big Pass 1",27.6966468,-82.515124,"visited 20210409"
+"Pinellas Co.","pinco","Big Pass 2",27.6986036,-82.5200807,"visited 20210409"
+"Pinellas Co.","pinco","Clambar Bay 1",27.5969301,-82.5994258,"visited 20210405"
+"Pinellas Co.","pinco","Clambar Bay 2",27.5966766,-82.5962787,"visited 20210405"
+"Pinellas Co.","pinco","Clambar Bay 3",27.5966202,-82.5922255,"visited 20210405"
+"Pinellas Co.","pinco","Clambar Bay 4",27.5973683,-82.5758245,"visited 20210405"
+"Pinellas Co.","pinco","Clambar Bay 5",27.6001599,-82.5799701,"visited 20210405"
+"Pinellas Co.","pinco","Clambar Bay 6",27.6007818,-82.5862114,"visited 20210405"
+"Pinellas Co.","pinco","Clambar Bay 7",27.6038394,-82.5797226,"visited 20210405"
+"Pinellas Co.","pinco","Clambar Bay 8",27.5976517,-82.5859968,"visited 20210405"
+"Pinellas Co.","pinco","Cockroach 1",27.6861018,-82.5233517,"visited 20210409"
+"Pinellas Co.","pinco","Cockroach 2",27.6870898,-82.527336,"visited 20210409"
+"Pinellas Co.","pinco","Joe Bay 1",27.5876892,-82.608252,"visited 20210405"
+"Pinellas Co.","pinco","Joe Bay 2",27.5872384,-82.6049301,"visited 20210405"
+"Pinellas Co.","pinco","Joe Bay 3",27.587013,-82.6012266,"visited 20210405"
+"Pinellas Co.","pinco","Joe Bay 4",27.5882401,-82.5945012,"visited 20210405"
+"Pinellas Co.","pinco","Joe Bay 5",27.5899338,-82.5913732,"visited 20210405"
+"Pinellas Co.","pinco","Joe Bay 6",27.592756,-82.5873305,"visited 20210405"
+"Pinellas Co.","pinco","Little Cockroach 1",27.7122439,-82.49992,"visited 20210409"
+"Pinellas Co.","pinco","Little Cockroach 2",27.7136686,-82.5031506,"visited 20210409"
+"Pinellas Co.","pinco","Little Manatee 1",27.7176708,-82.4805269,"visited 20210409"
+"Pinellas Co.","pinco","Little Manatee 2",27.7201599,-82.4890529,"visited 20210409"
+"Pinellas Co.","pinco","MC1",27.612443,-82.629256,"visited 20210404"
+"Pinellas Co.","pinco","MC2",27.601053,-82.613389,"visited 20210404"
+"Pinellas Co.","pinco","MC3",27.587669,-82.652122,"visited 20210404"
+"Pinellas Co.","pinco","MC4",27.573267,-82.63588,"visited 20210404"
+"Pinellas Co.","pinco","MC5",27.560375,-82.643627,"visited 20210404"
+"Pinellas Co.","pinco","MC6",27.545639,-82.656094,"visited 20210404"
+"Pinellas Co.","pinco","PC1",27.642252,-82.660052,"visited 20210404"
+"Pinellas Co.","pinco","PC2",27.633041,-82.651548,"visited 20210404"
+"Pinellas Co.","pinco","Rock Ponds 1",27.662158,-82.5418628,"visited 20210409"
+"Pinellas Co.","pinco","Rock Ponds 2",27.6640585,-82.5451244,"visited 20210409"
+"Pinellas Co.","pinco","South Cockroach 1",27.6780451,-82.5311983,"visited 20210409"
+"Pinellas Co.","pinco","South Cockroach 2",27.6788432,-82.5342024,"visited 20210409"
+"TBEP","tbep","TBEP-BH0",27.605423,-82.552508,"visited 20210410"
+"TBEP","tbep","TBEP-BH15",27.611731,-82.559575,"visited 20210410"
+"TBEP","tbep","TBEP-BH25",27.600785,-82.556658,"visited 20210410"
+"TBEP","tbep","TBEP-MCBH02",27.60739,-82.56236,"Manatee County - BH02; visited 20210410"
+"USF","usf-rains","20120409-01",27.63142,-82.54398,"visited 20210409"
+"USF","usf-rains","20120409-02",27.68337,-82.53004,"visited 20210409"
+"USF","usf-rains","20120409-03",27.68982,-82.52394,"visited 20210409"
+"USF","usf-rains","20120409-04",27.68271,-82.51804,"visited 20210409"
+"USF","usf-rains","20120409-05",27.68336,-82.51942,"visited 20210409"
+"USF","usf-rains","20120409-06",27.68691,-82.52039,"visited 20210409"
