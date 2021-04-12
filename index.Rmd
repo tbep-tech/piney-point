@@ -219,15 +219,13 @@ sgmap <- sgmap %>%
     radius= 4,
     label = ~paste0('Transect ', station)
   ) %>% 
-  addLabelOnlyMarkers(data = trnpts, ~0.99995 * lng, ~lat, label = ~station, labelOptions = labelOptions(
-    noHide = T, 
-    direction = 'auto', 
-    textOnly = T,
+  addStaticLabels(
+    data = trnpts,
+    label = trnpts$station, 
+    direction = 'top', 
     textsize = '15px',
-    style = list(
-      'color' = 'darkgreen'
-    )
-  )) %>% 
+    offset = c(0, 1)
+  ) %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
 # macroalgae base map
@@ -256,15 +254,13 @@ mcmap <- mcmap %>%
     radius= 4,
     label = ~paste0('Transect ', station)
   ) %>% 
-  addLabelOnlyMarkers(data = macropts, ~0.99995 * lng, ~lat, label = ~station, labelOptions = labelOptions(
-    noHide = T, 
-    direction = 'auto',
-    textOnly = T,
+  addStaticLabels(
+    data = macropts,
+    label = macropts$station, 
+    direction = 'top', 
     textsize = '15px',
-    style = list(
-      'color' = 'darkgreen'
-    )
-  )) %>% 
+    offset = c(0, 1)
+  ) %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 ```
 
