@@ -638,7 +638,7 @@ epc1 <- flsht %>%
   ) %>% 
   mutate(
     date = date(date), 
-    source = 'epc', 
+    source = 'epchc', 
     qual = NA_character_
     ) %>% 
   gather('var', 'val', -station, -date, -source, -qual) %>% 
