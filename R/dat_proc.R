@@ -465,7 +465,7 @@ for(id in ids) {
   
 }
 
-out1 <- out1 %>% 
+out1all <- out1 %>% 
   mutate(
     station = case_when(
       grepl('^\\(Piney\\sPoint\\sOutfall|^\\(PP\\sOutfall', station) ~ 'PM Out', 
@@ -499,7 +499,7 @@ for(id in ids) {
   
 }
 
-out2 <- out2 %>% 
+out2all <- out2 %>% 
   mutate(
     source = 'mpnrd',
     date = as.Date(date), 
@@ -510,7 +510,9 @@ out2 <- out2 %>%
       grepl('TKN$', var) ~ 'tkn',
       grepl('TP$', var) ~ 'tp',
       grepl('TSS$', var) ~ 'tss',
-      grepl('Turb$', var) ~ 'turb'
+      grepl('Turb$', var) ~ 'turb', 
+      grepl('Color$', var) ~ 'color', 
+      grepl('Chla$', var) ~ 'chla'
     ), 
     uni = case_when(
       uni == 'PCU' ~ 'pcu',
@@ -526,7 +528,7 @@ out2 <- out2 %>%
   ) %>% 
   select(station, date, source, var, uni, val, qual)
 
-mpnrd1 <- bind_rows(out1, out2)
+mpnrd1 <- bind_rows(out1all, out2all)
 
 ##
 # pinellas co dump 2021-04-06
@@ -594,6 +596,9 @@ for(id in ids) {
 
 pinco1 <- out1 %>% 
   filter(station %in% rsstatloc$station)
+
+##
+# pinellas county dump2 
 
 ##
 # new college dump 20210410
