@@ -1,5 +1,6 @@
 library(dplyr)
+library(here)
 
-load(file = 'data/rswqdat.RData')
-load(file = 'data/rsstatloc.RData')
-load(file = 'data/parms.RData')
+load(file = here('data/rswqdat.RData'))
+load(file = here('data/rsstatloc.RData'))
+load(file = here('data/parms.RData'))
