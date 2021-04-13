@@ -1,7 +1,7 @@
 # README
 
-[![build](https://github.com/tbep-tech/piney-point/actions/workflows/lobobuild.yaml/badge.svg)](https://github.com/tbep-tech/piney-point/actions/workflows/lobobuild.yaml): LOBO data processing
-[![build](https://github.com/tbep-tech/piney-point/actions/workflows/databuild.yaml/badge.svg)](https://github.com/tbep-tech/piney-point/actions/workflows/databuild.yaml): Data checks
+[![build](https://github.com/tbep-tech/piney-point/actions/workflows/lobobuild.yaml/badge.svg)](https://github.com/tbep-tech/piney-point/actions/workflows/lobobuild.yaml)
+[![build](https://github.com/tbep-tech/piney-point/actions/workflows/databuild.yaml/badge.svg)](https://github.com/tbep-tech/piney-point/actions/workflows/databuild.yaml)
 
 Materials for eval of Piney Point water quality data:
 

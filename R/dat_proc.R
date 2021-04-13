@@ -531,8 +531,10 @@ out2all <- out2 %>%
 mpnrd1 <- bind_rows(out1all, out2all)
 
 ##
-# pinellas co dump 2021-04-06
-ids <- fls[grep('^Preliminary\\sSample\\sResults', fls$name), 'id'] %>% pull(id)
+# pinellas co
+
+# lab results
+ids <- fls[grep('^PINCO_labresults', fls$name), 'id'] %>% pull(id)
 out1 <- NULL
 for(id in ids) {
   
@@ -594,11 +596,62 @@ for(id in ids) {
   
 }
 
-pinco1 <- out1 %>% 
-  filter(station %in% rsstatloc$station)
+# field results
+ids <- fls[grep('^PINCO_fieldresults', fls$name), 'id'] %>% pull(id)
+flsht1 <- read_sheet(ids) 
+pincowide <- flsht1 %>% 
+  clean_names() %>% 
+  select(
+    date,
+    station = site,
+    temp_c = temp_c, 
+    ph_none = p_h, 
+    sal_ppt = sal_ppt, 
+    secchi_m = secchi_depth_m,
+    do_mgl = odo_mg_l, 
+    dosat_per = odo_percent_sat,
+    secchi_qual = vob,
+  )
 
-##
-# pinellas county dump2 
+pinco1wq <- pincowide %>% 
+  select(-matches('\\_qual$')) %>% 
+  gather('var', 'val', -station, -date) %>% 
+  separate(var, c('var', 'uni'), sep = '_')
+
+pinco1qual <- pincowide %>% 
+  select(date, station, matches('\\_qual$')) %>% 
+  gather('var', 'qual', -date, -station) %>% 
+  mutate(var = gsub('\\_qual$', '', var)) %>% 
+  filter(grepl('\\w', qual))
+
+out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>% 
+  mutate(
+    source = 'pinco', 
+    date = ymd(date), 
+    station = gsub('\\s+', '', station), 
+    station = case_when(
+      station == 'CB1' ~ 'Clambar Bay 1', 
+      station == 'CB2' ~ 'Clambar Bay 2', 
+      station == 'CB3' ~ 'Clambar Bay 3', 
+      station == 'CB4' ~ 'Clambar Bay 4', 
+      station == 'CB5' ~ 'Clambar Bay 5', 
+      station == 'CB6' ~ 'Clambar Bay 6', 
+      station == 'CB7' ~ 'Clambar Bay 7', 
+      station == 'CB8' ~ 'Clambar Bay 8', 
+      station == 'JB1' ~ 'Joe Bay 1', 
+      station == 'JB2' ~ 'Joe Bay 2', 
+      station == 'JB3' ~ 'Joe Bay 3', 
+      station == 'JB4' ~ 'Joe Bay 4',
+      station == 'JB5' ~ 'Joe Bay 5', 
+      station == 'JB6' ~ 'Joe Bay 6', 
+      T ~ station
+    )
+  ) %>% 
+  select(station, date, source, var, uni, val, qual) %>% 
+  filter(!is.na(val)) %>% 
+  unique
+
+pinco1 <- bind_rows(out1, out2)
 
 ##
 # new college dump 20210410
