@@ -15,9 +15,9 @@ gs4_deauth()
 
 # parameter names, units
 parms <- tibble(
-  var = c('chla', 'color', 'nh3', 'no23', 'orthop', 'ph', 'sal', 'secchi', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
-  uni = c('ugl', 'pcu', 'mgl', 'mgl', 'mgl', 'none', 'ppt', 'm', 'c', 'mgl', 'mgl', 'mgl', 'mgl', 'ntu'), 
-  lbs = c('Chl-a (ug/L)', 'Color (PCU)', 'NH3 (mg/L)', 'Nitrate/Nitrite (mg/L)', 'Ortho-P (mg/L)', 'pH', 'Sal (ppt)', 'Secchi (m)', 'Temp (C)', 'TKN (mg/L)', 'TN (mg/L)', 'TP (mg/L)', 'TSS (mg/l)', 'Turb (NTU)')
+  var = c('chla', 'color', 'do', 'dosat', 'nh3', 'no23', 'orthop', 'ph', 'sal', 'secchi', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
+  uni = c('ugl', 'pcu', 'mgl', 'per', 'mgl', 'mgl', 'mgl', 'none', 'ppt', 'm', 'c', 'mgl', 'mgl', 'mgl', 'mgl', 'ntu'), 
+  lbs = c('Chl-a (ug/L)', 'Color (PCU)', 'DO (mg/L)', 'DO (% sat.)', 'NH3 (mg/L)', 'Nitrate/Nitrite (mg/L)', 'Ortho-P (mg/L)', 'pH', 'Sal (ppt)', 'Secchi (m)', 'Temp (C)', 'TKN (mg/L)', 'TN (mg/L)', 'TP (mg/L)', 'TSS (mg/l)', 'Turb (NTU)')
 )
 
 save(parms, file = 'data/parms.RData', version = 2)
@@ -290,7 +290,7 @@ save(macrodat, file = 'data/macrodat.RData', version = 2)
 
 # these are stations actively being monitoring by four agencies
 
-epchc <- read.csv('data/raw/epc.csv') %>% 
+epchc <- read.csv('data/raw/epc_stations.csv') %>% 
   mutate(
     source = 'epchc', 
     comment = NA_character_, 
@@ -390,7 +390,7 @@ fldep1 <- flsht %>%
     secchi_m = secchi_depth_m, 
     temp_c = water_temperature_c_surface, 
     sal_ppt = salinity_0_00_surface, 
-    # do_sat = d_o_percent_sat_surface, 
+    dosat_per = d_o_percent_sat_surface, 
     ph_none = p_h_surface, 
     nh3_mgl = ammonia_n_mg_n_l, 
     orthop_mgl = orthophosphate_p_mg_p_l, 
@@ -606,7 +606,8 @@ ncf1 <- flsht %>%
     date = Date, 
     temp = Temp_C, 
     secchi = Turbidity_m, 
-    sal = Salinity_ppt
+    sal = Salinity_ppt,
+    do = DO_mg
   ) %>% 
   gather('var', 'val', -station, -date) %>% 
   mutate(
@@ -616,14 +617,40 @@ ncf1 <- flsht %>%
     uni = case_when(
       var == 'temp' ~ 'c', 
       var == 'secchi' ~ 'm', 
-      var == 'sal' ~ 'ppt'
+      var == 'sal' ~ 'ppt', 
+      var == 'do' ~ 'mgl'
     )
   )
 
 ##
+# epc
+fl <- fls[grep('^EPC\\_PP\\_InSitu', fls$name), 'id'] %>% pull(id)
+flsht <- read_sheet(fl)
+epc1 <- flsht %>% 
+  select(
+    station = `EPC Station`, 
+    date = `Date`, 
+    temp = `Temp-C`, 
+    ph = `pH`, 
+    sal = `Salin-PSS`,
+    dosat = `DO%-Sat`, 
+    do = `DO-mg/L`
+  ) %>% 
+  mutate(
+    date = date(date), 
+    source = 'epc', 
+    qual = NA_character_
+    ) %>% 
+  gather('var', 'val', -station, -date, -source, -qual) %>% 
+  left_join(parms, by = 'var') %>% 
+  group_by(station, date, source, var, uni, qual) %>% 
+  summarise(val = mean(val, na.rm = T), .groups = 'drop') %>% 
+  select(station, date, source, var, uni, val, qual)
+
+##
 # combine all
 
-rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1) %>%
+rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1) %>%
   unique %>% 
   filter(!is.na(val)) %>% 
   arrange(source, station, date, var)

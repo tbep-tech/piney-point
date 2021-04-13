@@ -676,6 +676,10 @@ __Chlorophyll-a (ug/L)__: Chlorophyll is present in algal tissue and concentrati
 
 __Color (PCU)__: Water color in platinum cobalt units, changes in color can suggest a wastewater source with different characteristics from ambient conditions. Higher PCU means darker waters.
 
+__DO (mg/L)__: A measure of dissolved oxygen in the water column as a concentration (mg/L). Low dissolved oxygen less than 3 mg/L may indicate hypoxic conditions potentially harmful to biological organisms.
+
+__DO (% saturation)__: A measure of dissolved oxygen in the water column as percent saturation. Low percent saturation less than 30 %  may indicate hypoxic conditions potentially harmful to biological organisms. 
+
 __NH3 (mg/L)__: Ammonia concentration as a component of total nitrogen.  Excess ammonia can stimulate algal production.
 
 __Nitrate/Nitrite (mg/L)__: Nitrate/nitrite concentration as a component of total nitrogen.  Excess nitrate/nitrite can stimulate algal production.
