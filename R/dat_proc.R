@@ -264,9 +264,9 @@ save(rstrnlns, file = 'data/rstrnlns.RData', version = 2)
 # data
 
 savlevs <- c('Thalassia testudinum', 'Halodule wrightii', 'Syringodium filiforme', 'Ruppia maritima', 'Halophila engelmannii', 'Halophila decipiens')
-mcrlevs <- c('Gracilaria', 'Hypnea', 'Acanthophora', 'Caulerpa', 'Euchema', 'Halymenia', 'Ulva', 'Enteromorpha', 'Cladophora', 'Chaetomorpha', 'Codium', 'Unknown', 'Mixed Drift Reds')
+mcrlevs <- c('Gracilaria', 'Hypnea', 'Acanthophora', 'Caulerpa', 'Eucheuma', 'Halymenia', 'Ulva', 'Enteromorpha', 'Cladophora', 'Chaetomorpha', 'Codium', 'Unknown', 'Mixed Drift Reds')
 epilevs <- c('Clean', 'Light', 'Moderate', 'Heavy')
-abulevs <- c('Solitary', '<1%', '1-5%', '6-25%', '26-50%', '51-75%', '76-100%')
+abulevs <- c('<1%', '1-5%', '6-25%', '26-50%', '51-75%', '76-100%')
 
 rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>% 
   mutate(
@@ -284,16 +284,24 @@ rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>%
     macroalgae_abundance
   ) %>% 
   mutate(
+    macroalgae_abundance = case_when(
+      macroalgae_abundance %in% c('Solitary', '<1%') ~ '<1%', 
+      T ~ macroalgae_abundance
+    ),
     macroalgae_bb = case_when(
-      macroalgae_abundance %in% c('Solitary', '<1%') ~ 0, 
+      macroalgae_abundance %in% '<1%' ~ 0, 
       macroalgae_abundance %in% '1-5%' ~ 1, 
       macroalgae_abundance %in% '6-25%' ~ 2,
       macroalgae_abundance %in% '26-50%' ~ 3,
       macroalgae_abundance %in% '51-75%' ~ 4,
       macroalgae_abundance %in% '76-100%' ~ 5
     ), 
+    sav_abundance = case_when(
+      sav_abundance %in% c('Solitary', '<1%') ~ '<1%', 
+      T ~ sav_abundance
+    ),
     sav_bb = case_when(
-      sav_abundance %in% c('Solitary', '<1%') ~ 0, 
+      sav_abundance %in% '<1%' ~ 0, 
       sav_abundance %in% '1-5%' ~ 1, 
       sav_abundance %in% '6-25%' ~ 2,
       sav_abundance %in% '26-50%' ~ 3,
@@ -303,7 +311,9 @@ rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>%
     sav_abundance = factor(sav_abundance, levels = abulevs),
     macroalgae_abundance = factor(macroalgae_abundance, levels = abulevs),
     sav_species = factor(sav_species, levels = savlevs),
-    epibiota_density = factor(epibiota_density, levels = epilevs)
+    epibiota_density = factor(epibiota_density, levels = epilevs), 
+    station = factor(station), 
+    location = factor(location)
   )
 
 rstrndatsav <- rstrndat %>% 
@@ -312,6 +322,10 @@ rstrndatsav <- rstrndat %>%
     sav_species, 
     tidyr::nesting(date, station, location), 
     fill = list(sav_bb = 0)
+  ) %>% 
+  mutate(
+    station = as.character(station), 
+    location = as.numeric(as.character(location))
   )
 
 # find how many new macroalgae columns we'll need since can have multiple per cell
@@ -333,10 +347,14 @@ rstrndatmcr <- rstrndat %>%
   ) %>% 
   tidyr::complete(
     macroalgae_species, 
-    tidyr::nesting(date, station, location), 
+    tidyr::nesting(tidyr::expand(., date, station, location)), 
     fill = list(macroalgae_bb = 0)
   ) %>% 
-  select(date, station, location, macroalgae_species, macroalgae_abundance, macroalgae_bb)
+  mutate(
+    station = as.character(station), 
+    location = as.numeric(as.character(location))
+  ) %>% 
+  select(date, station, location, macroalgae_species, macroalgae_abundance, macroalgae_bb) 
 
 save(rstrndatsav, file = 'data/rstrndatsav.RData', version = 2)
 save(rstrndatmcr, file = 'data/rstrndatmcr.RData', version = 2)

@@ -24,6 +24,7 @@ library(colorspace)
 library(scales)
 library(reactable)
 library(tbeptools)
+library(patchwork)
 
 source('R/funcs.R')
 
@@ -87,7 +88,7 @@ spp <- c("Halodule", "Syringodium", "Thalassia", "Halophila", "Ruppia", "Caulerp
 trns <- sort(unique(bstransect$Transect))
 
 # macroalgae transect near pp
-mctrns <- sort(unique(macrodat$station))
+rstrns <- sort(unique(rstrndatsav$station))
 
 # sources lookup
 srcs <- rsstatloc %>% 
@@ -542,19 +543,53 @@ bsmcmap1 <- reactive({
   
 })
 
-# macroalgae baseline plot
-bsmctrnplo1 <- reactive({
+# rapid response sav selection
+rstrnsavsel <- reactive({
   
   # input
   trnsel2 <- input$trnsel2
   
-  p <- show_macrotransect(macrodat, station = trnsel2, plotly = T, base_size = 11) %>% 
-    layout(
-      title = list(text = NA), 
-      yaxis = list(title = NA),
-      legend = list(title = list(text = 'Weight (g)'))
-    )
+  out <- rstrndatsav %>% 
+    filter(station %in% !!trnsel2) %>% 
+    filter(sav_bb > 0) %>% 
+    pull(sav_species) %>% 
+    unique %>% 
+    as.character
   
+  return(out)
+  
+})
+
+# rapid response mcr selection
+rstrnmcrsel <- reactive({
+  
+  # input
+  trnsel2 <- input$trnsel2
+  
+  out <- rstrndatmcr %>% 
+    filter(station %in% !!trnsel2) %>% 
+    filter(macroalgae_bb > 0) %>% 
+    pull(macroalgae_species) %>% 
+    unique %>% 
+    as.character
+  
+  return(out)
+  
+})
+
+# rapid response transect plot
+rstrnplo1 <- reactive({
+  
+  # input
+  trnsel2 <- input$trnsel2
+  savsel <- input$savsel
+  mcrsel <- input$mcrsel
+  
+  # req(mcrsel)
+  # req(savsel)
+  
+  p <- show_rstransect(rstrndatsav, rstrndatmcr, station = trnsel2, savsel = savsel, mcrsel = mcrsel, base_size = 18) 
+ 
   return(p)
   
 })
@@ -586,8 +621,8 @@ The primary pollutants of concern for this discharge are phosphorus and nitrogen
 
 The dashboard is a synthesis of data that can be used to assess baseline conditions prior to discharge and to evaluate changing water quality conditions as new data become available. __All data are provisional and subject to revision.__ The dashboard is arranged as follows:
 
-1) __CURRENT DATA__: Locations being sampled by our partners in response to changing conditions, with an [overview summary](https://shiny.tbep.org/piney-point/#section-water-quality-overview) of sampling events to date and [current results](https://shiny.tbep.org/piney-point/#section-water-quality-results).
-1) __BASELINE DATA__: Long-term [water quality](https://shiny.tbep.org/piney-point/#section-water-quality) and [seagrass data](https://shiny.tbep.org/piney-point/#section-seagrasses) over a 25 year period.  Baseline [macroalgae](https://shiny.tbep.org/piney-point/#section-macroalgae) data are also presented.
+1) __CURRENT DATA__: Locations being sampled by our partners in response to changing conditions, with an [overview summary](https://shiny.tbep.org/piney-point/#section-water-quality-overview) of sampling events to date and [current results](https://shiny.tbep.org/piney-point/#section-water-quality-results). Current  [seagrass/macroalgae](https://shiny.tbep.org/piney-point/#section-rapid-response-seagrassmacroalgae-surveys) data are also presented.
+1) __BASELINE DATA__: Long-term [water quality](https://shiny.tbep.org/piney-point/#section-water-quality) and [seagrass data](https://shiny.tbep.org/piney-point/#section-seagrasses) over a 25 year period.  
 
 #### Additional resources
 
@@ -757,6 +792,39 @@ valueBox(stsm, 'Sites with data', color = boxcol, icon = 'fa-map-marked')
 valueBox(smsm, 'Measurements available', color = boxcol, icon = 'fa-tint')
 ```
 
+RAPID RESPONSE SEAGRASS/MACROALGAE SURVEYS {data-navmenu="CURRENT DATA"}
+=======================================================================
+
+Column {data-width=275}
+-----------------------------------------------------------------------
+
+### __TRANSECT LOCATIONS - PINEY POINT AT MARKER__
+
+```{r}
+output$bsmcmap1 <- renderLeaflet(bsmcmap1())
+leafletOutput('bsmcmap1')
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### __TRANSECT RESULTS__
+
+```{r}
+fillCol(flex = c(0.1, 0.8),
+  fillRow(
+    selectInput(inputId = 'trnsel2', label = 'Select transect:', choices = rstrns, selected = rstrns[1]), 
+    renderUI(
+      selectInput(inputId = 'savsel', label = 'Select SAV species:', choices = rstrnsavsel(), selected = rstrnsavsel(), multiple = T, selectize = T)
+    ),
+    renderUI(
+      selectInput(inputId = 'mcrsel', label = 'Select macroalgae species:', choices = rstrnmcrsel(), selected = rstrnmcrsel(), multiple = T, selectize = T)
+    )
+  ),
+  renderPlot(rstrnplo1())
+)
+```
+
 WATER QUALITY {data-navmenu="BASELINE DATA"}
 =======================================================================
 
@@ -871,36 +939,6 @@ fillCol(flex = c(0.1, 1),
   fillCol(flex = c(1, 1),
     renderPlotly(bssgtrnplo1()),
     renderPlotly(bssgsumplo1())
-  )
-)
-```
-
-MACROALGAE {data-navmenu="BASELINE DATA"}
-=======================================================================
-
-Column {data-width=275}
------------------------------------------------------------------------
-
-### __TRANSECT LOCATIONS - PINEY POINT AT MARKER__
-
-```{r}
-output$bsmcmap1 <- renderLeaflet(bsmcmap1())
-leafletOutput('bsmcmap1')
-```
-
-Column {data-width=650}
------------------------------------------------------------------------
-
-### __TRANSECT DATA__
-
-```{r}
-fillCol(flex = c(0.1, 0.4),
-  column(12,
-    selectInput(inputId = 'trnsel2', label = 'Select transect:', choices = mctrns, selected = mctrns[1])
-  ),
-  fillCol(flex = c(1),
-    HTML('<h5>Data forthcoming</h5>')
-    # renderPlotly(bsmctrnplo1())
   )
 )
 ```

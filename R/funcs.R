@@ -72,85 +72,120 @@ plo_fun <- function(wqdat, station, cols, parms){
 
 }
 
-# function for plotting macroalgae data
+# function for plotting rapid response transect data
 # modified from show_transect in tbpetools
-show_macrotransect <- function(dat, station, genus = c("Acan", "Codium", "Grac/Acan", "Grac/Euch", "Grac/Haly", "Grad", 
-                                                           "Hyp/Grac", "Laur", "Mixed Red", "Ulva", "Unknown"),
-                          base_size = 12,
-                          facet = FALSE, ncol = NULL, plotly = FALSE){
-  
-  # genus pool
-  gen <- c("Acan", "Codium", "Grac/Acan", "Grac/Euch", "Grac/Haly", "Grad", 
-           "Hyp/Grac", "Laur", "Mixed Red", "Ulva", "Unknown")
+show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, base_size = 12){
 
-  # prep plot data
-  dat <- dat %>%
+  savlevs <- c('Thalassia testudinum', 'Halodule wrightii', 'Syringodium filiforme', 'Ruppia maritima', 'Halophila engelmannii', 'Halophila decipiens')
+  mcrlevs <- c('Gracilaria', 'Hypnea', 'Acanthophora', 'Caulerpa', 'Eucheuma', 'Halymenia', 'Ulva', 'Enteromorpha', 'Cladophora', 'Chaetomorpha', 'Codium', 'Unknown', 'Mixed Drift Reds')
+  abulabs <- c('<1%', '1-5%', '6-25%', '26-50%', '51-75%', '76-100%')
+  abubrks <- c(0, 1, 2, 3, 4, 5)
+  
+  szrng <- c(2, 14)
+
+  # prep sav plot data
+  savdat <- rstrndatsav %>%
     dplyr::filter(station %in% !!station) %>%
-    dplyr::mutate(
-      genus = factor(genus, levels = genus)
-    ) %>%
     dplyr::mutate(
       Year = lubridate::year(date),
       location = as.numeric(location),
-      pa = ifelse(weight_g == 0, 0, 1)
+      pa = ifelse(sav_bb == 0, 0, 1)
     ) 
   
   # sort color palette so its the same regardless of species selected
-  gencol <- qualitative_hcl(length(gen), palette = "Harmonic")
-  names(gencol) <- gen
-  gencol <- gencol[levels(dat$genus)]
+  savcol <- qualitative_hcl(length(savlevs), palette = "Harmonic")
+  names(savcol) <- savlevs
+  savcol <- savcol[as.character(unique(savdat$sav_species))]
   
   # legend labels
-  leglab <- 'Weight (g)'
+  leglab <- 'Abundance (bb)'
   
   # data with species
-  toplo1 <- dat %>%
+  toplo1a <- savdat %>%
+    dplyr::filter(sav_species %in% !!savsel) %>% 
     dplyr::filter(pa == 1) %>%
-    dplyr::mutate(weight_g = round(weight_g, 1))
+    dplyr::mutate(sav_bb = round(sav_bb, 1))
   
   # data w/o species, no facet
-  toplo2 <- dat %>%
+  toplo2a <- savdat %>%
+    group_by(date, location) %>%
+    filter(sum(pa) == 0) %>%
+    ungroup() %>%
+    select(date, location) %>%
+    unique()
+
+  pa <- ggplot2::ggplot(toplo1a, ggplot2::aes(y = date, x = location)) +
+    ggplot2::geom_point(data = toplo2a, alpha = 1, colour = 'black', size = 2) +
+    ggplot2::geom_point(aes(size = sav_bb, fill = sav_species), alpha = 0.6, pch = 21) +
+    ggplot2::scale_fill_manual(values = savcol) +
+    ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng) +
+    ggplot2::theme_minimal(base_size = base_size) +
+    ggplot2::theme(
+      panel.grid.major.y = ggplot2::element_blank(),
+      panel.grid.minor.y = ggplot2::element_blank(),
+      legend.title = ggplot2::element_blank(),
+      strip.text = ggplot2::element_text(hjust = 0), 
+      axis.title.y = element_blank(), 
+      axis.title.x = element_blank()
+    ) +
+    ggplot2::labs(
+      x = 'Transect distance (m)',
+      title = 'Submerged aquatic vegetation'
+    ) + 
+    guides(fill = guide_legend(override.aes = list(size = 7)))
+  
+  # prep mcr plot data
+  mcrdat <- rstrndatmcr %>%
+    dplyr::filter(station %in% !!station) %>%
+    dplyr::mutate(
+      Year = lubridate::year(date),
+      location = as.numeric(location),
+      pa = ifelse(macroalgae_bb == 0, 0, 1)
+    ) 
+  
+  # sort color palette so its the same regardless of species selected
+  mcrcol <- qualitative_hcl(length(mcrlevs), palette = "Dark3")
+  names(mcrcol) <- mcrlevs
+  mcrcol <- mcrcol[as.character(unique(mcrdat$macroalgae_species))]
+  
+  # legend labels
+  leglab <- 'Abundance (bb)'
+  
+  # data with species
+  toplo1b <- mcrdat %>%
+    dplyr::filter(macroalgae_species %in% mcrsel) %>% 
+    dplyr::filter(pa == 1) %>%
+    dplyr::mutate(macroalgae_bb = round(macroalgae_bb, 1))
+  
+  # data w/o species, no facet
+  toplo2b <- mcrdat %>%
     group_by(date, location) %>%
     filter(sum(pa) == 0) %>%
     ungroup() %>%
     select(date, location) %>%
     unique()
   
-  # data w/o species, facet
-  toplo3 <- dat %>%
-    dplyr::filter(pa == 0)
-  
-  if(!facet)
-    p <- ggplot2::ggplot(toplo1, ggplot2::aes(y = date, x = location)) +
-      ggplot2::geom_point(data = toplo2, alpha = 0.6, colour = 'darkgrey', size = 0.5) +
-      ggplot2::geom_point(aes(size = weight_g, fill = genus), alpha = 0.6, pch = 21) +
-      ggplot2::scale_fill_manual(values = gencol)
-    
-  if(facet)
-    p <- ggplot2::ggplot(toplo1, ggplot2::aes(y = date, x = location, group = genus)) +
-      ggplot2::geom_point(data = toplo3, alpha = 0.6, colour = 'darkgrey', size = 0.5) +
-      ggplot2::geom_point(aes(size = weight_g, fill = genus), alpha = 0.6, pch = 21,) +
-      ggplot2::scale_fill_manual(values = gencol) +
-      ggplot2::guides(fill = FALSE) +
-      ggplot2::facet_wrap(~genus, ncol = ncol)
-  
-  # finish plot
-  p <- p +
-    ggplot2::scale_size(breaks = as.numeric(levels(factor(toplo1$weight_g)))) +
+  pb <- ggplot2::ggplot(toplo1b, ggplot2::aes(y = date, x = location)) +
+    ggplot2::geom_point(data = toplo2b, alpha = 1, colour = 'black', size = 2) +
+    ggplot2::geom_point(aes(size = macroalgae_bb, fill = macroalgae_species), alpha = 0.6, pch = 21) +
+    ggplot2::scale_fill_manual(values = mcrcol) +
+    ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, guide = F, range = szrng) +
     ggplot2::theme_minimal(base_size = base_size) +
     ggplot2::theme(
       panel.grid.major.y = ggplot2::element_blank(),
       panel.grid.minor.y = ggplot2::element_blank(),
       legend.title = ggplot2::element_blank(),
-      strip.text = ggplot2::element_text(hjust = 0)
+      strip.text = ggplot2::element_text(hjust = 0), 
+      axis.title.y = element_blank()
     ) +
     ggplot2::labs(
-      x = 'Transect distance (m)',
-      title = paste0(station, ', ', leglab)
-    )
+      x = 'Transect distance (m)', 
+      title = 'Macroalgae'
+    ) +
+    guides(fill = guide_legend(override.aes = list(size = 7)))
   
-  if(plotly)
-    p <- plotly::ggplotly(p)
+  # out
+  p <- pa + pb + plot_layout(ncol = 1, heights = c(0.9, 1))
   
   return(p)
   
