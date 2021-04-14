@@ -478,7 +478,7 @@ data(rsstatloc)
 gdrive_pth <- 'https://drive.google.com/drive/folders/1SWlBbZtjZ8SF43MCz5nv5YLCWDvn7T_x'
 
 # sleep time in seconds
-wait <- 5
+wait <- 10
 
 # csv files must be opened/saved as spreadsheet in google sheets
 fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
@@ -679,8 +679,7 @@ for(id in ids) {
         station == 'JB-3' ~ 'Joe Bay 3', 
         station == 'JB-4' ~ 'Joe Bay 4',
         station == 'JB-5' ~ 'Joe Bay 5', 
-        station == 'JB-6' ~ 'Joe Bay 6', 
-        station == 'MC - FB' ~ 'MCFB',
+        station == 'JB-6' ~ 'Joe Bay 6',
         T ~ station
       ), 
       station = gsub('^PC\\s', 'PC', station),
@@ -705,6 +704,7 @@ for(id in ids) {
       source = 'pinco', 
       date = as.Date(date)
     ) %>% 
+    filter(!station %in% 'MC- FB') %>% # this is a validation sample, no data
     filter(var %in% parms$var)
   
   out1 <- bind_rows(out1, tmp)
@@ -761,13 +761,13 @@ out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
       station == 'JB3' ~ 'Joe Bay 3', 
       station == 'JB4' ~ 'Joe Bay 4',
       station == 'JB5' ~ 'Joe Bay 5', 
-      station == 'JB6' ~ 'Joe Bay 6', 
-      station == 'MC - FB' ~ 'MCFB',
+      station == 'JB6' ~ 'Joe Bay 6',
       T ~ station
     )
   ) %>% 
   select(station, date, source, var, uni, val, qual) %>% 
   filter(!is.na(val)) %>% 
+  filter(!station %in% 'MC- FB') %>% # this is a validation site, no data
   unique
 
 pinco1 <- bind_rows(out1, out2)
