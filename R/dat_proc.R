@@ -459,6 +459,9 @@ data(rsstatloc)
 
 gdrive_pth <- 'https://drive.google.com/drive/folders/1SWlBbZtjZ8SF43MCz5nv5YLCWDvn7T_x'
 
+# sleep time in seconds
+wait <- 5
+
 # csv files must be opened/saved as spreadsheet in google sheets
 fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
@@ -511,6 +514,9 @@ ids <- fls[grep('Comp', fls$name), 'id'] %>% pull(id)
 out1 <- NULL
 for(id in ids) {
   
+  # sleep to not bonk api limit
+  Sys.sleep(wait)   
+  
   tmp <- read_sheet(id)
  
   sta <- tmp[[1, 7]][[1]]
@@ -562,9 +568,12 @@ out1all <- out1 %>%
 ids <- fls[grep('Results_By_Test_Param', fls$name), 'id'] %>% pull(id)
 out2 <- NULL
 for(id in ids) {
+
+  # sleep to not bonk api limit
+  Sys.sleep(wait)   
   
   var <- fls[fls$id == id, 'name'] %>% pull('name')
-  
+
   tmp <- read_sheet(id) %>% 
     clean_names() %>% 
     select(
@@ -621,6 +630,9 @@ mpnrd1 <- bind_rows(out1all, out2all)
 ids <- fls[grep('^PINCO_labresults', fls$name), 'id'] %>% pull(id)
 out1 <- NULL
 for(id in ids) {
+  
+  # sleep to not bonk api limit
+  Sys.sleep(wait)
   
   dat <- read_sheet(id)
   
@@ -680,6 +692,9 @@ for(id in ids) {
   out1 <- bind_rows(out1, tmp)
   
 }
+
+# sleep to not bonk api limit
+Sys.sleep(wait)
 
 # field results
 ids <- fls[grep('^PINCO_fieldresults', fls$name), 'id'] %>% pull(id)
@@ -742,6 +757,9 @@ pinco1 <- bind_rows(out1, out2)
 ##
 # new college dump 20210410
 
+# sleep to not bonk api limit
+Sys.sleep(wait)
+
 fl <- fls[which(fls$name == 'TCB_waterquality_Apr2021'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 ncf1 <- flsht %>% 
@@ -768,6 +786,10 @@ ncf1 <- flsht %>%
 
 ##
 # epc
+
+# sleep to not bonk api limit
+Sys.sleep(wait)
+
 fl <- fls[grep('^EPC\\_PP\\_InSitu', fls$name), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 epc1 <- flsht %>% 
@@ -812,5 +834,6 @@ attr(tms, 'tzone') <- 'America/New_York'
 tms <- paste(as.character(tms), 'Eastern')
 
 writeLines(tms, 'logs/indexlog.txt')
+
 
 
