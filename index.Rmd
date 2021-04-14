@@ -37,8 +37,10 @@ load('data/bstransect.RData')
 load('data/bstransectocc.RData')
 load('data/trnpts.RData')
 load('data/trnlns.RData')
-load('data/macropts.RData')
-load('data/macrolns.RData')
+load('data/rstrnpts.RData')
+load('data/rstrnlns.RData')
+load('data/rstrndatmcr.RData')
+load('data/rstrndatsav.RData')
 load('data/macrodat.RData')
 
 # log
@@ -229,13 +231,13 @@ sgmap <- sgmap %>%
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
 # macroalgae base map
-mcmap <- mapview(macropts, homebutton = F, legend = F) %>% 
+mcmap <- mapview(rstrnpts, homebutton = F, legend = F) %>% 
   .@map %>% 
   clearMarkers()
-for(i in unique(macrolns$station))
+for(i in unique(rstrnlns$station))
   mcmap <- mcmap %>% 
     addPolylines(
-      data = macrolns[macrolns$station %in% i, ], 
+      data = rstrnlns[rstrnlns$station %in% i, ], 
       lng = ~lng, 
       lat = ~lat, 
       color = 'grey', 
@@ -243,7 +245,7 @@ for(i in unique(macrolns$station))
     )
 mcmap <- mcmap %>% 
   addCircleMarkers(
-    data = macropts,
+    data = rstrnpts,
     layerId = ~station,
     stroke = TRUE,
     color = 'black',
@@ -255,8 +257,8 @@ mcmap <- mcmap %>%
     label = ~paste0('Transect ', station)
   ) %>% 
   addStaticLabels(
-    data = macropts,
-    label = macropts$station, 
+    data = rstrnpts,
+    label = rstrnpts$station, 
     direction = 'top', 
     textsize = '15px',
     offset = c(0, 1)
@@ -519,7 +521,7 @@ bsmcmap1 <- reactive({
   # input
   trnsel2 <- input$trnsel2
   
-  toadd <- macropts %>% 
+  toadd <- rstrnpts %>% 
     filter(station %in% trnsel2)
   mout <- mcmap %>% 
     addCircleMarkers(
@@ -752,7 +754,7 @@ valueBox(stsm, 'Sites with data', color = boxcol, icon = 'fa-map-marked')
 ### 
 
 ```{r}
-valueBox(smsm, 'Samples processed', color = boxcol, icon = 'fa-tint')
+valueBox(smsm, 'Measurements available', color = boxcol, icon = 'fa-tint')
 ```
 
 WATER QUALITY {data-navmenu="BASELINE DATA"}

@@ -4,6 +4,7 @@ library(readxl)
 library(janitor)
 library(tbeptools)
 library(sf)
+library(stringr)
 library(googlesheets4)
 library(googledrive)
 
@@ -236,11 +237,13 @@ save(bstransectocc, file = 'data/bstransectocc.RData', version = 2)
 save(trnpts, file = 'data/trnpts.RData', version = 2)
 save(trnlns, file = 'data/trnlns.RData', version = 2)
 
-# macroalgae monitoring stations ------------------------------------------
+# rapid response seagrass, macroalgae surveys -----------------------------
 
-macrofl <- read.csv('data/raw/TBEP_SBEP_Rapid_Macroalgae_Monitoring_Stations.csv')
+##
+# locations
+rstrnfl <- read.csv('data/raw/TBEP_SBEP_Rapid_Macroalgae_Monitoring_Stations.csv')
 
-macropts <- macrofl %>% 
+rstrnpts <- rstrnfl %>% 
   filter(!location %in% 'end') %>%
   select(-location) %>% 
   mutate(
@@ -250,14 +253,95 @@ macropts <- macrofl %>%
   st_as_sf(coords = c('longitude', 'latitude'), crs = 4326) %>% 
   select(station, type, lng, lat)
 
-macrolns <- macrofl %>% 
+rstrnlns <- rstrnfl %>% 
   filter(!location %in% '') %>% 
   select(station, lng = longitude, lat = latitude)
 
-save(macropts, file = 'data/macropts.RData', version = 2)
-save(macrolns, file = 'data/macrolns.RData', version = 2)
+save(rstrnpts, file = 'data/rstrnpts.RData', version = 2)
+save(rstrnlns, file = 'data/rstrnlns.RData', version = 2)
 
-# macroalgae data ---------------------------------------------------------
+##
+# data
+
+savlevs <- c('Thalassia testudinum', 'Halodule wrightii', 'Syringodium filiforme', 'Ruppia maritima', 'Halophila engelmannii', 'Halophila decipiens')
+mcrlevs <- c('Gracilaria', 'Hypnea', 'Acanthophora', 'Caulerpa', 'Euchema', 'Halymenia', 'Ulva', 'Enteromorpha', 'Cladophora', 'Chaetomorpha', 'Codium', 'Unknown', 'Mixed Drift Reds')
+epilevs <- c('Clean', 'Light', 'Moderate', 'Heavy')
+abulevs <- c('Solitary', '<1%', '1-5%', '6-25%', '26-50%', '51-75%', '76-100%')
+
+rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>% 
+  mutate(
+    date = as.Date(date)
+  ) %>% 
+  select(
+    date, 
+    station, 
+    location, 
+    sav_species, 
+    sav_abundance,
+    epibiota_density, 
+    macroalgae_species,
+    macroalgae_group,
+    macroalgae_abundance
+  ) %>% 
+  mutate(
+    macroalgae_bb = case_when(
+      macroalgae_abundance %in% c('Solitary', '<1%') ~ 0, 
+      macroalgae_abundance %in% '1-5%' ~ 1, 
+      macroalgae_abundance %in% '6-25%' ~ 2,
+      macroalgae_abundance %in% '26-50%' ~ 3,
+      macroalgae_abundance %in% '51-75%' ~ 4,
+      macroalgae_abundance %in% '76-100%' ~ 5
+    ), 
+    sav_bb = case_when(
+      sav_abundance %in% c('Solitary', '<1%') ~ 0, 
+      sav_abundance %in% '1-5%' ~ 1, 
+      sav_abundance %in% '6-25%' ~ 2,
+      sav_abundance %in% '26-50%' ~ 3,
+      sav_abundance %in% '51-75%' ~ 4,
+      sav_abundance %in% '76-100%' ~ 5
+    ), 
+    sav_abundance = factor(sav_abundance, levels = abulevs),
+    macroalgae_abundance = factor(macroalgae_abundance, levels = abulevs),
+    sav_species = factor(sav_species, levels = savlevs),
+    epibiota_density = factor(epibiota_density, levels = epilevs)
+  )
+
+rstrndatsav <- rstrndat %>% 
+  select(date, station, location, sav_species, sav_abundance, sav_bb, epibiota_density) %>% 
+  tidyr::complete(
+    sav_species, 
+    tidyr::nesting(date, station, location), 
+    fill = list(sav_bb = 0)
+  )
+
+# find how many new macroalgae columns we'll need since can have multiple per cell
+maxcols <- rstrndat$macroalgae_species %>% 
+  str_count(',') %>% 
+  na.omit %>% 
+  max %>% 
+  `+` (1) %>% 
+  seq(1, .) %>% 
+  paste('sppcol', ., sep = '')
+
+rstrndatmcr <- rstrndat %>% 
+  select(date, station, location, macroalgae_species, macroalgae_abundance, macroalgae_bb) %>% 
+  separate(macroalgae_species, maxcols, sep = ', ') %>% 
+  gather('var', 'macroalgae_species', !!maxcols) %>% 
+  filter(!is.na(macroalgae_species)) %>% 
+  mutate(
+    macroalgae_species = factor(macroalgae_species, levels = mcrlevs)
+  ) %>% 
+  tidyr::complete(
+    macroalgae_species, 
+    tidyr::nesting(date, station, location), 
+    fill = list(macroalgae_bb = 0)
+  ) %>% 
+  select(date, station, location, macroalgae_species, macroalgae_abundance, macroalgae_bb)
+
+save(rstrndatsav, file = 'data/rstrndatsav.RData', version = 2)
+save(rstrndatmcr, file = 'data/rstrndatmcr.RData', version = 2)
+
+# macroalgae weight data --------------------------------------------------
 
 gdrive_pth <- 'https://drive.google.com/drive/u/0/folders/1xiLuuvXQsiOWxLBZKq_81dA8ajVn9w2G'
 
@@ -566,6 +650,7 @@ for(id in ids) {
         station == 'JB-4' ~ 'Joe Bay 4',
         station == 'JB-5' ~ 'Joe Bay 5', 
         station == 'JB-6' ~ 'Joe Bay 6', 
+        station == 'MC - FB' ~ 'MCFB',
         T ~ station
       ), 
       station = gsub('^PC\\s', 'PC', station),
@@ -644,6 +729,7 @@ out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
       station == 'JB4' ~ 'Joe Bay 4',
       station == 'JB5' ~ 'Joe Bay 5', 
       station == 'JB6' ~ 'Joe Bay 6', 
+      station == 'MC - FB' ~ 'MCFB',
       T ~ station
     )
   ) %>% 
