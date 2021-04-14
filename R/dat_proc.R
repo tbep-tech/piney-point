@@ -464,7 +464,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ##
 # fldep dump 20210411
-fl <- fls[which(fls$name == 'FLDEP_20210411'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210413'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 fldep1 <- flsht %>% 
   clean_names %>% 
@@ -795,9 +795,14 @@ epc1 <- flsht %>%
 # combine all
 
 rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1) %>%
-  unique %>% 
-  filter(!is.na(val)) %>% 
+  unique %>%
+  filter(!is.na(val)) %>%
   arrange(source, station, date, var)
+
+# rswqdat <- bind_rows(fldep1, rswqdat) %>%
+#   unique %>% 
+#   filter(!is.na(val)) %>% 
+#   arrange(source, station, date, var)
 
 save(rswqdat, file = 'data/rswqdat.RData', version = 2)
 
