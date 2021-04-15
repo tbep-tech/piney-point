@@ -432,12 +432,15 @@ rsdat1 <- reactive({
     out <- out %>% 
       filter(!station %in% nonbay)
 
+  # colors
   out <- out %>% 
     mutate(
-      cols = colfun(val),
-      cexs = scales::rescale(val, to = c(4, 17))
+      cols = colfun(val)
     ) 
  
+  # sizes
+  out$cexs <- scales::rescale(out$val, to = c(4, 17))
+  
   # filter by day if provided
   if(mapsel1){
     
