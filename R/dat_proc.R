@@ -849,10 +849,36 @@ rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1) %>%
   filter(!is.na(val)) %>%
   arrange(source, station, date, var)
 
-# rswqdat <- bind_rows(fldep1, rswqdat) %>%
-#   unique %>% 
-#   filter(!is.na(val)) %>% 
-#   arrange(source, station, date, var)
+## 
+# calc tn if tkn, no23 provided 
+
+# find stations, dates that already have tn
+# remove from calc below
+tnexists <- rswqdat %>% 
+  select(station, date, var) %>%
+  unique %>% 
+  filter(var %in% 'tn')
+
+# calculate tn from tkn, no23
+tncalc <- rswqdat %>% 
+  select(station, date, source, var, val) %>% 
+  filter(var %in% c('tkn', 'no23')) %>%
+  filter(!(station %in% tnexists$station & date %in% tnexists$date)) %>%  # remove stations, dates that already have tn
+  group_by(station, date, source, var) %>%
+  summarise(val = mean(val, na.rm = T), .groups = 'drop') %>% # some stations, dates have repeat samples
+  spread(var, val) %>% 
+  mutate(tn = no23 + tkn) %>% 
+  gather('var', 'val', -station, -date, -source) %>% 
+  filter(var %in% 'tn') %>% 
+  filter(!is.na(val)) %>% 
+  mutate(
+    uni = 'mgl',
+    qual = NA_character_
+  )
+
+rswqdat <- rswqdat %>% 
+  bind_rows(tncalc) %>% 
+  arrange(source, date, var)
 
 save(rswqdat, file = 'data/rswqdat.RData', version = 2)
 
