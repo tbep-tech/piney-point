@@ -1,3 +1,5 @@
+# setup -------------------------------------------------------------------
+
 library(tidyverse)
 library(lubridate)
 library(readxl)
@@ -588,7 +590,7 @@ out2 <- NULL
 for(id in ids) {
 
   # sleep to not bonk api limit
-  Sys.sleep(wait)   
+  Sys.sleep(20)   
   
   var <- fls[fls$id == id, 'name'] %>% pull('name')
 
@@ -598,7 +600,7 @@ for(id in ids) {
       station = sample_location, 
       date = sampled_date, 
       val = reported_result, 
-      qual = qual, 
+      qual = sample_name, 
       uni = unit
     ) %>% 
     mutate(
@@ -637,6 +639,7 @@ out2all <- out2 %>%
       T ~ station
     )
   ) %>% 
+  filter(!qual %in% 'EQB') %>% # remove field blanks (other are duplicates FD)
   select(station, date, source, var, uni, val, qual)
 
 mpnrd1 <- bind_rows(out1all, out2all)
