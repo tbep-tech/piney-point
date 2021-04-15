@@ -829,31 +829,40 @@ ncf1 <- flsht %>%
 ##
 # epc
 
-# sleep to not bonk api limit
-Sys.sleep(wait)
-
-fl <- fls[grep('^EPC\\_PP\\_InSitu', fls$name), 'id'] %>% pull(id)
-flsht <- read_sheet(fl)
-epc1 <- flsht %>% 
-  select(
-    station = `EPC Station`, 
-    date = `Date`, 
-    temp = `Temp-C`, 
-    ph = `pH`, 
-    sal = `Salin-PSS`,
-    dosat = `DO%-Sat`, 
-    do = `DO-mg/L`
-  ) %>% 
-  mutate(
-    date = date(date), 
-    source = 'epchc', 
-    qual = NA_character_
+ids <- fls[grep('^EPC\\_PP\\_InSitu', fls$name), 'id'] %>% pull(id)
+epcout <- NULL
+for(id in ids){
+  
+  # sleep to not bonk api limit
+  Sys.sleep(wait)
+  
+  flsht <- read_sheet(id)
+  epctmp <- flsht %>% 
+    select(
+      station = `EPC Station`, 
+      date = `Date`, 
+      temp = `Temp-C`, 
+      ph = `pH`, 
+      sal = `Salin-PSS`,
+      dosat = `DO%-Sat`, 
+      do = `DO-mg/L`
     ) %>% 
-  gather('var', 'val', -station, -date, -source, -qual) %>% 
-  left_join(parms, by = 'var') %>% 
-  group_by(station, date, source, var, uni, qual) %>% 
-  summarise(val = mean(val, na.rm = T), .groups = 'drop') %>% 
-  select(station, date, source, var, uni, val, qual)
+    mutate(
+      date = date(date), 
+      source = 'epchc', 
+      qual = NA_character_
+    ) %>% 
+    gather('var', 'val', -station, -date, -source, -qual) %>% 
+    left_join(parms, by = 'var') %>% 
+    group_by(station, date, source, var, uni, qual) %>% 
+    summarise(val = mean(val, na.rm = T), .groups = 'drop') %>% 
+    select(station, date, source, var, uni, val, qual)
+  
+  epcout <- bind_rows(epcout, epctmp)
+  
+}
+
+epc1 <- epcout
 
 ##
 # combine all
