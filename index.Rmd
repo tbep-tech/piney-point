@@ -76,7 +76,7 @@ boxcol <- '#00806E'
 pineypoint <- c(-82.52469352586753, 27.629819505234703)
 
 # map center
-mapcenter <- c(-82.57862105363802, 27.601257082103725)
+mapcenter <- c(-82.57862105363802, 27.624588580411267)
 
 # seagrass transect prj
 st_crs(trnpts) <- 4326
@@ -231,12 +231,12 @@ sgmap <- sgmap %>%
   ) %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
-# macroalgae base map
-mcmap <- mapview(rstrnpts, homebutton = F, legend = F) %>% 
+# rapid response transect base map
+rstrnmap <- mapview(rstrnpts, homebutton = F, legend = F) %>% 
   .@map %>% 
   clearMarkers()
 for(i in unique(rstrnlns$station))
-  mcmap <- mcmap %>% 
+  rstrnmap <- rstrnmap %>% 
     addPolylines(
       data = rstrnlns[rstrnlns$station %in% i, ], 
       lng = ~lng, 
@@ -244,7 +244,7 @@ for(i in unique(rstrnlns$station))
       color = 'grey', 
       label = ~station
     )
-mcmap <- mcmap %>% 
+rstrnmap <- rstrnmap %>% 
   addCircleMarkers(
     data = rstrnpts,
     layerId = ~station,
@@ -255,7 +255,7 @@ mcmap <- mcmap %>%
     weight = 1,
     fillOpacity = 1,
     radius= 4,
-    label = ~paste0('Transect ', station)
+    label = ~paste0('Transect ', station, ' (', toupper(source), ')')
   ) %>% 
   addStaticLabels(
     data = rstrnpts,
@@ -289,7 +289,7 @@ bswqmap1 <- reactive({
       fillOpacity = 1,
       radius= 6
     ) %>% 
-    setView(pineypoint[1], pineypoint[2], zoom = 12)
+    setView(mapcenter[1], mapcenter[2], zoom = 12)
   
   return(mout)
 })
@@ -476,7 +476,7 @@ bssgmap1 <- reactive({
       radius= 6,
       label = ~paste0('Transect ', station)
     ) %>% 
-    setView(pineypoint[1], pineypoint[2], zoom = 12)
+    setView(mapcenter[1], mapcenter[2], zoom = 12)
   
   return(mout)
   
@@ -516,15 +516,15 @@ bssgsumplo1 <- reactive({
   
 })
 
-# macroalgae map selection
-bsmcmap1 <- reactive({
+# rapid response transect map selection
+rstrnmap1 <- reactive({
   
   # input
   trnsel2 <- input$trnsel2
   
   toadd <- rstrnpts %>% 
     filter(station %in% trnsel2)
-  mout <- mcmap %>% 
+  mout <- rstrnmap %>% 
     addCircleMarkers(
       data = toadd,
       layerId = ~station,
@@ -537,7 +537,7 @@ bsmcmap1 <- reactive({
       radius= 6,
       label = ~paste0('Transect ', station)
     ) %>% 
-    setView(pineypoint[1], pineypoint[2], zoom = 12)
+    setView(mapcenter[1], mapcenter[2], zoom = 12)
   
   return(mout)
   
@@ -801,8 +801,8 @@ Column {data-width=275}
 ### __TRANSECT LOCATIONS - PINEY POINT AT MARKER__
 
 ```{r}
-output$bsmcmap1 <- renderLeaflet(bsmcmap1())
-leafletOutput('bsmcmap1')
+output$rstrnmap1 <- renderLeaflet(rstrnmap1())
+leafletOutput('rstrnmap1')
 ```
 
 Column {data-width=650}
