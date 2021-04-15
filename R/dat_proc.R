@@ -488,7 +488,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ##
 # fldep dump 20210411
-fl <- fls[which(fls$name == 'FLDEP_20210414'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210415'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 fldep1 <- flsht %>% 
   clean_names %>% 
@@ -503,7 +503,9 @@ fldep1 <- flsht %>%
     nh3_mgl = ammonia_n_mg_n_l, 
     orthop_mgl = orthophosphate_p_mg_p_l, 
     chla_ugl = chlorophyll_a_corrected_mg_l, # this is ugl, janitor think mu is m
-    turb_ntu = turbidity_ntu
+    turb_ntu = turbidity_ntu, 
+    tp_mgl = total_phosphorus_mg_p_l, 
+    tn_mgl = total_nitrogen_calculated_mg_n_l,
   ) %>% 
   mutate_if(is.list, as.character) %>% 
   gather('var', 'val', -station, -date) %>% 
@@ -514,6 +516,7 @@ fldep1 <- flsht %>%
       val %in% c('NULL', 'not detected') ~ '', 
       T ~ val
     ),
+    val = gsub('\\"', '', val),
     qual = gsub('^\\d+\\.\\d+|^\\d+', '', val),
     qual = gsub('^\\s+', '', qual),
     qual = case_when(
