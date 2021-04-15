@@ -45,6 +45,7 @@ load('data/rstrndatmcr.RData')
 load('data/rstrndatsav.RData')
 load('data/macrodat.RData')
 load('data/rsbntpts.RData')
+load('data/bswqrngs.RData')
 
 # log
 log <- readLines('https://tbep-tech.github.io/piney-point/logs/indexlog.txt')
@@ -357,6 +358,21 @@ baseplo2 <- reactive({
   
 })
 
+# baseline variable text ranges
+bswqtxt <- reactive({
+  
+  # input
+  varsel1 <- input$varsel1
+
+  tmp <- bswqrngs %>% 
+    filter(var == !!varsel1) 
+  
+  out <- HTML(paste('Normal range for March/April (mean +/- 1 sd):<b>', tmp$minv, '-', tmp$maxv, tmp$lbs, '</b><br></br>'))
+  
+  return(out)
+  
+})
+
 # variable range
 varrng1 <- reactive({
   
@@ -408,7 +424,7 @@ rsdat1 <- reactive({
   colfun <- colfun()
   
   req(colfun)
-
+  
   out <- rswqdat %>% 
     filter(var %in% varsel1) 
   
@@ -423,7 +439,7 @@ rsdat1 <- reactive({
     ) 
  
    # filter by day if provided
-  if(mapsel1 == 'yes'){
+  if(mapsel1){
     
     out <- out %>% 
       filter(date %in% dyssel1)
@@ -753,7 +769,7 @@ column(12,
     selectInput('varsel1', HTML('<b>Select variable:</b>'), choices = vrs, selected = 'nh3')       
   ), 
   column(3, 
-    selectInput('mapsel1', 'Map results by date?', choices = c('yes', 'no'), selected = 'no')
+    materialSwitch(inputId = 'mapsel1', label = 'Map results by date?', width = '100%')
     ),
   column(6, 
     renderUI({
@@ -761,8 +777,8 @@ column(12,
       # inputs
       varsel1 <- input$varsel1
       mapsel1 <- input$mapsel1
-      
-      if(mapsel1 == 'no')
+ 
+      if(!mapsel1)
         return(NULL)
       
       dys <- rswqdat %>% 
@@ -773,6 +789,11 @@ column(12,
       sliderInput('dyssel1', 'Select date:', min = min(dys), max = max(dys), value = max(dys), animate = T, timeFormat="%m-%d", width = '100%')
   
     })     
+  )
+)
+column(12, 
+  column(12, 
+    renderUI(bswqtxt())
   )
 )
 ```
@@ -790,7 +811,7 @@ Use the variable selection menu on the top to view results for a measured water 
 
 How are the data interpreted? 
 
-As of `r log`, data from `r vars` parameters and `r agns` agencies have been added to this dashboard.  These parameters were chosen primarily to track the flow of nutrients from wastewater being discharged into the bay.  The primary environmental threat is an algae response as a result of high concentrations of nutrients in this wastewater. Excess algal can have adverse effects on seagrass, fish, and other wildlife.  __Nitrogen, either total nitrogen (TN) or ammonia (NH3), is the primary concern for tracking potential impacts of discharge from Piney Point.  Nitrogen concentrations higher than 1-2 mg/L may be problematic in Lower Tampa Bay.__ 
+As of `r log`, data from `r vars` parameters and `r agns` agencies have been added to this dashboard.  These parameters were chosen primarily to track the flow of nutrients from wastewater being discharged into the bay.  The primary environmental threat is an algae response as a result of high concentrations of nutrients in this wastewater. Excess algal can have adverse effects on seagrass, fish, and other wildlife.  __Nitrogen, either total nitrogen (TN) or ammonia (NH3), is the primary concern for tracking potential impacts of discharge from Piney Point.__
 
 The parameters being monitored include: 
 

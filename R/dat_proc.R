@@ -30,6 +30,8 @@ save(parms, file = 'data/parms.RData', version = 2)
 
 # get March, April ranges from 2006 to present
 
+data(parms)
+
 # epc
 epcdat <- read_importwq('data/raw/epcdat.xlsx', download_latest = T)
 epcraw <- readxl::read_xlsx('data/raw/epcdat.xlsx', sheet="RWMDataSpreadsheet",
@@ -123,7 +125,20 @@ bswqrngs <- epcraw %>%
     avev = mean(val, na.rm = T), 
     stdv = sd(val, na.rm = T), 
     .groups = 'drop'
-  )
+  ) %>% 
+  mutate(
+    sigdig = c(2, 2, 2, 1, 4, 5, 4, 1, 1, 1, 1, 3, 3, 3, 2, 2),
+    avev = round(avev, sigdig), 
+    stdv = round(stdv, sigdig), 
+    minv = avev - stdv, 
+    minv = pmax(0, minv),
+    maxv = avev + stdv
+  ) %>% 
+  left_join(parms, by = c('var', 'uni')) %>% 
+  mutate(
+    lbs = gsub('^.*\\s(\\(.*\\))$', '\\1', lbs), 
+    lbs = gsub('pH', '', lbs)
+    )
 
 save(bswqrngs, file = 'data/bswqrngs.RData', version = 2)
 
@@ -360,7 +375,7 @@ rstrnpts <- rstrnfl %>%
 
 rstrnlns <- rstrnfl %>% 
   filter(!location %in% '') %>% 
-  select(station, lng = longitude, lat = latitude)
+  select(source, station, lng = longitude, lat = latitude)
 
 save(rstrnpts, file = 'data/rstrnpts.RData', version = 2)
 save(rstrnlns, file = 'data/rstrnlns.RData', version = 2)
