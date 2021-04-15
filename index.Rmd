@@ -43,6 +43,7 @@ load('data/rstrnlns.RData')
 load('data/rstrndatmcr.RData')
 load('data/rstrndatsav.RData')
 load('data/macrodat.RData')
+load('data/rsbntpts.RData')
 
 # log
 log <- readLines('https://tbep-tech.github.io/piney-point/logs/indexlog.txt')
@@ -89,6 +90,9 @@ trns <- sort(unique(bstransect$Transect))
 
 # macroalgae transect near pp
 rstrns <- sort(unique(rstrndatsav$station))
+
+# benthic sites
+rsbnts <- sort(unique(rsbntpts$station))
 
 # sources lookup
 srcs <- rsstatloc %>% 
@@ -260,6 +264,31 @@ rstrnmap <- rstrnmap %>%
   addStaticLabels(
     data = rstrnpts,
     label = rstrnpts$station, 
+    direction = 'top', 
+    textsize = '15px',
+    offset = c(0, 1)
+  ) %>% 
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
+
+# response benthic sampling base map
+rsbntmap <- mapview(rsbntpts, homebutton = F, legend = F) %>% 
+  .@map %>% 
+  clearMarkers() %>% 
+  addCircleMarkers(
+    data = rsbntpts,
+    layerId = ~station,
+    stroke = TRUE,
+    color = 'black',
+    fill = TRUE,
+    fillColor = 'grey',
+    weight = 1,
+    fillOpacity = 1,
+    radius= 4,
+    label = ~paste0('Station ', station)
+  ) %>% 
+  addStaticLabels(
+    data = rsbntpts,
+    label = rsbntpts$station, 
     direction = 'top', 
     textsize = '15px',
     offset = c(0, 1)
@@ -593,6 +622,33 @@ rstrnplo1 <- reactive({
   return(p)
   
 })
+
+# rapid response benthic map selection
+rsbntmap1 <- reactive({
+  
+  # input
+  stasel2 <- input$stasel2
+  
+  toadd <- rsbntpts %>% 
+    filter(station %in% stasel2)
+  mout <- rsbntmap %>% 
+    addCircleMarkers(
+      data = toadd,
+      layerId = ~station,
+      stroke = TRUE,
+      color = 'black',
+      fill = TRUE,
+      fillColor = 'red',
+      weight = 1,
+      fillOpacity = 1,
+      radius= 6,
+      label = ~paste0('Station ', station)
+    ) %>% 
+    setView(mapcenter[1], mapcenter[2], zoom = 12)
+  
+  return(mout)
+  
+})
 ```
 
 OVERVIEW
@@ -822,6 +878,33 @@ fillCol(flex = c(0.1, 0.8),
     )
   ),
   renderPlot(rstrnplo1())
+)
+```
+
+BENTHIC SURVEYS {data-navmenu="CURRENT DATA"}
+=======================================================================
+
+Column {data-width=275}
+-----------------------------------------------------------------------
+
+### __STATION LOCATIONS - PINEY POINT AT MARKER__
+
+```{r}
+output$rsbntmap1 <- renderLeaflet(rsbntmap1())
+leafletOutput('rsbntmap1')
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### __STATION RESULTS__
+
+```{r}
+fillCol(flex = c(0.1, 0.8),
+  fillRow(
+    selectInput(inputId = 'stasel2', label = 'Select station:', choices = rsbnts, selected = rsbnts[1])
+  ),
+  HTML('<h5>Samples collected 2021-04-12 (biology, sediment chemistry), data forthcoming</h5>')
 )
 ```
 
