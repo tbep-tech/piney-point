@@ -243,7 +243,8 @@ save(trnlns, file = 'data/trnlns.RData', version = 2)
 
 ##
 # locations
-rstrnfl <- read.csv('data/raw/TBEP_SBEP_Rapid_Macroalgae_Monitoring_Stations.csv')
+# https://docs.google.com/spreadsheets/d/1_wxkXJPjSlVRt9oVLO_AGxjupg8PI_PHkkLA6rq2zGQ/edit#gid=379130523
+rstrnfl <- read_sheet('1_wxkXJPjSlVRt9oVLO_AGxjupg8PI_PHkkLA6rq2zGQ')
 
 rstrnpts <- rstrnfl %>% 
   filter(!location %in% 'end') %>%
@@ -253,7 +254,7 @@ rstrnpts <- rstrnfl %>%
     lat = latitude
   ) %>% 
   st_as_sf(coords = c('longitude', 'latitude'), crs = 4326) %>% 
-  select(station, type, lng, lat)
+  select(source, station, type, lng, lat)
 
 rstrnlns <- rstrnfl %>% 
   filter(!location %in% '') %>% 
@@ -592,6 +593,8 @@ for(id in ids) {
   # sleep to not bonk api limit
   Sys.sleep(20)   
   
+  cat('mpnrd', which(id == ids), 'of', length(ids), '\n')
+  
   var <- fls[fls$id == id, 'name'] %>% pull('name')
 
   tmp <- read_sheet(id) %>% 
@@ -600,7 +603,8 @@ for(id in ids) {
       station = sample_location, 
       date = sampled_date, 
       val = reported_result, 
-      qual = sample_name, 
+      qual = qual,
+      type = sample_name, 
       uni = unit
     ) %>% 
     mutate(
@@ -639,7 +643,7 @@ out2all <- out2 %>%
       T ~ station
     )
   ) %>% 
-  filter(!qual %in% 'EQB') %>% # remove field blanks (other are duplicates FD)
+  filter(!type %in% 'EQB') %>% # remove field blanks (other are duplicates FD)
   select(station, date, source, var, uni, val, qual)
 
 mpnrd1 <- bind_rows(out1all, out2all)
