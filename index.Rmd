@@ -294,6 +294,12 @@ rsbntmap <- mapview(rsbntpts, homebutton = F, legend = F) %>%
     offset = c(0, 1)
   ) %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
+
+# response phytoplankton sampling base map
+rsphymap <- mapview(rsbntpts, homebutton = F, legend = F) %>% 
+  .@map %>% 
+  clearMarkers() %>%
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 ```
 
 ```{r reactives}
@@ -677,7 +683,7 @@ The primary pollutants of concern for this discharge are phosphorus and nitrogen
 
 The dashboard is a synthesis of data that can be used to assess baseline conditions prior to discharge and to evaluate changing water quality conditions as new data become available. __All data are provisional and subject to revision.__ The dashboard is arranged as follows:
 
-1) __CURRENT DATA__: Locations being sampled by our partners in response to changing conditions, with an [overview summary](https://shiny.tbep.org/piney-point/#section-water-quality-overview) of sampling events to date and [current results](https://shiny.tbep.org/piney-point/#section-water-quality-results). Current  [seagrass/macroalgae](https://shiny.tbep.org/piney-point/#section-rapid-response-seagrassmacroalgae-surveys) data are also presented.
+1) __CURRENT DATA__: Locations being sampled by our partners in response to changing conditions, with an [overview summary](https://shiny.tbep.org/piney-point/#section-water-quality-overview) of sampling events to date and [current results](https://shiny.tbep.org/piney-point/#section-water-quality-results). Current  [seagrass/macroalgae](https://shiny.tbep.org/piney-point/#section-rapid-response-seagrassmacroalgae-surveys) data are also presented. Sediment (biology and chemistry) and algal samples have also been collected and the data are being processed.
 1) __BASELINE DATA__: Long-term [water quality](https://shiny.tbep.org/piney-point/#section-water-quality) and [seagrass data](https://shiny.tbep.org/piney-point/#section-seagrasses) over a 25 year period.  
 
 #### Additional resources
@@ -905,6 +911,29 @@ fillCol(flex = c(0.1, 0.8),
     selectInput(inputId = 'stasel2', label = 'Select station:', choices = rsbnts, selected = rsbnts[1])
   ),
   HTML('<h5>Samples collected 2021-04-12 (biology, sediment chemistry), data forthcoming</h5>')
+)
+```
+
+ALGAL SURVEYS {data-navmenu="CURRENT DATA"}
+=======================================================================
+
+Column {data-width=275}
+-----------------------------------------------------------------------
+
+### __STATION LOCATIONS - PINEY POINT AT MARKER__
+
+```{r}
+rsphymap
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### __STATION RESULTS__
+
+```{r}
+fillCol(
+  HTML('<h5>Data forthcoming</h5>')
 )
 ```
 
