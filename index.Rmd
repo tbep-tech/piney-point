@@ -458,6 +458,7 @@ rstab1 <- reactive({
   
   # input
   rsdat1 <- rsdat1()
+  rngemph <- input$rngemph
   varsel1 <- input$varsel1
   
   # variable label
@@ -476,15 +477,40 @@ rstab1 <- reactive({
     arrange(desc(Date))
   names(totab)[names(totab) == 'val'] <- vrlb
   
-  out <- reactable(totab,
-    defaultColDef = colDef(
-      footerStyle = list(fontWeight = "bold"),
-      format = colFormat(separators = F),
-      resizable = TRUE, 
-      align = 'left'
-    ),
-    filterable = T,
-    defaultPageSize = nrow(totab)
+  # do not emphasize out of range
+  if(!rngemph)
+    out <- reactable(totab,
+      defaultColDef = colDef(
+        footerStyle = list(fontWeight = "bold"),
+        format = colFormat(separators = F),
+        resizable = TRUE, 
+        align = 'left'
+      ),
+      filterable = T,
+      defaultPageSize = nrow(totab)
+      )
+  
+  # emphasize out or range
+  if(rngemph)
+    out <- reactable(totab,
+      defaultColDef = colDef(
+        footerStyle = list(fontWeight = "bold"),
+        format = colFormat(separators = F),
+        resizable = TRUE, 
+        align = 'left'
+      ),
+      filterable = T,
+      defaultPageSize = nrow(totab),
+      rowStyle = JS("function(rowInfo) {
+        if (rowInfo.row['In normal range?'] == 'no') {
+          return { background: 'rgba(0, 0, 0, 0.05)' }
+        }
+      }"),
+      rowClass = JS("function(rowInfo) {
+        if (rowInfo.row['In normal range?'] == 'no') {
+          return 'bold'
+        }
+      }")
     )
   
   return(out)
@@ -499,6 +525,7 @@ rsmap1 <- reactive({
   colfun <- colfun()
   varrng1 <- varrng1()
   varsel1 <- input$varsel1
+  rngemph <- input$rngemph
   
   req(rsdat1)
 
@@ -508,16 +535,36 @@ rsmap1 <- reactive({
   # make sf
   tomap <- rsdat1 %>% 
     inner_join(rsstatloc, ., by = c('source', 'station'))
-    
-  # hover pt labels
-  labs <- paste0('Station: ', tomap$station, ', Date: ', tomap$date, ', ', vrlb, ': ', round(tomap$val, 2))
+    browser()
   leglab <- vrlb
 
   if(nrow(tomap) == 0)
     m <- mapview()
-   
-  if(nrow(tomap) != 0)
+  
+  # show all equally 
+  if(nrow(tomap) != 0 & !rngemph){
+    
+    # hover pt labels
+    labs <- paste0('Station: ', tomap$station, ', Date: ', tomap$date, ', ', vrlb, ': ', round(tomap$val, 2))
+  
     m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, map.types = mptyps)
+    
+  }
+  
+  # emphasize out of range
+  if(nrow(tomap) != 0 & rngemph){
+    
+    tomap1 <- tomap %>% filter(inrng == 'yes')
+    tomap2 <- tomap %>% filter(inrng == 'no')
+    
+    # hover pt labels
+    labs1 <- paste0('Station: ', tomap1$station, ', Date: ', tomap1$date, ', ', vrlb, ': ', round(tomap1$val, 2))
+    labs2 <- paste0('Station: ', tomap2$station, ', Date: ', tomap2$date, ', ', vrlb, ': ', round(tomap2$val, 2))
+    
+    m <- mapview(tomap1, cex = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0) +
+      mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F)
+  
+  }
   
   # add legend
   out <- m@map %>% 
@@ -797,8 +844,11 @@ column(12,
   )
 )
 column(12, 
-  column(12, 
+  column(3, 
     renderUI(bswqtxt())
+  ), 
+  column(9,
+    materialSwitch(inputId = 'rngemph', label = 'Emphasize results out of normal range?', width = '100%')     
   )
 )
 ```
