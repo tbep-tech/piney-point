@@ -606,6 +606,7 @@ save(rsstatloc, file = 'data/rsstatloc.RData', version = 2)
 
 # coordinated response data -----------------------------------------------
 
+data(bswqrngs)
 data(parms)
 data(rsstatloc)
 
@@ -1016,9 +1017,20 @@ tncalc <- rswqdat %>%
     qual = NA_character_
   )
 
+# join tn calc to complete data
 rswqdat <- rswqdat %>% 
   bind_rows(tncalc) %>% 
   arrange(source, date, var)
+
+# add column if in/out of range
+rswqdat <- rswqdat %>% 
+  left_join(bswqrngs, by = c('var', 'uni')) %>% 
+  rowwise() %>% 
+  mutate(
+    inrng = ifelse(val >= minv & val <= maxv, 'yes', 'no'), 
+    val = round(val, sigdig)
+  ) %>% 
+  select(-avev, -stdv, -sigdig, -minv, -maxv, -lbs)
 
 save(rswqdat, file = 'data/rswqdat.RData', version = 2)
 

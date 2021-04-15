@@ -427,18 +427,18 @@ rsdat1 <- reactive({
   
   out <- rswqdat %>% 
     filter(var %in% varsel1) 
-  
+
   if(rmvssta)
     out <- out %>% 
       filter(!station %in% nonbay)
-    
+
   out <- out %>% 
     mutate(
       cols = colfun(val),
       cexs = scales::rescale(val, to = c(4, 17))
     ) 
  
-   # filter by day if provided
+  # filter by day if provided
   if(mapsel1){
     
     out <- out %>% 
@@ -467,7 +467,8 @@ rstab1 <- reactive({
       Source = source_lng,
       Station = station ,
       Date = date, 
-      val
+      `In normal range?` = inrng,
+      val 
     ) %>% 
     arrange(desc(Date))
   names(totab)[names(totab) == 'val'] <- vrlb
@@ -476,7 +477,8 @@ rstab1 <- reactive({
     defaultColDef = colDef(
       footerStyle = list(fontWeight = "bold"),
       format = colFormat(separators = F),
-      resizable = TRUE
+      resizable = TRUE, 
+      align = 'left'
     ),
     filterable = T,
     defaultPageSize = nrow(totab)
