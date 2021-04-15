@@ -84,7 +84,7 @@ mapcenter <- c(-82.57862105363802, 27.624588580411267)
 st_crs(trnpts) <- 4326
 
 # non-bay stations
-nonbay <- c('BH01', 'P Port 2', 'P Port 3', 'PM Out', '20120409-01', 'PPC41', 'P Port 4')
+nonbay <- c('BH01', 'P Port 2', 'P Port 3', 'PM Out', '20120409-01', 'PPC41', 'P Port 4', 'PMB01')
 
 # seagrass species
 spp <- c("Halodule", "Syringodium", "Thalassia", "Halophila", "Ruppia", "Caulerpa")
@@ -250,7 +250,7 @@ for(i in unique(rstrnlns$station))
       lng = ~lng, 
       lat = ~lat, 
       color = 'grey', 
-      label = ~station
+      label = ~paste0('Transect ', station, ' (', toupper(source), ')')
     )
 rstrnmap <- rstrnmap %>% 
   addCircleMarkers(
@@ -588,7 +588,7 @@ rstrnmap1 <- reactive({
       weight = 1,
       fillOpacity = 1,
       radius= 6,
-      label = ~paste0('Transect ', station)
+      label = ~paste0('Transect ', station, ' (', toupper(source), ')')
     ) %>% 
     setView(mapcenter[1], mapcenter[2], zoom = 12)
   
@@ -745,7 +745,7 @@ Column {.tabset .tabset-fade}
 column(12,
   column(3, HTML('<b>ALL DATA ARE PROVISIONAL</b><br></br>')),
   column(9,
-    materialSwitch(inputId = 'rmvssta', label = 'Remove stations on land near Piney Point (these may skew results)?', width = '100%')
+    materialSwitch(inputId = 'rmvssta', label = 'Remove stations on land near Piney Point (these can skew in-bay results)?', width = '100%')
   )
 )
 column(12,

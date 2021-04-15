@@ -25,6 +25,108 @@ parms <- tibble(
 
 save(parms, file = 'data/parms.RData', version = 2)
 
+
+# normal ranges -----------------------------------------------------------
+
+# get March, April ranges from 2006 to present
+
+# epc
+epcdat <- read_importwq('data/raw/epcdat.xlsx', download_latest = T)
+epcraw <- readxl::read_xlsx('data/raw/epcdat.xlsx', sheet="RWMDataSpreadsheet",
+                            col_types = c("numeric", "numeric", "text", "text", "text", "text",
+                                          "numeric", "numeric", "text", "numeric", "numeric",
+                                          "text", "date", "text", "numeric", "text", "text",
+                                          "numeric", "numeric", "numeric", "numeric", "text",
+                                          "text", "text", "numeric", "text", "numeric", "text",
+                                          "numeric", "text", "numeric", "text", "numeric",
+                                          "text", "numeric", "text", "numeric", "text",
+                                          "numeric", "text", "numeric", "text", "numeric",
+                                          "text", "numeric", "text", "numeric", "text",
+                                          "numeric", "text", "numeric", "text", "numeric",
+                                          "text", "numeric", "text", "numeric", "text",
+                                          "numeric", "text", "numeric", "text", "numeric",
+                                          "text", "numeric", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text", "text", "text", "text",
+                                          "text", "text", "text"),
+                            na = '')
+
+bswqrngs <- epcraw %>% 
+  clean_names %>% 
+  filter(station_number %in% c(21, 22, 90)) %>% 
+  select(
+    station = station_number,
+    date = sample_time,
+    color_pcu = color_345_c_pcu, 
+    tn_mgl = total_nitrogen_mg_l, 
+    nh3_mgl = ammonia_mg_l,
+    no23_mgl = nitrates_nitrites_mg_l,
+    tkn_mgl = kjeldahl_nitrogen_mg_l,
+    orthop_mgl = ortho_phosphates_mg_l,
+    tp_mgl = total_phosphorus_mg_l, 
+    chla_ugl = chlorophyll_a_uncorr_ug_l, 
+    tss_mgl = total_suspended_solids_mg_l, 
+    turb_ntu = turbidity_jtu_ntu,
+    secchi_m = secchi_depth_m,
+    p_h_bottom, 
+    p_h_mid, 
+    p_h_top,
+    do_bottom_mg_l, 
+    do_mid_mg_l,
+    do_top_mg_l, 
+    do_sat_bottom_percent, 
+    do_sat_mid_percent, 
+    do_sat_top_percent, 
+    sal_bottom_ppth,
+    sal_mid_ppth,
+    sal_top_ppth, 
+    temp_water_bottom_deg_c,
+    temp_water_mid_deg_c,
+    temp_water_top_deg_c
+  ) %>% 
+  mutate(
+    date = as.Date(date), 
+    yr = year(date), 
+    mo = month(date)
+  ) %>% 
+  rowwise() %>% 
+  mutate(
+    do_mgl = mean(c(do_bottom_mg_l, do_mid_mg_l, do_top_mg_l), na.rm = T), 
+    dosat_per = mean(c(do_sat_bottom_percent, do_sat_mid_percent, do_sat_top_percent), na.rm = T),
+    ph_none = mean(c(p_h_top, p_h_mid, p_h_bottom), na.rm = T),
+    temp_c = mean(c(temp_water_bottom_deg_c, temp_water_mid_deg_c, temp_water_top_deg_c), na.rm = T),
+    sal_ppt = mean(c(sal_bottom_ppth, sal_mid_ppth, sal_top_ppth), na.rm = T)
+  ) %>% 
+  ungroup() %>% 
+  select(-matches('bottom|mid|top')) %>% 
+  gather('var', 'val', -station, -date, -yr, -mo) %>% 
+  separate(var, c('var', 'uni'), sep = '_') %>% 
+  mutate(
+    val = as.numeric(val)
+  ) %>% 
+  filter(yr > 2005 & mo %in% c(3, 4)) %>% 
+  group_by(var, uni) %>% 
+  summarise(
+    avev = mean(val, na.rm = T), 
+    stdv = sd(val, na.rm = T), 
+    .groups = 'drop'
+  )
+
+save(bswqrngs, file = 'data/bswqrngs.RData', version = 2)
+
 # baseline wq data --------------------------------------------------------
 
 # epc
