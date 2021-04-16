@@ -822,6 +822,7 @@ for(id in ids) {
         station == 'JB-4' ~ 'Joe Bay 4',
         station == 'JB-5' ~ 'Joe Bay 5', 
         station == 'JB-6' ~ 'Joe Bay 6',
+        station == 'TBEP-MCBHO2' ~ 'TBEP-MCBH02',
         T ~ station
       ), 
       station = gsub('^PC\\s', 'PC', station),
@@ -904,6 +905,7 @@ out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
       station == 'JB4' ~ 'Joe Bay 4',
       station == 'JB5' ~ 'Joe Bay 5', 
       station == 'JB6' ~ 'Joe Bay 6',
+      station == 'TBEP-MCBHO2' ~ 'TBEP-MCBH02',
       T ~ station
     )
   ) %>% 
