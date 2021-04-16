@@ -535,7 +535,7 @@ rsmap1 <- reactive({
   # make sf
   tomap <- rsdat1 %>% 
     inner_join(rsstatloc, ., by = c('source', 'station'))
-    browser()
+
   leglab <- vrlb
 
   if(nrow(tomap) == 0)
@@ -560,10 +560,17 @@ rsmap1 <- reactive({
     # hover pt labels
     labs1 <- paste0('Station: ', tomap1$station, ', Date: ', tomap1$date, ', ', vrlb, ': ', round(tomap1$val, 2))
     labs2 <- paste0('Station: ', tomap2$station, ', Date: ', tomap2$date, ', ', vrlb, ': ', round(tomap2$val, 2))
-    
-    m <- mapview(tomap1, cex = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0) +
-      mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F)
+
+    if(nrow(tomap1) == 0)
+      m <- mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F)
   
+    if(nrow(tomap2) == 0)
+      m <- mapview(tomap1, cex = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0)
+    
+    if(nrow(tomap1) > 0 & nrow(tomap2) > 0)
+      m <- mapview(tomap1, cex = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0) +
+        mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F)
+    
   }
   
   # add legend
