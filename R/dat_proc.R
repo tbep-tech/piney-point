@@ -691,21 +691,32 @@ for(id in ids) {
         var == 'Total Suspended Solids' ~ 'tss',
         var == 'Phosphorus, Total' ~ 'tp',
         var == 'Nitrate + Nitrite as N' ~ 'no23', 
+        var == 'Temperature' ~ 'temp',
         var == 'Chlorophyll-a' ~ 'chla',
         var == 'Total Kjedahl Nitrogen - Saltwater' ~ 'tkn',
-        var == 'Ammonia as N' ~ 'nh3'
+        var == 'Ammonia as N' ~ 'nh3', 
+        var == 'Dissolved Oxygen' ~ 'do',
+        var == 'Dissolved Oxygen % Saturation' ~ 'dosat', 
+        var == 'pH' ~ 'ph', 
+        var == 'Salinity' ~ 'sal', 
+        var == 'Transparency (Secchi Depth)' ~ 'secchi'
       ),
       uni = case_when(
         uni == 'PCU' ~ 'pcu',
         uni == 'NTU' ~ 'ntu', 
         uni == 'mg/L' ~ 'mgl', 
         uni == 'mg/m3' ~ 'ugl', 
+        uni == 'PSS' ~ 'ppt',
+        uni == 'SU' ~ 'none', 
+        uni == '%' ~ 'per', 
+        uni == 'deg C' ~ 'c',
         T ~ uni
       ),
       station = sta, 
       date = dt,
       source = 'mpnrd'
-    )
+    ) %>% 
+    filter(!is.na(var))
   
   out1 <- bind_rows(out1, tmp)
   
