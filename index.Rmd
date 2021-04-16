@@ -784,6 +784,7 @@ The dashboard is a synthesis of data that can be used to assess baseline conditi
 * Florida DEP Piney Point regional notification: <https://protectingfloridatogether.gov/PineyPointUpdate>
 * USF Piney Point circulation modeling: <http://ocgweb.marine.usf.edu/~liu/Tracer/>
 * NOAA algal bloom satellite imagery: <https://coastalscience.noaa.gov/research/stressor-impacts-mitigation/hab-monitoring-system/red-tide-from-satellite-for-southwest-florida/tampa-bay/>
+* USF Optical Oceanography Lab algal bloom satellite imagery: <https://optics.marine.usf.edu/cgi-bin/animation?productSensor=MPH.olcis3a&amp;animateFrom=03/29/2021&amp;animateTo=04/30/2021&amp;roi=CWFL>
 
 #### Website information
 
