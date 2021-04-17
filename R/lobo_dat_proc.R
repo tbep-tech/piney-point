@@ -11,6 +11,7 @@ dt <- Sys.Date() %>%
 
 url <- paste('http://tampabay.loboviz.com/cgi-data/nph-data.cgi?node=82&min_date=20210321&max_date=', dt, '&y=salinity,temperature,co2,oxygen,pht,par,pressure&data_format=text', sep = '')
 
+# note that do is ml/L, to convert use [mg/L] = [ml/L] * 1.42903 (from email 4/16/21)
 datraw <- read.table(url, skip = 2, sep = '\t', header = T) %>% 
   clean_names() %>% 
   select(

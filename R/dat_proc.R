@@ -508,6 +508,44 @@ macrodat <- flsht %>%
 
 save(macrodat, file = 'data/macrodat.RData', version = 2)
 
+
+# contaminants from DEP ---------------------------------------------------
+
+fl <- 'http://publicfiles.dep.state.fl.us/DEAR/DEARweb/_PP_EventResponse/Latest_Analytical_Results.xlsx'
+
+tmpfl <- tempfile()
+download.file(fl, tmpfl, mode = 'wb')
+
+rawdat <- read_excel(tmpfl)
+
+file.remove(tmpfl)
+
+rscntdat <- rawdat %>% 
+  select(
+    station = `SITE LOCATION`, 
+    date = `DATE SAMPLED`, 
+    var = COMPONENT, 
+    val = RESULT
+  ) %>% 
+  mutate(
+    date = as.Date(date),
+    val = gsub('\\"', '', val),
+    qual = gsub('^\\d+\\.\\d+|^\\d+', '', val),
+    qual = gsub('^\\s+', '', qual),
+    qual = case_when(
+      qual == '' ~ NA_character_, 
+      T ~ qual
+    ),
+    val = gsub('(^\\d+\\.\\d+|^\\d+)\\s.*$', '\\1', val),
+    val = as.numeric(val),
+    source = 'fldep', 
+    station = gsub('Point\\-', 'Point ', station), 
+    station = gsub('\\sPoint\\s', ' ', station)
+  ) %>% 
+  filter(!grepl('Blank', station))
+
+save(rscntdat, file = 'data/rscntdat.RData', version = 2)
+
 # benthic sampling stations -----------------------------------------------
 
 # https://docs.google.com/spreadsheets/d/1eJ64uMX7WOrt2XrjxKV67W5Y_EiXDh_9gBFpaBXuQWo/edit#gid=0
