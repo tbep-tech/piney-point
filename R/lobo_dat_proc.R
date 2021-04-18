@@ -1,6 +1,7 @@
 library(tidyverse)
 library(janitor)
 library(lubridate)
+library(WtRegDO)
 
 dt <- Sys.Date() %>% 
   as.character %>% 
@@ -71,6 +72,22 @@ lobodat <- lobodat %>%
   left_join(portsdat, by = 'DateTimeStamp')
 
 save(lobodat, file = 'data/lobodat.RData', version = 2)
+
+
+# lobo metabolism ---------------------------------------------------------
+
+lobodat <- lobodat %>% 
+  mutate(
+    DO_obs = DO_obs * 1.42903 
+  )
+
+tz <- attr(lobodat$DateTimeStamp, which = 'tzone')
+lat <- 27.6594677
+long <- -82.6043877
+
+loboeco <- WtRegDO::ecometab(lobodat, DO_var = "DO_obs", tz = tz, lat = lat, long = long)
+
+save(loboeco, file = 'data/loboeco.RData', version = 2)
 
 # log file ----------------------------------------------------------------
 

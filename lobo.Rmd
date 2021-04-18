@@ -22,11 +22,13 @@ library(plotly)
 library(mapview)
 library(sf)
 library(leaflet)
+library(WtRegDO)
 
 source('R/funcs.R')
 
 # data
 load(url('https://tbep-tech.github.io/piney-point/data/lobodat.RData'))
+load(url('hhttps://tbep-tech.github.io/piney-point/data/loboeco.RData'))
 
 # log
 log <- readLines('https://tbep-tech.github.io/piney-point/logs/lobolog.txt')
@@ -64,6 +66,19 @@ datsel <- reactive({
   out <- lobodat %>% 
     select(DateTimeStamp, !!varsel1, !!varsel2) %>% 
     filter(as.Date(DateTimeStamp) >= dtsel[1] & as.Date(DateTimeStamp) <= dtsel[2])
+
+  return(out)
+  
+})
+
+# ecometab data selection
+ecosel <- reactive({
+  
+  # inputs
+  dtsel <- input$dtsel
+  
+  out <- loboeco %>% 
+    filter(as.Date(Date) >= dtsel[1] & as.Date(DateTimeStamp) <= dtsel[2])
 
   return(out)
   
@@ -107,6 +122,18 @@ tsplo <- reactive({
   p <- (p1 / p2) | p3
   
   return(p)
+  
+})
+
+# ecometab plot
+ecoplo <- reactive({
+  
+  # input
+  ecosel <- ecosel()
+  
+  out <- WtRegDO::plot(ecosel, by = 'days')
+  
+  return(out)
   
 })
 
@@ -212,5 +239,12 @@ Column {.tabset .tabset-fade data-width=700}
 ```{r}
 output$tsplo <- renderPlot(tsplo())
 plotOutput('tsplo')
+```
+
+### Odum open-water metabolism
+
+```{r}
+output$ecoplo <- renderPlot(ecoplo())
+plotOutput('ecoplo')
 ```
 

@@ -28,7 +28,8 @@ jobs:
           sudo apt-get install libfribidi-dev
       - name: Install dependencies
         run: |
-          install.packages(c("janitor", "tidyverse"))
+          install.packages(c("janitor", "tidyverse", "remotes"))
+          remotes::install_github("fawda123/WtRegDO")
         shell: Rscript {0}
       - name: Build lobo data
         run: Rscript -e 'source("R/lobo_dat_proc.R")'
