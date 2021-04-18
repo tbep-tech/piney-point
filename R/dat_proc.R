@@ -511,7 +511,7 @@ save(macrodat, file = 'data/macrodat.RData', version = 2)
 
 # contaminants from DEP ---------------------------------------------------
 
-fl <- 'http://publicfiles.dep.state.fl.us/DEAR/DEARweb/_PP_EventResponse/Latest_Analytical_Results.xlsx'
+fl <- 'http://publicfiles.dep.state.fl.us/DEAR/DEARweb/_PP_EventResponse/Latest_Analytical_Results_Final.xlsx'
 
 tmpfl <- tempfile()
 download.file(fl, tmpfl, mode = 'wb')
@@ -528,7 +528,7 @@ rscntdat <- rawdat %>%
     val = RESULT
   ) %>% 
   mutate(
-    date = as.Date(date),
+    date = as.Date(date, origin = as.Date('1899-12-30')),
     val = gsub('\\"', '', val),
     qual = gsub('^\\d+\\.\\d+|^\\d+', '', val),
     qual = gsub('^\\s+', '', qual),
