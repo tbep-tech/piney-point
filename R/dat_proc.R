@@ -529,6 +529,7 @@ rscntdat <- rawdat %>%
   ) %>% 
   mutate(
     date = as.Date(date, origin = as.Date('1899-12-30')),
+    date = date(date),
     val = gsub('\\"', '', val),
     qual = gsub('^\\d+\\.\\d+|^\\d+', '', val),
     qual = gsub('^\\s+', '', qual),
