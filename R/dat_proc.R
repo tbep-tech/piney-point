@@ -18,13 +18,12 @@ gs4_deauth()
 
 # parameter names, units
 parms <- tibble(
-  var = c('chla', 'color', 'do', 'dosat', 'nh3', 'no23', 'orthop', 'ph', 'sal', 'secchi', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
-  uni = c('ugl', 'pcu', 'mgl', 'per', 'mgl', 'mgl', 'mgl', 'none', 'ppt', 'm', 'c', 'mgl', 'mgl', 'mgl', 'mgl', 'ntu'), 
-  lbs = c('Chl-a (ug/L)', 'Color (PCU)', 'DO (mg/L)', 'DO (% sat.)', 'NH3 (mg/L)', 'Nitrate/Nitrite (mg/L)', 'Ortho-P (mg/L)', 'pH', 'Sal (ppt)', 'Secchi (m)', 'Temp (C)', 'TKN (mg/L)', 'TN (mg/L)', 'TP (mg/L)', 'TSS (mg/l)', 'Turb (NTU)')
+  var = c('bod', 'chla', 'color', 'do', 'dosat', 'nh3', 'no23', 'orthop', 'ph', 'sal', 'secchi', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
+  uni = c('mgl', 'ugl', 'pcu', 'mgl', 'per', 'mgl', 'mgl', 'mgl', 'none', 'ppt', 'm', 'c', 'mgl', 'mgl', 'mgl', 'mgl', 'ntu'), 
+  lbs = c('BOD (mg/L)', 'Chl-a (ug/L)', 'Color (PCU)', 'DO (mg/L)', 'DO (% sat.)', 'NH3 (mg/L)', 'Nitrate/Nitrite (mg/L)', 'Ortho-P (mg/L)', 'pH', 'Sal (ppt)', 'Secchi (m)', 'Temp (C)', 'TKN (mg/L)', 'TN (mg/L)', 'TP (mg/L)', 'TSS (mg/l)', 'Turb (NTU)')
 )
 
 save(parms, file = 'data/parms.RData', version = 2)
-
 
 # normal ranges -----------------------------------------------------------
 
@@ -79,6 +78,7 @@ bswqrngs <- epcraw %>%
     tkn_mgl = kjeldahl_nitrogen_mg_l,
     orthop_mgl = ortho_phosphates_mg_l,
     tp_mgl = total_phosphorus_mg_l, 
+    bod_mgl = bod_mg_l,
     chla_ugl = chlorophyll_a_uncorr_ug_l, 
     tss_mgl = total_suspended_solids_mg_l, 
     turb_ntu = turbidity_jtu_ntu,
@@ -127,7 +127,7 @@ bswqrngs <- epcraw %>%
     .groups = 'drop'
   ) %>% 
   mutate(
-    sigdig = c(2, 2, 2, 1, 4, 5, 4, 1, 1, 1, 1, 3, 3, 3, 2, 2),
+    sigdig = c(2, 2, 2, 2, 1, 4, 5, 4, 1, 1, 1, 1, 3, 3, 3, 2, 2),
     avev = round(avev, sigdig), 
     stdv = round(stdv, sigdig), 
     minv = avev - stdv, 
@@ -658,7 +658,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ##
 # fldep dump 20210411
-fl <- fls[which(fls$name == 'FLDEP_20210416'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210417'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 fldep1 <- flsht %>% 
   clean_names %>% 
@@ -839,129 +839,204 @@ mpnrd1 <- bind_rows(out1all, out2all)
 ids <- fls[grep('^PINCO_labresults', fls$name), 'id'] %>% pull(id)
 out1 <- NULL
 for(id in ids) {
-  
+
   # sleep to not bonk api limit
   Sys.sleep(wait)
-  
+
   dat <- read_sheet(id)
-  
-  tmp <- dat %>% 
-    clean_names() %>% 
+
+  tmp <- dat %>%
+    clean_names() %>%
     select(
-      station = collection_site, 
-      date = collect_date, 
-      var = analyte_name, 
-      val = formatted_result, 
-      uni = result_units, 
+      station = collection_site,
+      date = collect_date,
+      var = analyte_name,
+      val = formatted_result,
+      uni = result_units,
       qual = qualifiers
-    ) %>% 
+    ) %>%
     mutate(
       station = case_when(
-        station == 'CB-1' ~ 'Clambar Bay 1', 
-        station == 'CB-2' ~ 'Clambar Bay 2', 
-        station == 'CB-3' ~ 'Clambar Bay 3', 
-        station == 'CB-4' ~ 'Clambar Bay 4', 
-        station == 'CB-5' ~ 'Clambar Bay 5', 
-        station == 'CB-6' ~ 'Clambar Bay 6', 
-        station == 'CB-7' ~ 'Clambar Bay 7', 
-        station == 'CB-8' ~ 'Clambar Bay 8', 
-        station == 'JB-1' ~ 'Joe Bay 1', 
-        station == 'JB-2' ~ 'Joe Bay 2', 
-        station == 'JB-3' ~ 'Joe Bay 3', 
+        station == 'CB-1' ~ 'Clambar Bay 1',
+        station == 'CB-2' ~ 'Clambar Bay 2',
+        station == 'CB-3' ~ 'Clambar Bay 3',
+        station == 'CB-4' ~ 'Clambar Bay 4',
+        station == 'CB-5' ~ 'Clambar Bay 5',
+        station == 'CB-6' ~ 'Clambar Bay 6',
+        station == 'CB-7' ~ 'Clambar Bay 7',
+        station == 'CB-8' ~ 'Clambar Bay 8',
+        station == 'JB-1' ~ 'Joe Bay 1',
+        station == 'JB-2' ~ 'Joe Bay 2',
+        station == 'JB-3' ~ 'Joe Bay 3',
         station == 'JB-4' ~ 'Joe Bay 4',
-        station == 'JB-5' ~ 'Joe Bay 5', 
+        station == 'JB-5' ~ 'Joe Bay 5',
         station == 'JB-6' ~ 'Joe Bay 6',
         station == 'TBEP-MCBHO2' ~ 'TBEP-MCBH02',
         T ~ station
-      ), 
+      ),
       station = gsub('^PC\\s', 'PC', station),
       station = gsub('^MC\\s', 'MC', station),
       var = case_when(
-        var == 'Ammonia' ~ 'nh3', 
-        var == 'Nitrate+Nitrite (N)' ~ 'no23', 
-        var == 'Orthophosphate as P(Dissolved)' ~ 'orthop', 
-        var == 'Total Phosphorus' ~ 'tp', 
-        var == 'Total Suspended Solids' ~ 'tss', 
-        var == 'Turbidity' ~ 'turb', 
+        var == 'Ammonia' ~ 'nh3',
+        var == 'Nitrate+Nitrite (N)' ~ 'no23',
+        var == 'Orthophosphate as P(Dissolved)' ~ 'orthop',
+        var == 'Total Phosphorus' ~ 'tp',
+        var == 'Total Suspended Solids' ~ 'tss',
+        var == 'Turbidity' ~ 'turb',
         var == 'Chlorophyll a (Corrected)' ~ 'chla',
         T ~ var
-      ), 
-      val = as.numeric(gsub('[^0-9.-]', '', val)), 
+      ),
+      val = as.numeric(gsub('[^0-9.-]', '', val)),
       uni = case_when(
-        uni == 'mg/L' ~ 'mgl', 
-        uni == 'NTU' ~ 'ntu', 
+        uni == 'mg/L' ~ 'mgl',
+        uni == 'NTU' ~ 'ntu',
         uni == 'mg/m3' ~ 'ugl',
         T ~ uni
-      ), 
-      source = 'pinco', 
+      ),
+      source = 'pinco',
       date = as.Date(date)
-    ) %>% 
+    ) %>%
     filter(!station %in% 'MC- FB') %>% # this is a validation sample, no data
     filter(var %in% parms$var)
-  
-  out1 <- bind_rows(out1, tmp)
-  
-}
 
-# sleep to not bonk api limit
-Sys.sleep(wait)
+  out1 <- bind_rows(out1, tmp)
+
+}
 
 # field results
 ids <- fls[grep('^PINCO_fieldresults', fls$name), 'id'] %>% pull(id)
-flsht1 <- read_sheet(ids) 
-pincowide <- flsht1 %>% 
-  clean_names() %>% 
+flsht1 <- read_sheet(ids)
+pincowide <- flsht1 %>%
+  clean_names() %>%
   select(
     date,
     station = site,
-    temp_c = temp_c, 
-    ph_none = p_h, 
-    sal_ppt = sal_ppt, 
+    temp_c = temp_c,
+    ph_none = p_h,
+    sal_ppt = sal_ppt,
     secchi_m = secchi_depth_m,
-    do_mgl = odo_mg_l, 
+    do_mgl = odo_mg_l,
     dosat_per = odo_percent_sat,
     secchi_qual = vob,
+    tkn_mgl = tkn_mg_l_as_n,
+    tkn_qual = tkn_flag,
+    nh3_mgl = nh3_mg_l_as_n, 
+    nh3_qual = nh3_flag, 
+    no23_mgl = n_ox_mg_l_as_n, 
+    no23_qual = nox_flag, 
+    tp_mgl = total_p_mg_l_as_p, 
+    tp_qual = tp_flag, 
+    orthop_mgl = dissd_o_p_mg_l_as_p, 
+    orthop_qual = op_flag, 
+    chla_ugl = chlorophyll_a_corrd_mg_m3,
+    chla_qual = cha_flag, 
+    tss_mgl = tss_mg_l, 
+    tss_qual = tss_flag, 
+    turb_ntu = turbidity_ntu, 
+    turb_qual = turb_flag, 
+    bod_mgl = total_bod_mg_l, 
+    bod_qual = bod_flag
   )
 
-pinco1wq <- pincowide %>% 
-  select(-matches('\\_qual$')) %>% 
-  gather('var', 'val', -station, -date) %>% 
+pinco1wq <- pincowide %>%
+  select(-matches('\\_qual$')) %>%
+  gather('var', 'val', -station, -date) %>%
   separate(var, c('var', 'uni'), sep = '_')
 
-pinco1qual <- pincowide %>% 
-  select(date, station, matches('\\_qual$')) %>% 
-  gather('var', 'qual', -date, -station) %>% 
-  mutate(var = gsub('\\_qual$', '', var)) %>% 
+pinco1qual <- pincowide %>%
+  select(date, station, matches('\\_qual$')) %>%
+  gather('var', 'qual', -date, -station) %>%
+  mutate(var = gsub('\\_qual$', '', var)) %>%
   filter(grepl('\\w', qual))
 
-out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>% 
+out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
   mutate(
-    source = 'pinco', 
-    date = ymd(date), 
-    station = gsub('\\s+', '', station), 
+    source = 'pinco',
+    date = ymd(date),
+    station = gsub('\\s+', '', station),
     station = case_when(
-      station == 'CB1' ~ 'Clambar Bay 1', 
-      station == 'CB2' ~ 'Clambar Bay 2', 
-      station == 'CB3' ~ 'Clambar Bay 3', 
-      station == 'CB4' ~ 'Clambar Bay 4', 
-      station == 'CB5' ~ 'Clambar Bay 5', 
-      station == 'CB6' ~ 'Clambar Bay 6', 
-      station == 'CB7' ~ 'Clambar Bay 7', 
-      station == 'CB8' ~ 'Clambar Bay 8', 
-      station == 'JB1' ~ 'Joe Bay 1', 
-      station == 'JB2' ~ 'Joe Bay 2', 
-      station == 'JB3' ~ 'Joe Bay 3', 
+      station == 'CB1' ~ 'Clambar Bay 1',
+      station == 'CB2' ~ 'Clambar Bay 2',
+      station == 'CB3' ~ 'Clambar Bay 3',
+      station == 'CB4' ~ 'Clambar Bay 4',
+      station == 'CB5' ~ 'Clambar Bay 5',
+      station == 'CB6' ~ 'Clambar Bay 6',
+      station == 'CB7' ~ 'Clambar Bay 7',
+      station == 'CB8' ~ 'Clambar Bay 8',
+      station == 'JB1' ~ 'Joe Bay 1',
+      station == 'JB2' ~ 'Joe Bay 2',
+      station == 'JB3' ~ 'Joe Bay 3',
       station == 'JB4' ~ 'Joe Bay 4',
-      station == 'JB5' ~ 'Joe Bay 5', 
+      station == 'JB5' ~ 'Joe Bay 5',
       station == 'JB6' ~ 'Joe Bay 6',
       station == 'TBEP-MCBHO2' ~ 'TBEP-MCBH02',
       T ~ station
     )
-  ) %>% 
-  select(station, date, source, var, uni, val, qual) %>% 
-  filter(!is.na(val)) %>% 
+  ) %>%
+  select(station, date, source, var, uni, val, qual) %>%
+  filter(!is.na(val)) %>%
   filter(!station %in% 'MC- FB') %>% # this is a validation site, no data
   unique
+
+# # sleep to not bonk api limit
+# Sys.sleep(wait)
+# 
+# # field results
+# ids <- fls[grep('^PINCO_fieldresults', fls$name), 'id'] %>% pull(id)
+# flsht1 <- read_sheet(ids) 
+# pincowide <- flsht1 %>% 
+#   clean_names() %>% 
+#   select(
+#     date,
+#     station = site,
+#     temp_c = temp_c, 
+#     ph_none = p_h, 
+#     sal_ppt = sal_ppt, 
+#     secchi_m = secchi_depth_m,
+#     do_mgl = odo_mg_l, 
+#     dosat_per = odo_percent_sat,
+#     secchi_qual = vob,
+#   )
+# 
+# pinco1wq <- pincowide %>% 
+#   select(-matches('\\_qual$')) %>% 
+#   gather('var', 'val', -station, -date) %>% 
+#   separate(var, c('var', 'uni'), sep = '_')
+# 
+# pinco1qual <- pincowide %>% 
+#   select(date, station, matches('\\_qual$')) %>% 
+#   gather('var', 'qual', -date, -station) %>% 
+#   mutate(var = gsub('\\_qual$', '', var)) %>% 
+#   filter(grepl('\\w', qual))
+# 
+# out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>% 
+#   mutate(
+#     source = 'pinco', 
+#     date = ymd(date), 
+#     station = gsub('\\s+', '', station), 
+#     station = case_when(
+#       station == 'CB1' ~ 'Clambar Bay 1', 
+#       station == 'CB2' ~ 'Clambar Bay 2', 
+#       station == 'CB3' ~ 'Clambar Bay 3', 
+#       station == 'CB4' ~ 'Clambar Bay 4', 
+#       station == 'CB5' ~ 'Clambar Bay 5', 
+#       station == 'CB6' ~ 'Clambar Bay 6', 
+#       station == 'CB7' ~ 'Clambar Bay 7', 
+#       station == 'CB8' ~ 'Clambar Bay 8', 
+#       station == 'JB1' ~ 'Joe Bay 1', 
+#       station == 'JB2' ~ 'Joe Bay 2', 
+#       station == 'JB3' ~ 'Joe Bay 3', 
+#       station == 'JB4' ~ 'Joe Bay 4',
+#       station == 'JB5' ~ 'Joe Bay 5', 
+#       station == 'JB6' ~ 'Joe Bay 6',
+#       station == 'TBEP-MCBHO2' ~ 'TBEP-MCBH02',
+#       T ~ station
+#     )
+#   ) %>% 
+#   select(station, date, source, var, uni, val, qual) %>% 
+#   filter(!is.na(val)) %>% 
+#   filter(!station %in% 'MC- FB') %>% # this is a validation site, no data
+#   unique
 
 pinco1 <- bind_rows(out1, out2)
 

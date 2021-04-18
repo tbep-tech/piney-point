@@ -886,6 +886,8 @@ __Chlorophyll-a (ug/L)__: Chlorophyll is present in algal tissue and concentrati
 
 __Color (PCU)__: Water color in platinum cobalt units, changes in color can suggest a wastewater or stormwater source with different characteristics from ambient conditions. Higher PCU means darker waters.
 
+__BOD (mg/L)__: Biological (or biochemical) oxygen demand (mg/L) as a measure of the amount of oxygen consumed by microorganisms in decomposing organic matter or the chemical oxidation of inorganic matter.  Higher BOD may indicate higher productivity associated with an algal bloom.
+
 __DO (mg/L)__: A measure of dissolved oxygen in the water column as a concentration (mg/L). Low dissolved oxygen less than 3 mg/L may indicate hypoxic conditions potentially harmful to biological organisms.
 
 __DO (% saturation)__: A measure of dissolved oxygen in the water column as percent saturation. Low percent saturation less than 30 %  may indicate hypoxic conditions potentially harmful to biological organisms. Supersaturated values (>100%) indicate enhanced algal or seagrass primary production.
