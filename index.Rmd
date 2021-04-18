@@ -387,6 +387,10 @@ varrng1 <- reactive({
     out <- out %>% 
       filter(!station %in% nonbay)
   
+  validate(
+    need(nrow(out) > 0, 'No data...')
+  )
+  
   out <- out %>% 
     pull(val) %>% 
     range(na.rm = T)
@@ -401,6 +405,8 @@ colfun <- reactive({
   # input
   varsel1 <- input$varsel1
   varrng1 <- varrng1()
+  
+  req(varrng1)
   
   # color palette function
   out <- colorNumeric(
