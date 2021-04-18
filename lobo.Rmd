@@ -28,7 +28,7 @@ source('R/funcs.R')
 
 # data
 load(url('https://tbep-tech.github.io/piney-point/data/lobodat.RData'))
-load(url('hhttps://tbep-tech.github.io/piney-point/data/loboeco.RData'))
+load(url('https://tbep-tech.github.io/piney-point/data/loboeco.RData'))
 
 # log
 log <- readLines('https://tbep-tech.github.io/piney-point/logs/lobolog.txt')
@@ -78,7 +78,7 @@ ecosel <- reactive({
   dtsel <- input$dtsel
   
   out <- loboeco %>% 
-    filter(as.Date(Date) >= dtsel[1] & as.Date(DateTimeStamp) <= dtsel[2])
+    filter(as.Date(Date) >= dtsel[1] & as.Date(Date) <= dtsel[2])
 
   return(out)
   
@@ -131,7 +131,8 @@ ecoplo <- reactive({
   # input
   ecosel <- ecosel()
   
-  out <- WtRegDO::plot(ecosel, by = 'days')
+  out <- plot(ecosel, by = 'days') + 
+    theme_bw(base_size = 20)
   
   return(out)
   
