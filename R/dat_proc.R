@@ -564,48 +564,25 @@ save(rsbntpts, file = 'data/rsbntpts.RData', version = 2)
 
 # these are stations actively being monitoring by four agencies
 
-epchc <- read.csv('data/raw/epc_stations.csv') %>% 
+epchcsta1 <- read.csv('data/raw/epc_stations.csv') %>% 
   mutate(
     source = 'epchc', 
     comment = NA_character_, 
     station = as.character(station)
   ) %>% 
   select(source, station, lat, lon, comment)
-fldep <- read_excel('data/raw/FLDEP.xlsx') %>% 
+fldepsta1 <- read_excel('data/raw/FLDEP.xlsx') %>% 
   mutate(
     source = 'fldep', 
     comment = Description
   ) %>% 
   select(source, station = Name, lat = Latitude, lon = Longitude, comment)
-mpnrd <- read.csv('data/raw/manco_stations.csv') %>% 
+mpnrdsta1 <- read.csv('data/raw/manco_stations.csv') %>% 
   mutate(
     source = 'mpnrd'
   )
-pinco1 <- read_excel('data/raw/PinellasCo20210404.xlsx') %>% 
-  mutate(
-    source = 'pinco',
-    comment = 'visited 20210404'
-  ) %>% 
-  select(source, station = Site, lat = Lat, lon = Long, comment)
-pinco2 <- st_read('data/raw/PinellasCo20210405.kml') %>% 
-  mutate(
-    source = 'pinco', 
-    lon = st_coordinates(.)[, 1],
-    lat = st_coordinates(.)[, 2], 
-    comment = 'visited 20210405'
-  ) %>% 
-  st_set_geometry(NULL) %>% 
-  select(source, station = Name, lat, lon, comment)
-pinco3 <- st_read('data/raw/PinellasCo20210408.kml') %>% 
-  mutate(
-    source = 'pinco', 
-    lon = st_coordinates(.)[, 1],
-    lat = st_coordinates(.)[, 2], 
-    comment = 'visited 20210409'
-  ) %>% 
-  st_set_geometry(NULL) %>% 
-  select(source, station = Name, lat, lon, comment)
-ncf1 <- read.csv('data/raw/ncf_stations.csv') %>% 
+pincosta1 <- read.csv('data/raw/pinco_stations.csv')
+ncfsta1 <- read.csv('data/raw/ncf_stations.csv') %>% 
   select(
     station = Set,
     lon = Lon, 
@@ -615,11 +592,11 @@ ncf1 <- read.csv('data/raw/ncf_stations.csv') %>%
     source = 'ncf', 
     comment = NA_character_
   )
-usf1 <- read.csv('data/raw/usf_stations.csv')
-tbep1 <- read.csv('data/raw/tbep_stations.csv')
+usfsta1 <- read.csv('data/raw/usf_stations.csv')
+tbepsta1 <- read.csv('data/raw/tbep_stations.csv')
 
 # combine all
-rsstatloc <- bind_rows(epchc, fldep, mpnrd, pinco1, pinco2, pinco3, ncf1, usf1, tbep1) %>% 
+rsstatloc <- bind_rows(epchcsta1, fldepsta1, mpnrdsta1, pincosta1, ncfsta1, usfsta1, tbepsta1) %>% 
   mutate(
     source = source,
     source_lng = case_when(
@@ -857,20 +834,7 @@ for(id in ids) {
     ) %>%
     mutate(
       station = case_when(
-        station == 'CB-1' ~ 'Clambar Bay 1',
-        station == 'CB-2' ~ 'Clambar Bay 2',
-        station == 'CB-3' ~ 'Clambar Bay 3',
-        station == 'CB-4' ~ 'Clambar Bay 4',
-        station == 'CB-5' ~ 'Clambar Bay 5',
-        station == 'CB-6' ~ 'Clambar Bay 6',
-        station == 'CB-7' ~ 'Clambar Bay 7',
-        station == 'CB-8' ~ 'Clambar Bay 8',
-        station == 'JB-1' ~ 'Joe Bay 1',
-        station == 'JB-2' ~ 'Joe Bay 2',
-        station == 'JB-3' ~ 'Joe Bay 3',
-        station == 'JB-4' ~ 'Joe Bay 4',
-        station == 'JB-5' ~ 'Joe Bay 5',
-        station == 'JB-6' ~ 'Joe Bay 6',
+        station == 'PMOutfall' ~ 'PM Out',
         station == 'TBEP-MCBHO2' ~ 'TBEP-MCBH02',
         T ~ station
       ),
@@ -903,8 +867,8 @@ for(id in ids) {
 
 }
 
-# field results
-ids <- fls[grep('^PINCO_fieldresults', fls$name), 'id'] %>% pull(id)
+# compiled results
+ids <- fls[grep('^PINCO_compiledresults', fls$name), 'id'] %>% pull(id)
 flsht1 <- read_sheet(ids)
 pincowide <- flsht1 %>%
   clean_names() %>%
@@ -955,20 +919,7 @@ out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
     date = ymd(date),
     station = gsub('\\s+', '', station),
     station = case_when(
-      station == 'CB1' ~ 'Clambar Bay 1',
-      station == 'CB2' ~ 'Clambar Bay 2',
-      station == 'CB3' ~ 'Clambar Bay 3',
-      station == 'CB4' ~ 'Clambar Bay 4',
-      station == 'CB5' ~ 'Clambar Bay 5',
-      station == 'CB6' ~ 'Clambar Bay 6',
-      station == 'CB7' ~ 'Clambar Bay 7',
-      station == 'CB8' ~ 'Clambar Bay 8',
-      station == 'JB1' ~ 'Joe Bay 1',
-      station == 'JB2' ~ 'Joe Bay 2',
-      station == 'JB3' ~ 'Joe Bay 3',
-      station == 'JB4' ~ 'Joe Bay 4',
-      station == 'JB5' ~ 'Joe Bay 5',
-      station == 'JB6' ~ 'Joe Bay 6',
+      station == 'PMOutfall' ~ 'PM Out',
       station == 'TBEP-MCBHO2' ~ 'TBEP-MCBH02',
       T ~ station
     )
