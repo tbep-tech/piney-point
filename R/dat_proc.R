@@ -508,7 +508,6 @@ macrodat <- flsht %>%
 
 save(macrodat, file = 'data/macrodat.RData', version = 2)
 
-
 # contaminants from DEP ---------------------------------------------------
 
 fl <- 'http://publicfiles.dep.state.fl.us/DEAR/DEARweb/_PP_EventResponse/Latest_Analytical_Results_Final.xlsx'
@@ -546,6 +545,71 @@ rscntdat <- rawdat %>%
   filter(!grepl('Blank', station))
 
 save(rscntdat, file = 'data/rscntdat.RData', version = 2)
+
+
+# phytoplankton data ------------------------------------------------------
+
+gdrive_phypth <- 'https://drive.google.com/drive/u/0/folders/1_69VmwAPA3i0aeEHZg_-qJU5TqLiITBf'
+
+# csv files must be opened/saved as spreadsheet in google sheets
+fls <- drive_ls(gdrive_phypth, type = 'spreadsheet')
+
+##
+# fldep
+
+# data from DEP, by way of FWI
+# https://docs.google.com/spreadsheets/d/1ZSeAzDX4fGQHDbyRGOaJnkEy4ttZzNva1zWs1fKFFRU/edit#gid=1764340772
+id <- fls[grep('^FLDEP', fls$name), 'id'] %>% pull(id)
+flphy <- read_sheet(id)
+rsphydatfldep <- flphy %>% 
+  select(
+    date = `Site Visit Date and Time`, 
+    station = `Sample Location`, 
+    species = `Algal ID`, 
+    microcyst_ugl = `Total Microcystin Toxin (micrograms/L)`, 
+    othertox_ugl = `Other Toxin (micrograms/L)`
+  ) %>% 
+  mutate(
+    date = as.Date(date), 
+    station = gsub('\\s0', ' ', station), 
+    source = 'fldep', 
+    quant = 'no'
+  )
+
+##
+# pinco
+id <- fls[grep('^PINCO', fls$name), 'id'] %>% pull(id)
+flphy <- read_sheet(id)
+rsphydatpinco <- flphy %>% 
+  select(
+    date = `Date collected`, 
+    station = Site, 
+    species = `Genus/Species`, 
+    val = `cells/L`, 
+    uni = 'cells/L',
+    valqual = Index
+  ) %>% 
+  mutate(
+    date = date(date), 
+    station = case_when(
+      station == 'Rock Pond 1' ~ 'RP1',
+      station == 'Rock Pond 2' ~ 'RP2', 
+      station == 'S. Cockroach 1' ~ 'SCR1', 
+      station == 'S. Cockroach 2' ~ 'SCR2', 
+      station == 'Cockroach 1' ~ 'CR1', 
+      station == 'Cockroach 2' ~ 'CR2', 
+      T ~ station
+    ), 
+    source = 'pinco', 
+    quant = 'yes'
+  )
+
+## 
+# combine all
+
+rsphydat <- bind_rows(rsphydatfldep, rsphydatpinco)
+
+save(rsphydat, file = 'data/rsphydat.RData', version = 2)
 
 # benthic sampling stations -----------------------------------------------
 
