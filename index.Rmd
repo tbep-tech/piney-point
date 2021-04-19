@@ -47,6 +47,8 @@ load('data/macrodat.RData')
 load('data/rsbntpts.RData')
 load('data/bswqrngs.RData')
 load('data/rscntdat.RData')
+load('data/rsphydat.RData')
+load('data/rsphypts.RData')
 
 # log
 log <- readLines('https://tbep-tech.github.io/piney-point/logs/indexlog.txt')
@@ -100,6 +102,9 @@ rstrns <- sort(unique(rstrndatsav$station))
 # benthic sites
 rsbnts <- sort(unique(rsbntpts$station))
 
+# phyto sites
+rsphys <- sort(unique(rsphypts$station))
+
 # sources lookup
 srcs <- rsstatloc %>% 
   st_set_geometry(NULL) %>% 
@@ -118,6 +123,12 @@ cntvrs <- rscntdat %>%
   pull(var) %>% 
   unique %>% 
   sort
+
+# phy cell count range
+phymax <- rsphydat %>% 
+  pull(val) %>% 
+  max(., na.rm = T) %>% 
+  `/` (1000)
 ```
 
 ```{r statics}
@@ -177,11 +188,11 @@ rscolsin <- rswqdat %>%
   stacols[.] 
 rswqmap <- rsstatloc %>% 
   filter(station %in% rswqdat$station) %>% 
-  mapview(zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = rscolsin, map.types = mptyps) %>% 
+  mapview(zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = rscolsin, map.types = mptyps, alpha.regions = 0.9) %>% 
   .@map %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 rswqmapall <- rsstatloc %>% 
-  mapview(zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = stacols, map.types = mptyps) %>% 
+  mapview(zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = stacols, map.types = mptyps, alpha.regions = 0.9) %>% 
   .@map %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
@@ -309,10 +320,34 @@ rsbntmap <- mapview(rsbntpts, homebutton = F, legend = F) %>%
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
 # response phytoplankton sampling base map
-rsphymap <- mapview(rsbntpts, homebutton = F, legend = F) %>% 
+phyleg <- rsphypts %>% 
+  st_set_geometry(NULL) %>% 
+  select(typ, col) %>% 
+  unique
+rsphymap <- mapview(rsphypts, homebutton = F, legend = F) %>% 
   .@map %>% 
   clearMarkers() %>%
-  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
+  addCircleMarkers(
+    data = rsphypts,
+    layerId = ~station,
+    stroke = TRUE,
+    color = 'black',
+    fill = TRUE,
+    fillColor = rsphypts$col,
+    weight = 1,
+    fillOpacity = 1,
+    radius= 4,
+    label = ~paste0('Station ', station)
+  ) %>% 
+  addStaticLabels(
+    data = rsphypts,
+    label = rsphypts$station, 
+    direction = 'top', 
+    textsize = '15px',
+    offset = c(0, 1)
+  ) %>% 
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point') %>% 
+  addLegend("topright", title = 'Data type', opacity = 1, labels = phyleg$typ, colors = phyleg$col) 
 ```
 
 ```{r reactives}
@@ -367,7 +402,7 @@ baseplo2 <- reactive({
 })
 
 # baseline variable text ranges
-bswqtxt <- reactive({
+bswqtxt1 <- reactive({
   
   # input
   varsel1 <- input$varsel1
@@ -375,7 +410,7 @@ bswqtxt <- reactive({
   tmp <- bswqrngs %>% 
     filter(var == !!varsel1) 
   
-  out <- HTML(paste('Normal range for March/April (mean +/- 1 sd):<b>', tmp$minv, '-', tmp$maxv, tmp$lbs, '</b><br></br>'))
+  out <- HTML(paste('Normal range for March/April (mean +/- 1 sd):<b>', tmp$minv, '-', tmp$maxv, tmp$lbunis, '</b><br></br>'))
   
   return(out)
   
@@ -913,6 +948,157 @@ rsbntmap1 <- reactive({
   return(mout)
   
 })
+
+# rapid response phyto map selection
+rsphymap1 <- reactive({
+  
+  # input
+  stasel3 <- input$stasel3
+  
+  toadd <- rsphypts %>% 
+    filter(station %in% stasel3)
+  mout <- rsphymap %>% 
+    addCircleMarkers(
+      data = toadd,
+      layerId = ~station,
+      stroke = TRUE,
+      color = 'black',
+      fill = TRUE,
+      fillColor = 'red',
+      weight = 1,
+      fillOpacity = 1,
+      radius= 6,
+      label = ~paste0('Station ', station)
+    ) %>% 
+    setView(mapcenter[1], mapcenter[2], zoom = 11)
+  
+  return(mout)
+  
+})
+
+# rapid response phyto data
+rsphydat1 <- reactive({
+  
+  # input
+  stasel3 <- input$stasel3
+  
+  phyout <- rsphydat %>% 
+    filter(station %in% stasel3)
+  
+  wqout <- rswqdat %>% 
+    filter(station %in% stasel3)
+  
+  out <- list(
+    wq = wqout, 
+    phy = phyout
+  )
+  
+  return(out)
+  
+})
+
+# rapid response phyto text
+rsphytxt1 <- reactive({
+  
+  # inputs
+  rsphydat1 <- rsphydat1()
+  
+  typ <- unique(rsphydat1$phy$typ)
+  
+  out <- HTML(paste0('<b>', typ, ' samples</b><br></br>'))
+  
+  return(out)
+  
+})
+
+# # baseline variable text ranges
+# bswqtxt2 <- reactive({
+#   
+#   # input
+#   varsel2 <- input$varsel2
+# 
+#   tmp <- bswqrngs %>% 
+#     filter(var == !!varsel2) 
+#   
+#   out <- HTML(paste(tmp$lbs, 'normal range for March/April (mean +/- 1 sd):<b>', tmp$minv, '-', tmp$maxv, '</b><br></br>'))
+#   
+#   return(out)
+#   
+# })
+
+# rapid response phyto plot
+rsphyplo1 <- reactive({
+  
+  # inputs
+  rsphydat1 <- rsphydat1()
+  # varsel2 <- input$varsel2
+
+  # req(varsel2)
+
+  phydat <- rsphydat1$phy
+  
+  typ <- phydat %>% 
+    pull(typ) %>% 
+    unique
+  
+  out <- NULL
+  if(typ == 'Quantitative'){
+    
+    toplo <- phydat %>% 
+      select(date, species, val, valqual) %>% 
+      arrange(val) %>% 
+      mutate(
+        species = factor(species, levels = species), 
+        val = val / 1000
+        )
+  
+    out <- ggplot(toplo, aes(y = species, x = val)) + 
+      geom_bar(stat = 'identity', aes(fill = valqual), colour = 'black') + 
+      scale_x_continuous(expand = c(0, 0), limits = c(0, phymax)) +
+      scale_fill_manual(values = RColorBrewer::brewer.pal(length(levels(toplo$valqual)), 'Reds')) +
+      facet_wrap(~date) + 
+      theme_minimal(base_size = 16) + 
+      theme(
+        legend.position = 'top', 
+        legend.title = element_blank(), 
+        strip.background = element_blank(), 
+        axis.title.y = element_blank()
+        ) + 
+      labs(
+        x = '1000 x cells/L'
+      )
+
+  }
+  
+  return(out)
+  
+})
+
+# rapid response phyto table
+rsphytab1 <- reactive({
+  
+  # inputs
+  rsphydat1 <- rsphydat1()
+
+  phydat <- rsphydat1$phy
+  
+  typ <- phydat %>% 
+    pull(typ) %>% 
+    unique
+  
+  out <- NULL
+  if(typ == 'Qualitative') 
+    out <- phydat %>% 
+      select(
+        Date = date, 
+        `Taxa observed` = species
+        ) %>% 
+      unique %>% 
+      reactable()
+  
+  return(out)
+  
+})
 ```
 
 OVERVIEW
@@ -1018,7 +1204,7 @@ column(12,
 )
 column(12, 
   column(3, 
-    renderUI(bswqtxt())
+    renderUI(bswqtxt1())
   ), 
   column(9,
     materialSwitch(inputId = 'rngemph', label = 'Emphasize results out of normal range?', width = '100%')     
@@ -1140,7 +1326,9 @@ Column {data-width=275}
 ### __STATION LOCATIONS - PINEY POINT AT MARKER__
 
 ```{r}
-rsphymap
+rsphymap %>% 
+  clearMarkers() %>% 
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 ```
 
 Column {data-width=650}
@@ -1280,19 +1468,75 @@ Column {data-width=275}
 ### __STATION LOCATIONS - PINEY POINT AT MARKER__
 
 ```{r}
-rsphymap
+output$rsphymap1 <- renderLeaflet(rsphymap1())
+leafletOutput('rsphymap1')
 ```
 
-Column {data-width=650}
+Column {data-width=650 .tabset .tabset-fade}
 -----------------------------------------------------------------------
 
-### __STATION RESULTS__
-
+<br>
 ```{r}
-fillCol(
-  HTML('<h5>Data forthcoming</h5>')
+column(12, 
+  column(4, 
+    selectInput(inputId = 'stasel3', label = 'Select station:', choices = rsphys, selected = rsphys[1])
+    )#, 
+  # column(4,
+  #   renderUI({
+  #     
+  #     # inputs
+  #     rsphydat1 <- rsphydat1()
+  #     
+  #     req(rsphydat1)
+  #     
+  #     tosel <- rsphydat1$wq %>% 
+  #       select(var) %>%
+  #       left_join(parms, by = 'var') %>% 
+  #       select(lbs, var) %>% 
+  #       unique %>% 
+  #       deframe %>% 
+  #       as.list
+  # 
+  #     selectInput('varsel2', 'Select water quality variable:', choices = tosel, selected = tosel[1])
+  #     
+  #   })
+  # ), 
+  # column(4, 
+  #   renderUI(bswqtxt2())
+  # )
+)
+column(12,
+  column(4, 
+    renderUI(rsphytxt1())
+  )
 )
 ```
+
+### SUMMARY
+
+```{r}
+output$rsphyplo1 <- renderPlot(rsphyplo1())
+output$rsphytab1 <- renderReactable(rsphytab1())
+output$physum1 <- renderUI({
+  
+  # input
+  rsphydat1 <- rsphydat1()
+  
+  typ <- rsphydat1$phy %>% 
+    pull(typ) %>% 
+    unique
+  
+  if(typ == 'Quantitative'){
+    plotOutput('rsphyplo1')
+  } else {
+    if(typ == 'Qualitative')
+      reactableOutput('rsphytab1')
+  }
+  
+})
+uiOutput('physum1')
+```
+
 
 WATER QUALITY {data-navmenu="BASELINE DATA"}
 =======================================================================

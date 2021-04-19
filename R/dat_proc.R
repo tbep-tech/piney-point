@@ -136,8 +136,8 @@ bswqrngs <- epcraw %>%
   ) %>% 
   left_join(parms, by = c('var', 'uni')) %>% 
   mutate(
-    lbs = gsub('^.*\\s(\\(.*\\))$', '\\1', lbs), 
-    lbs = gsub('pH', '', lbs)
+    lbunis = gsub('^.*\\s(\\(.*\\))$', '\\1', lbs), 
+    lbunis = gsub('pH', '', lbunis)
     )
 
 save(bswqrngs, file = 'data/bswqrngs.RData', version = 2)
@@ -546,7 +546,6 @@ rscntdat <- rawdat %>%
 
 save(rscntdat, file = 'data/rscntdat.RData', version = 2)
 
-
 # phytoplankton data ------------------------------------------------------
 
 gdrive_phypth <- 'https://drive.google.com/drive/u/0/folders/1_69VmwAPA3i0aeEHZg_-qJU5TqLiITBf'
@@ -573,7 +572,7 @@ rsphydatfldep <- flphy %>%
     date = as.Date(date), 
     station = gsub('\\s0', ' ', station), 
     source = 'fldep', 
-    quant = 'no'
+    typ = 'Qualitative'
   )
 
 ##
@@ -601,15 +600,43 @@ rsphydatpinco <- flphy %>%
       T ~ station
     ), 
     source = 'pinco', 
-    quant = 'yes'
+    typ = 'Quantitative'
   )
 
 ## 
 # combine all
 
-rsphydat <- bind_rows(rsphydatfldep, rsphydatpinco)
+rsphydat <- bind_rows(rsphydatfldep, rsphydatpinco) %>% 
+  mutate(
+    valqual = factor(valqual, levels = c('Very low', 'Low', 'Medium'))
+  )
 
 save(rsphydat, file = 'data/rsphydat.RData', version = 2)
+
+# phytoplankon sampling stations ------------------------------------------
+
+data(rsphydat)
+
+##
+# make point object
+rsphypts <- rsphydat %>% 
+  inner_join(rsstatloc, ., by = c('source', 'station')) %>% 
+  mutate(col = case_when(
+    typ == 'Quantitative' ~ col2hcl('burlywood1'), 
+    typ == 'Qualitative' ~ col2hcl('cyan3')
+    )
+  ) %>% 
+  select(station, typ, col) %>% 
+  unique %>% 
+  mutate( 
+    lng = st_coordinates(.)[,1],
+    lat = st_coordinates(.)[,2]
+  ) %>% 
+  select(
+    station, lng, lat, typ, col
+  )
+
+save(rsphypts, file = 'data/rsphypts.RData', version = 2)
 
 # benthic sampling stations -----------------------------------------------
 
