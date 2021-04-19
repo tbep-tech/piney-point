@@ -636,7 +636,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ##
 # fldep dump 20210411
-fl <- fls[which(fls$name == 'FLDEP_20210417'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210418'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 fldep1 <- flsht %>% 
   clean_names %>% 
@@ -998,7 +998,7 @@ pinco1 <- bind_rows(out1, out2)
 # sleep to not bonk api limit
 Sys.sleep(wait)
 
-fl <- fls[which(fls$name == 'TCB_waterquality_Apr2021'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'NCF_waterquality_Apr2021'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 ncf1 <- flsht %>% 
   select(
