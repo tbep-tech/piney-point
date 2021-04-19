@@ -859,6 +859,10 @@ for(id in ids) {
         T ~ uni
       ),
       source = 'pinco',
+      source = case_when(
+        station %in% c("TBEP-BH0", "TBEP-BH15", "TBEP-BH25", "TBEP-MCBH02") ~ 'tbep', 
+        T ~ source
+      ),
       date = as.Date(date)
     ) %>%
     filter(!station %in% 'MC- FB') %>% # this is a validation sample, no data
@@ -923,6 +927,10 @@ out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
       station == 'PMOutfall' ~ 'PM Out',
       station == 'TBEP-MCBHO2' ~ 'TBEP-MCBH02',
       T ~ station
+    ), 
+    source = case_when(
+      station %in% c("TBEP-BH0", "TBEP-BH15", "TBEP-BH25", "TBEP-MCBH02") ~ 'tbep', 
+      T ~ source
     )
   ) %>%
   select(station, date, source, var, uni, val, qual) %>%

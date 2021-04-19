@@ -81,7 +81,9 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   abulabs <- c('<1%', '1-5%', '6-25%', '26-50%', '51-75%', '76-100%')
   abubrks <- c(0, 1, 2, 3, 4, 5)
   
-  szrng <- c(2, 14)
+  colpal <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = 'Dark2'))
+  
+  szrng <- c(2, 16)
 
   # prep sav plot data
   savdat <- rstrndatsav %>%
@@ -93,7 +95,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     ) 
   
   # sort color palette so its the same regardless of species selected
-  savcol <- qualitative_hcl(length(savlevs), palette = "Harmonic")
+  savcol <- colpal(length(savlevs))
   names(savcol) <- savlevs
   savcol <- savcol[as.character(unique(savdat$sav_species))]
   
@@ -116,7 +118,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
 
   pa <- ggplot2::ggplot(toplo1a, ggplot2::aes(y = date, x = location)) +
     ggplot2::geom_point(data = toplo2a, alpha = 1, colour = 'black', size = 2) +
-    ggplot2::geom_point(aes(size = sav_bb, fill = sav_species), alpha = 0.6, pch = 21) +
+    ggplot2::geom_point(aes(size = sav_bb, fill = sav_species), alpha = 0.8, pch = 21) +
     ggplot2::scale_fill_manual(values = savcol) +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng) +
     ggplot2::theme_minimal(base_size = base_size) +
@@ -144,7 +146,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     ) 
   
   # sort color palette so its the same regardless of species selected
-  mcrcol <- qualitative_hcl(length(mcrlevs), palette = "Dark3")
+  mcrcol <- colpal(length(mcrlevs))
   names(mcrcol) <- mcrlevs
   mcrcol <- mcrcol[as.character(unique(mcrdat$macroalgae_species))]
   
@@ -167,7 +169,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   
   pb <- ggplot2::ggplot(toplo1b, ggplot2::aes(y = date, x = location)) +
     ggplot2::geom_point(data = toplo2b, alpha = 1, colour = 'black', size = 2) +
-    ggplot2::geom_point(aes(size = macroalgae_bb, fill = macroalgae_species), alpha = 0.6, pch = 21) +
+    ggplot2::geom_point(aes(size = macroalgae_bb, fill = macroalgae_species), alpha = 0.8, pch = 21) +
     ggplot2::scale_fill_manual(values = mcrcol) +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, guide = F, range = szrng) +
     ggplot2::theme_minimal(base_size = base_size) +

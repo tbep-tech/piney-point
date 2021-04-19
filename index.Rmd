@@ -20,7 +20,7 @@ library(tidyverse)
 library(sf)
 library(plotly)
 library(leafem)
-library(colorspace)
+library(RColorBrewer)
 library(scales)
 library(reactable)
 library(tbeptools)
@@ -64,14 +64,14 @@ prj <- 4326
 fml <- 'Lato Light'
 
 # line colors on baseline
-cols <- qualitative_hcl(length(unique(bswqdat$var)), palette = "Dynamic")
+cols <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = 'Set1'))(length(unique(bswqdat$var)))
 
 # station colors on maps
-stacols <- qualitative_hcl(length(unique(rsstatloc$source_lng)), palette = "Dark2")
+stacols <- colorRampPalette(RColorBrewer::brewer.pal(n = 7, name = 'Accent'))(length(unique(rsstatloc$source_lng)))
 names(stacols) <- sort(unique(rsstatloc$source_lng))
 
 # variable color on maps
-vrscols <- rev(sequential_hcl(11, palette = 'Blues'))
+vrscols <- RColorBrewer::brewer.pal(n = 9, name = 'Blues')
 
 # value box colors
 boxcol <- '#00806E'
@@ -173,6 +173,7 @@ rscolsin <- rswqdat %>%
   left_join(rsstatloc, by = 'source') %>% 
   pull(source_lng) %>% 
   unique %>% 
+  sort %>% 
   stacols[.] 
 rswqmap <- rsstatloc %>% 
   filter(station %in% rswqdat$station) %>% 
