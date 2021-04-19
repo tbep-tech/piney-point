@@ -169,9 +169,9 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   
   pb <- ggplot2::ggplot(toplo1b, ggplot2::aes(y = date, x = location)) +
     ggplot2::geom_point(data = toplo2b, alpha = 1, colour = 'black', size = 2) +
-    ggplot2::geom_point(aes(size = macroalgae_bb, fill = macroalgae_species), alpha = 0.8, pch = 21) +
+    ggplot2::geom_point(aes(size = macroalgae_bb, fill = macroalgae_species), alpha = 0.8, pch = 23) +
     ggplot2::scale_fill_manual(values = mcrcol) +
-    ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, guide = F, range = szrng) +
+    ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng) +
     ggplot2::theme_minimal(base_size = base_size) +
     ggplot2::theme(
       panel.grid.major.y = ggplot2::element_blank(),
@@ -187,7 +187,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     guides(fill = guide_legend(override.aes = list(size = 7)))
   
   # out
-  p <- pa + pb + plot_layout(ncol = 1, heights = c(0.9, 1))
+  p <- pa + pb + plot_layout(ncol = 1, heights = c(0.9, 1), guides = 'collect')
   
   return(p)
   
