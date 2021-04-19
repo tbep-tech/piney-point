@@ -584,8 +584,7 @@ rsphydatpinco <- flphy %>%
     date = `Date collected`, 
     station = Site, 
     species = `Genus/Species`, 
-    val = `cells/L`, 
-    uni = 'cells/L',
+    val = `cells/L`,
     valqual = Index
   ) %>% 
   mutate(
@@ -600,7 +599,8 @@ rsphydatpinco <- flphy %>%
       T ~ station
     ), 
     source = 'pinco', 
-    typ = 'Quantitative'
+    typ = 'Quantitative',
+    uni = 'cells/L'
   )
 
 ## 
@@ -727,7 +727,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ##
 # fldep dump 20210411
-fl <- fls[which(fls$name == 'FLDEP_20210418'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210419'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 fldep1 <- flsht %>% 
   clean_names %>% 
