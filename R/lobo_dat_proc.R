@@ -87,7 +87,7 @@ tz <- attr(lobodat$DateTimeStamp, which = 'tzone')
 lat <- 27.6594677
 long <- -82.6043877
 
-loboeco <- WtRegDO::ecometab(lobodat, DO_var = "DO_obs", tz = tz, lat = lat, long = long)
+loboeco <- WtRegDO::ecometab(lobodat, DO_var = "DO_obs", tz = tz, lat = lat, long = long, gasex = 'Wanninkhof')
 
 save(loboeco, file = 'data/loboeco.RData', version = 2)
 

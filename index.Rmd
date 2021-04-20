@@ -462,7 +462,7 @@ colfun <- reactive({
   
 })
 
-# response data
+# response wq data
 rsdat1 <- reactive({
   
   # input
@@ -502,7 +502,7 @@ rsdat1 <- reactive({
   
 })
 
-# response data table
+# response wq data table
 rstab1 <- reactive({
   
   # input
@@ -566,7 +566,7 @@ rstab1 <- reactive({
   
 })
 
-# response data map
+# response wq data map
 rsmap1 <- reactive({
   
   # input
@@ -1011,20 +1011,22 @@ rsphytxt1 <- reactive({
   
 })
 
-# # baseline variable text ranges
-# bswqtxt2 <- reactive({
-#   
-#   # input
-#   varsel2 <- input$varsel2
-# 
-#   tmp <- bswqrngs %>% 
-#     filter(var == !!varsel2) 
-#   
-#   out <- HTML(paste(tmp$lbs, 'normal range for March/April (mean +/- 1 sd):<b>', tmp$minv, '-', tmp$maxv, '</b><br></br>'))
-#   
-#   return(out)
-#   
-# })
+# baseline variable text ranges
+bswqtxt2 <- reactive({
+
+  # input
+  varsel2 <- input$varsel2
+
+  req(varsel2)
+  
+  tmp <- bswqrngs %>%
+    filter(var == !!varsel2)
+
+  out <- HTML(paste(tmp$lbs, 'normal range for March/April (mean +/- 1 sd):<b>', tmp$minv, '-', tmp$maxv, '</b><br></br>'))
+
+  return(out)
+
+})
 
 # rapid response phyto plot
 rsphyplo1 <- reactive({
@@ -1090,11 +1092,61 @@ rsphytab1 <- reactive({
   if(typ == 'Qualitative') 
     out <- phydat %>% 
       select(
+        Station = station,
         Date = date, 
         `Taxa observed` = species
         ) %>% 
       unique %>% 
       reactable()
+  
+  return(out)
+  
+})
+
+# response wq data table to accompany phyto
+rstab2 <- reactive({
+  
+  # input
+  rsphydat1 <- rsphydat1()
+  varsel2 <- input$varsel2
+  
+  req(varsel2)
+  
+  # variable label
+  vrlb <- names(vrs)[vrs == varsel2]
+  
+  totab <- rsphydat1$wq %>% 
+    filter(var %in% !!varsel2) %>% 
+    left_join(parms, by = 'var') %>% 
+    left_join(srcs, by = 'source') %>% 
+    select(
+      Station = station,
+      Date = date, 
+      `In normal range?` = inrng,
+      val 
+    ) %>% 
+    arrange(desc(Date))
+  names(totab)[names(totab) == 'val'] <- vrlb
+  
+  out <- reactable(totab,
+    defaultColDef = colDef(
+      footerStyle = list(fontWeight = "bold"),
+      format = colFormat(separators = F),
+      resizable = TRUE, 
+      align = 'left'
+    ),
+    defaultPageSize = nrow(totab),
+    rowStyle = JS("function(rowInfo) {
+      if (rowInfo.row['In normal range?'] == 'no') {
+        return { background: 'rgba(0, 0, 0, 0.05)' }
+      }
+    }"),
+    rowClass = JS("function(rowInfo) {
+      if (rowInfo.row['In normal range?'] == 'no') {
+        return 'bold'
+      }
+    }")
+  )
   
   return(out)
   
@@ -1480,30 +1532,30 @@ Column {data-width=650 .tabset .tabset-fade}
 column(12, 
   column(4, 
     selectInput(inputId = 'stasel3', label = 'Select station:', choices = rsphys, selected = rsphys[1])
-    )#, 
-  # column(4,
-  #   renderUI({
-  #     
-  #     # inputs
-  #     rsphydat1 <- rsphydat1()
-  #     
-  #     req(rsphydat1)
-  #     
-  #     tosel <- rsphydat1$wq %>% 
-  #       select(var) %>%
-  #       left_join(parms, by = 'var') %>% 
-  #       select(lbs, var) %>% 
-  #       unique %>% 
-  #       deframe %>% 
-  #       as.list
-  # 
-  #     selectInput('varsel2', 'Select water quality variable:', choices = tosel, selected = tosel[1])
-  #     
-  #   })
-  # ), 
-  # column(4, 
-  #   renderUI(bswqtxt2())
-  # )
+    ), 
+  column(4,
+    renderUI({
+
+      # inputs
+      rsphydat1 <- rsphydat1()
+
+      req(rsphydat1)
+
+      tosel <- rsphydat1$wq %>%
+        select(var) %>%
+        left_join(parms, by = 'var') %>%
+        select(lbs, var) %>%
+        unique %>%
+        deframe %>%
+        as.list
+
+      selectInput('varsel2', 'Select water quality variable:', choices = tosel, selected = tosel[1])
+
+    })
+  ),
+  column(4,
+    renderUI(bswqtxt2())
+  )
 )
 column(12,
   column(4, 
@@ -1517,6 +1569,7 @@ column(12,
 ```{r}
 output$rsphyplo1 <- renderPlot(rsphyplo1())
 output$rsphytab1 <- renderReactable(rsphytab1())
+output$rstab2 <- renderReactable(rstab2())
 output$physum1 <- renderUI({
   
   # input
@@ -1534,8 +1587,15 @@ output$physum1 <- renderUI({
   }
   
 })
-uiOutput('physum1')
+fillCol(flex = c(NA, 1, NA, 1),
+  HTML('<b>Algal results</b>'),
+  uiOutput('physum1'), 
+  HTML('<b>Paired water quaility results</b>'),
+  reactableOutput('rstab2')
+)
 ```
+
+### INFORMATION 
 
 
 WATER QUALITY {data-navmenu="BASELINE DATA"}
