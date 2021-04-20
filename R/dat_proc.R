@@ -7,6 +7,7 @@ library(janitor)
 library(tbeptools)
 library(sf)
 library(stringr)
+library(scales)
 library(googlesheets4)
 library(googledrive)
 
@@ -18,9 +19,9 @@ gs4_deauth()
 
 # parameter names, units
 parms <- tibble(
-  var = c('bod', 'chla', 'color', 'do', 'dosat', 'nh3', 'no23', 'orthop', 'ph', 'sal', 'secchi', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
+  var = c('bod', 'chla', 'color', 'do', 'dosat', 'nh34', 'no23', 'orthop', 'ph', 'sal', 'secchi', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
   uni = c('mgl', 'ugl', 'pcu', 'mgl', 'per', 'mgl', 'mgl', 'mgl', 'none', 'ppt', 'm', 'c', 'mgl', 'mgl', 'mgl', 'mgl', 'ntu'), 
-  lbs = c('BOD (mg/L)', 'Chl-a (ug/L)', 'Color (PCU)', 'DO (mg/L)', 'DO (% sat.)', 'NH3 (mg/L)', 'Nitrate/Nitrite (mg/L)', 'Ortho-P (mg/L)', 'pH', 'Sal (ppt)', 'Secchi (m)', 'Temp (C)', 'TKN (mg/L)', 'TN (mg/L)', 'TP (mg/L)', 'TSS (mg/l)', 'Turb (NTU)')
+  lbs = c('BOD (mg/L)', 'Chl-a (ug/L)', 'Color (PCU)', 'DO (mg/L)', 'DO (% sat.)', 'NH3, NH4+ (mg/L)', 'Nitrate/Nitrite (mg/L)', 'Ortho-P (mg/L)', 'pH', 'Sal (ppt)', 'Secchi (m)', 'Temp (C)', 'TKN (mg/L)', 'TN (mg/L)', 'TP (mg/L)', 'TSS (mg/l)', 'Turb (NTU)')
 )
 
 save(parms, file = 'data/parms.RData', version = 2)
@@ -73,7 +74,7 @@ bswqrngs <- epcraw %>%
     date = sample_time,
     color_pcu = color_345_c_pcu, 
     tn_mgl = total_nitrogen_mg_l, 
-    nh3_mgl = ammonia_mg_l,
+    nh34_mgl = ammonia_mg_l,
     no23_mgl = nitrates_nitrites_mg_l,
     tkn_mgl = kjeldahl_nitrogen_mg_l,
     orthop_mgl = ortho_phosphates_mg_l,
@@ -194,7 +195,7 @@ epcraw <- epcraw %>%
     latitude, 
     longitude,
     tn = total_nitrogen_mg_l, 
-    nh3 = ammonia_mg_l,
+    nh34 = ammonia_mg_l,
     tp = total_phosphorus_mg_l, 
     chla = chlorophyll_a_uncorr_ug_l, 
     p_h_bottom, 
@@ -223,7 +224,7 @@ epcraw <- epcraw %>%
     uni = case_when(
       var == 'sal' ~ 'ppt', 
       var == 'ph' ~ 'none', 
-      var %in% c('tp', 'tn', 'nh3') ~ 'mg/l', 
+      var %in% c('tp', 'tn', 'nh34') ~ 'mg/l', 
       var %in% 'chla' ~ 'ug/l'
     )
   )
@@ -257,13 +258,13 @@ manraw <- mandat %>%
     var = case_when(
       var == 'Chla_ugl' ~ 'chla', 
       var == 'TN_ugl' ~ 'tn', 
-      var == 'NH3_N_ugl' ~ 'nh3',
+      var == 'NH3_N_ugl' ~ 'nh34',
       var == 'TP_ugl' ~ 'tp', 
       var == 'pH' ~ 'ph', 
       var == 'Salinity_ppt' ~ 'sal'
     ), 
     val = case_when(
-      var %in% c('tn', 'tp', 'nh3') ~ val / 1000, 
+      var %in% c('tn', 'tp', 'nh34') ~ val / 1000, 
       T ~ val
     ), 
     uni = case_when(
@@ -603,10 +604,45 @@ rsphydatpinco <- flphy %>%
     uni = 'cells/L'
   )
 
+##
+# EPC
+
+# # has TNTC for nanoplankton (too numerous to count), these are filtered
+# # counts in cells/0.1mL, converted to cells/L
+# id <- fls[grep('^EPC', fls$name), 'id'] %>% pull(id)
+# flphy <- read_sheet(id)
+# rsphydatepc <- flphy %>% 
+#   select(
+#     date = Date, 
+#     station = Station, 
+#     species = Taxa, 
+#     val = Count
+#     ) %>% 
+#   mutate_if(is.list, as.character) %>% 
+#   filter(!val %in% 'TNTC') %>% # too numerous to count
+#   filter(!species %in% 'Nanoplankton') %>% 
+#   mutate(
+#     date = date(date),
+#     station = gsub('^0', '', station),
+#     val = as.numeric(val),
+#     val = val * 10, # cells/0.1mL to cells/mL, 
+#     val = val * 1000, # cells/L
+#     valqual = case_when(
+#       val < 1e3 ~ 'Not present/Background', 
+#       val >= 1e3 & val < 1e4 ~ 'Very low', 
+#       val >= 1e4 & val < 1e5 ~ 'Low', 
+#       val >= 1e5 & val < 1e6 ~ 'Medium', 
+#       val >= 1e6 & val ~ 'High'
+#     ), 
+#     source = 'epchc',
+#     typ = 'Quantitative',
+#     uni = 'cells/L'
+#   )
+
 ## 
 # combine all
 
-rsphydat <- bind_rows(rsphydatfldep, rsphydatpinco) %>% 
+rsphydat <- bind_rows(rsphydatfldep, rsphydatpinco) %>% #, rsphydatepc) %>% 
   mutate(
     valqual = factor(valqual, levels = c('Very low', 'Low', 'Medium'))
   )
@@ -739,7 +775,7 @@ fldep1 <- flsht %>%
     sal_ppt = salinity_0_00_surface, 
     dosat_per = d_o_percent_sat_surface, 
     ph_none = p_h_surface, 
-    nh3_mgl = ammonia_n_mg_n_l, 
+    nh34_mgl = ammonia_n_mg_n_l, 
     orthop_mgl = orthophosphate_p_mg_p_l, 
     chla_ugl = chlorophyll_a_corrected_mg_l, # this is ugl, janitor think mu is m
     turb_ntu = turbidity_ntu, 
@@ -801,7 +837,7 @@ for(id in ids) {
         var == 'Temperature' ~ 'temp',
         var == 'Chlorophyll-a' ~ 'chla',
         var == 'Total Kjedahl Nitrogen - Saltwater' ~ 'tkn',
-        var == 'Ammonia as N' ~ 'nh3', 
+        var == 'Ammonia as N' ~ 'nh34', 
         var == 'Dissolved Oxygen' ~ 'do',
         var == 'Dissolved Oxygen % Saturation' ~ 'dosat', 
         var == 'pH' ~ 'ph', 
@@ -875,7 +911,7 @@ out2all <- out2 %>%
     date = as.Date(date), 
     var = gsub('\\sResults_By_Test_Param', '', var), 
     var = case_when(
-      grepl('NH4$', var) ~ 'nh3',
+      grepl('NH4$', var) ~ 'nh34',
       grepl('NN$', var) ~ 'no23',
       grepl('TKN$', var) ~ 'tkn',
       grepl('TP$', var) ~ 'tp',
@@ -933,7 +969,7 @@ for(id in ids) {
       station = gsub('^PC\\s', 'PC', station),
       station = gsub('^MC\\s', 'MC', station),
       var = case_when(
-        var == 'Ammonia' ~ 'nh3',
+        var == 'Ammonia' ~ 'nh34',
         var == 'Nitrate+Nitrite (N)' ~ 'no23',
         var == 'Orthophosphate as P(Dissolved)' ~ 'orthop',
         var == 'Total Phosphorus' ~ 'tp',
@@ -980,8 +1016,8 @@ pincowide <- flsht1 %>%
     secchi_qual = vob,
     tkn_mgl = tkn_mg_l_as_n,
     tkn_qual = tkn_flag,
-    nh3_mgl = nh3_mg_l_as_n, 
-    nh3_qual = nh3_flag, 
+    nh34_mgl = nh3_mg_l_as_n, 
+    nh34_qual = nh3_flag, 
     no23_mgl = n_ox_mg_l_as_n, 
     no23_qual = nox_flag, 
     tp_mgl = total_p_mg_l_as_p, 
@@ -1204,9 +1240,14 @@ rswqdat <- rswqdat %>%
   left_join(bswqrngs, by = c('var', 'uni')) %>% 
   rowwise() %>% 
   mutate(
-    inrng = ifelse(val >= minv & val <= maxv, 'yes', 'no'), 
+    inrng = case_when(
+      val < minv ~ 'below', 
+      val > maxv ~ 'above', 
+      T ~ 'in range'
+      ), 
     val = round(val, sigdig)
   ) %>% 
+  ungroup %>% 
   select(-avev, -stdv, -sigdig, -minv, -maxv, -lbs)
 
 save(rswqdat, file = 'data/rswqdat.RData', version = 2)

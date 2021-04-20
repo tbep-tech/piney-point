@@ -509,6 +509,7 @@ rstab1 <- reactive({
   rsdat1 <- rsdat1()
   rngemph <- input$rngemph
   varsel1 <- input$varsel1
+  rngsel1 <- input$rngsel1
   
   # variable label
   vrlb <- names(vrs)[vrs == varsel1]
@@ -540,27 +541,55 @@ rstab1 <- reactive({
       )
   
   # emphasize out or range
-  if(rngemph)
-    out <- reactable(totab,
-      defaultColDef = colDef(
-        footerStyle = list(fontWeight = "bold"),
-        format = colFormat(separators = F),
-        resizable = TRUE, 
-        align = 'left'
-      ),
-      filterable = T,
-      defaultPageSize = nrow(totab),
-      rowStyle = JS("function(rowInfo) {
-        if (rowInfo.row['In normal range?'] == 'no') {
-          return { background: 'rgba(0, 0, 0, 0.05)' }
-        }
-      }"),
-      rowClass = JS("function(rowInfo) {
-        if (rowInfo.row['In normal range?'] == 'no') {
-          return 'bold'
-        }
-      }")
-    )
+  if(rngemph){
+    
+    req(rngsel1)
+    
+    if(rngsel1 == 'above')
+      out <- reactable(totab,
+        defaultColDef = colDef(
+          footerStyle = list(fontWeight = "bold"),
+          format = colFormat(separators = F),
+          resizable = TRUE, 
+          align = 'left'
+        ),
+        filterable = T,
+        defaultPageSize = nrow(totab),
+        rowStyle = JS("function(rowInfo) {
+          if (rowInfo.row['In normal range?'] == 'above') {
+            return { background: 'rgba(0, 0, 0, 0.05)' }
+          }
+        }"),
+        rowClass = JS("function(rowInfo) {
+          if (rowInfo.row['In normal range?'] == 'above') {
+            return 'bold'
+          }
+        }")
+      )
+    
+    if(rngsel1 == 'below')  
+      out <- reactable(totab,
+        defaultColDef = colDef(
+          footerStyle = list(fontWeight = "bold"),
+          format = colFormat(separators = F),
+          resizable = TRUE, 
+          align = 'left'
+        ),
+        filterable = T,
+        defaultPageSize = nrow(totab),
+        rowStyle = JS("function(rowInfo) {
+          if (rowInfo.row['In normal range?'] == 'below') {
+            return { background: 'rgba(0, 0, 0, 0.05)' }
+          }
+        }"),
+        rowClass = JS("function(rowInfo) {
+          if (rowInfo.row['In normal range?'] == 'below') {
+            return 'bold'
+          }
+        }")
+      )
+    
+  }
   
   return(out)
   
@@ -575,6 +604,7 @@ rsmap1 <- reactive({
   varrng1 <- varrng1()
   varsel1 <- input$varsel1
   rngemph <- input$rngemph
+  rngsel1 <- input$rngsel1
   
   req(rsdat1)
 
@@ -603,8 +633,10 @@ rsmap1 <- reactive({
   # emphasize out of range
   if(nrow(tomap) != 0 & rngemph){
     
-    tomap1 <- tomap %>% filter(inrng == 'yes')
-    tomap2 <- tomap %>% filter(inrng == 'no')
+    req(rngsel1)
+    
+    tomap1 <- tomap %>% filter(inrng != !!rngsel1)
+    tomap2 <- tomap %>% filter(inrng == !!rngsel1)
     
     # hover pt labels
     labs1 <- paste0('Station: ', tomap1$station, ', Date: ', tomap1$date, ', ', vrlb, ': ', round(tomap1$val, 2))
@@ -983,10 +1015,12 @@ rsphydat1 <- reactive({
   stasel3 <- input$stasel3
   
   phyout <- rsphydat %>% 
-    filter(station %in% stasel3)
+    filter(station %in% stasel3) %>% 
+    left_join(srcs, by = 'source')
   
   wqout <- rswqdat %>% 
-    filter(station %in% stasel3)
+    filter(station %in% stasel3) %>% 
+    left_join(srcs, by = 'source')
   
   out <- list(
     wq = wqout, 
@@ -1092,6 +1126,7 @@ rsphytab1 <- reactive({
   if(typ == 'Qualitative') 
     out <- phydat %>% 
       select(
+        Source = source_lng,
         Station = station,
         Date = date, 
         `Taxa observed` = species
@@ -1118,8 +1153,8 @@ rstab2 <- reactive({
   totab <- rsphydat1$wq %>% 
     filter(var %in% !!varsel2) %>% 
     left_join(parms, by = 'var') %>% 
-    left_join(srcs, by = 'source') %>% 
     select(
+      Source = source_lng,
       Station = station,
       Date = date, 
       `In normal range?` = inrng,
@@ -1229,7 +1264,7 @@ column(12,
 )
 column(12,
   column(3, 
-    selectInput('varsel1', HTML('<b>Select variable:</b>'), choices = vrs, selected = 'nh3')       
+    selectInput('varsel1', HTML('<b>Select variable:</b>'), choices = vrs, selected = 'nh34')       
   ), 
   column(3, 
     materialSwitch(inputId = 'mapsel1', label = 'Map results by date?', width = '100%')
@@ -1259,9 +1294,19 @@ column(12,
     renderUI(bswqtxt1())
   ), 
   column(9,
-    materialSwitch(inputId = 'rngemph', label = 'Emphasize results out of normal range?', width = '100%')     
+    fillRow(
+    materialSwitch(inputId = 'rngemph', label = 'Emphasize results out of normal range?', width = '100%'),
+    renderUI({
+      
+      # input
+      rngemph <- input$rngemph
+      
+      if(rngemph)
+        selectInput('rngsel1', NULL, choices = c('above', 'below'), selected = 'above')
+      
+    })
   )
-)
+))
 ```
 
 ### __TABLE DATA__
@@ -1281,7 +1326,7 @@ Use the variable selection menu on the top to view results for a measured water 
 
 How are the data interpreted? 
 
-As of `r log`, data from `r vars` parameters and `r agns` agencies have been added to this dashboard.  These parameters were chosen primarily to track the flow of nutrients from wastewater being discharged into the bay.  The primary environmental threat is an algae response as a result of high concentrations of nutrients in this wastewater. Excess algal can have adverse effects on seagrass, fish, and other wildlife.  __Nitrogen, either total nitrogen (TN) or ammonia (NH3), is the primary concern for tracking potential impacts of discharge from Piney Point.__
+As of `r log`, data from `r vars` parameters and `r agns` agencies have been added to this dashboard.  These parameters were chosen primarily to track the flow of nutrients from wastewater being discharged into the bay.  The primary environmental threat is an algae response as a result of high concentrations of nutrients in this wastewater. Excess algal can have adverse effects on seagrass, fish, and other wildlife.  __Nitrogen, either total nitrogen (TN) or total ammonia nitrogen (NH3, NH4+), is the primary concern for tracking potential impacts of discharge from Piney Point.__
 
 The parameters being monitored include: 
 
@@ -1295,7 +1340,7 @@ __DO (mg/L)__: A measure of dissolved oxygen in the water column as a concentrat
 
 __DO (% saturation)__: A measure of dissolved oxygen in the water column as percent saturation. Low percent saturation less than 30 %  may indicate hypoxic conditions potentially harmful to biological organisms. Supersaturated values (>100%) indicate enhanced algal or seagrass primary production.
 
-__NH3 (mg/L)__: Ammonia concentration as a component of total nitrogen.  Excess ammonia can stimulate algal production.
+__NH3, NH4+ (mg/L)__: Total ammonia nitrogen concentration as a component of total nitrogen, includes unionized ammonia (NH3) and ionized ammonium (NH4+).  Excess total ammonia nitrogen can stimulate algal production.
 
 __Nitrate/Nitrite (mg/L)__: Nitrate/nitrite concentration as a component of total nitrogen.  Excess nitrate/nitrite can stimulate algal production.
 
@@ -1597,11 +1642,11 @@ fillCol(flex = c(NA, 1, NA, 0.5),
 
 ### INFORMATION 
 
-This tab shows results of phytoplankton (algae) surveys provided from different sources.  The data are either qualitative (e.g., description of taxa observed at a site) or quantitative (counts of taxa observed at a site) depending on the data source.  Phytoplankton are collected at the same stations where water quality samples are collected, which allows a comparison of both to determine potential associations between water quality (e.g., nutrient concentrations) and changes in the algal community.  
+This tab shows results of phytoplankton (algae) surveys provided from different sources.  The data are either qualitative (e.g., description of taxa observed at a site) or quantitative (counts of taxa observed at a site) depending on the data source.  Phytoplankton are also collected at many, but not all, of the same stations where water quality samples are collected, which allows a comparison of both to determine potential associations between water quality (e.g., nutrient concentrations) and changes in the algal community.  
 
-Select the station to view from the menu on the top.  The station map on the left shows which stations provide qualitative or quantitative data.  If a qualitative station is selected, a tabular summary of species observed by date will be shown.  If a quantitative station is selected, a plot of algal cell counts (a measure of abundance) by date will be shown.  
+Select the station to view from the menu on the top.  The station map on the left shows which stations provide qualitative or quantitative data.  If a qualitative station is selected, a tabular summary of species observed by date will be shown.  If a quantitative station is selected, a plot of algal cell counts (a measure of abundance) by date will be shown.  The cell counts are categorized into relative amounts (Very low, Low, etc.) following breakpoints used by Florida DEP for *Karenia brevis* ([https://myfwc.com/research/redtide/statewide/](https://myfwc.com/research/redtide/statewide/)).  Note that these breakpoints may not have ecological relevance for algal taxa in Lower Tampa Bay and are only provided as guidelines to assess relative differences.  Results for nanoplankton have been removed because of typically high concentrations that cannot be enumerated in the lab.  
 
-For all stations, water quality data collected at the station will also be shown in a table below the algal results.  You can choose which water quality variable is shown. Observations outside of the normal range will be highlighted in the table. 
+For all stations, water quality data collected at the station will also be shown in a table below the algal results, if available.  You can choose which water quality variable is shown. Observations outside of the normal range will be highlighted in the table. 
 
 WATER QUALITY {data-navmenu="BASELINE DATA"}
 =======================================================================

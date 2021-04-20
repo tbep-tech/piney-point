@@ -1,7 +1,8 @@
 test_that("Checking levels in phytoplankton data", {
   
   chk <- levels(rsphydat$valqual)
+  chk <- any(!chk %in% c('Not present/Background', 'Very low', 'Low', 'Medium', 'High'))
   
-  expect_equal(chk, c('Very low', 'Low', 'Medium'))
+  expect_false(chk)
   
 })
