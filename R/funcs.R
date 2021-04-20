@@ -40,9 +40,9 @@ plo_fun <- function(wqdat, station, cols, parms){
       )
   
   p3 <- plot_ly(toplo) %>% 
-    add_markers(x = ~date, y = ~nh3, type = 'scatter', color = I(cols[4]), mode = 'markers', line = list(shape = 'linear'), showlegend = F) %>% 
+    add_markers(x = ~date, y = ~nh34, type = 'scatter', color = I(cols[4]), mode = 'markers', line = list(shape = 'linear'), showlegend = F) %>% 
     layout(
-      yaxis = list(title = lbs['nh3'], range = rngs$nh3, titlefont = list(size = ylbsz))
+      yaxis = list(title = lbs['nh34'], range = rngs$nh34, titlefont = list(size = ylbsz))
     )  
   
   p4 <- plot_ly(toplo) %>% 
