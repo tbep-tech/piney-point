@@ -73,12 +73,14 @@ lobodat <- lobodat %>%
 
 save(lobodat, file = 'data/lobodat.RData', version = 2)
 
-
 # lobo metabolism ---------------------------------------------------------
 
+# convert do from ml/L go mg/L
+# convert tide from dbar to depth (1dbar is ~1m), sonde is mid-depth at ~2.6m, total depth is 5m
 lobodat <- lobodat %>% 
   mutate(
-    DO_obs = DO_obs * 1.42903 
+    DO_obs = DO_obs * 1.42903, 
+    Tide = Tide + 2.4
   )
 
 tz <- attr(lobodat$DateTimeStamp, which = 'tzone')

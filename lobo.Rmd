@@ -245,7 +245,12 @@ plotOutput('tsplo')
 ### Odum open-water metabolism
 
 ```{r}
+txt <- HTML('This plot shows estimates of metabolic rates as gross prodution (Pg), total respiration (Rt), and net ecosystem metabolism (as the difference between the two). Metabolic rates are based on the Odum open water method (<a href="https://aslopubs.onlinelibrary.wiley.com/doi/10.4319/lo.1956.1.2.0102">Odum 1956</a>, as adapted in <a href="https://aslopubs.onlinelibrary.wiley.com/doi/full/10.1002/lom3.10062">Beck et al. 2015</a>).  Rates are shown as mmol of O<sub>2</sub> per square meter per day, assuming a well-mixed water column at an approximate depth of 5 meters.')
 output$ecoplo <- renderPlot(ecoplo())
-plotOutput('ecoplo')
+fillCol(flex = c(NA, 1), 
+        txt, 
+        plotOutput('ecoplo')
+        )
+
 ```
 
