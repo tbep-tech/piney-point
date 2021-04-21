@@ -607,63 +607,71 @@ rsphydatpinco <- flphy %>%
 ##
 # EPC
 
-# # has TNTC for nanoplankton (too numerous to count), these are filtered
-# # counts in cells/0.1mL, converted to cells/L
-# id <- fls[grep('^EPC', fls$name), 'id'] %>% pull(id)
-# flphy <- read_sheet(id)
-# rsphydatepc <- flphy %>% 
-#   select(
-#     date = Date, 
-#     station = Station, 
-#     species = Taxa, 
-#     val = Count
-#     ) %>% 
-#   mutate_if(is.list, as.character) %>% 
-#   filter(!val %in% 'TNTC') %>% # too numerous to count
-#   filter(!species %in% 'Nanoplankton') %>% 
-#   mutate(
-#     date = date(date),
-#     station = gsub('^0', '', station),
-#     val = as.numeric(val),
-#     val = val * 10, # cells/0.1mL to cells/mL, 
-#     val = val * 1000, # cells/L
-#     valqual = case_when(
-#       val < 1e3 ~ 'Not present/Background', 
-#       val >= 1e3 & val < 1e4 ~ 'Very low', 
-#       val >= 1e4 & val < 1e5 ~ 'Low', 
-#       val >= 1e5 & val < 1e6 ~ 'Medium', 
-#       val >= 1e6 & val ~ 'High'
-#     ), 
-#     source = 'epchc',
-#     typ = 'Quantitative',
-#     uni = 'cells/L'
-#   )
+# has TNTC for nanoplankton (too numerous to count), these are filtered
+# counts in cells/0.1mL, converted to cells/L
+id <- fls[grep('^EPC', fls$name), 'id'] %>% pull(id)
+flphy <- read_sheet(id)
+rsphydatepc <- flphy %>%
+  select(
+    date = Date,
+    station = Station,
+    species = Taxa,
+    val = Count
+    ) %>%
+  mutate_if(is.list, as.character) %>%
+  filter(!val %in% 'TNTC') %>% # too numerous to count
+  filter(!species %in% 'Nanoplankton') %>%
+  mutate(
+    date = date(date),
+    val = as.numeric(val),
+    val = val * 10, # cells/0.1mL to cells/mL,
+    val = val * 1000, # cells/L
+    valqual = case_when(
+      val < 1e3 ~ 'Not present/Background',
+      val >= 1e3 & val < 1e4 ~ 'Very low',
+      val >= 1e4 & val < 1e5 ~ 'Low',
+      val >= 1e5 & val < 1e6 ~ 'Medium',
+      val >= 1e6 & val ~ 'High'
+    ),
+    station = case_when(
+      station %in% c('01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '20') ~ paste0('21PP', station, 's'), 
+      T ~ station
+    ),
+    source = 'epchc',
+    typ = 'Quantitative',
+    uni = 'cells/L'
+  )
 
 ## 
 # combine all
 
-rsphydat <- bind_rows(rsphydatfldep, rsphydatpinco) %>% #, rsphydatepc) %>% 
+rsphydat <- bind_rows(rsphydatfldep, rsphydatpinco, rsphydatepc) %>% 
+  filter(!valqual == 'Not present/Background' | is.na(valqual)) %>% 
   mutate(
-    valqual = factor(valqual, levels = c('Very low', 'Low', 'Medium'))
-  )
-
+    valqual = factor(valqual, levels = c('Very low', 'Low', 'Medium', 'High'))
+  ) 
+  
 save(rsphydat, file = 'data/rsphydat.RData', version = 2)
 
 # phytoplankon sampling stations ------------------------------------------
 
 data(rsphydat)
 
+typs <- rsphydat %>% 
+  select(station, typ) %>% 
+  unique
+
 ##
 # make point object
-rsphypts <- rsphydat %>% 
-  inner_join(rsstatloc, ., by = c('source', 'station')) %>% 
+rsphypts <- read_sheet('1ju1vJpCxR58Iayr8DhBxGVqloZDTI4TDoQUohS0h-6c') %>%
+  mutate_if(is.list, as.character) %>% 
+  left_join(typs, by = 'station') %>% 
   mutate(col = case_when(
     typ == 'Quantitative' ~ col2hcl('burlywood1'), 
     typ == 'Qualitative' ~ col2hcl('cyan3')
     )
   ) %>% 
-  select(station, typ, col) %>% 
-  unique %>% 
+  st_as_sf(coords = c('lng', 'lat'), crs = 4326) %>% 
   mutate( 
     lng = st_coordinates(.)[,1],
     lat = st_coordinates(.)[,2]
@@ -671,6 +679,10 @@ rsphypts <- rsphydat %>%
   select(
     station, lng, lat, typ, col
   )
+
+# remove PP- stations, these were sampled week of 4/19, will need to add once I have data in hand
+rsphypts <- rsphypts %>% 
+  filter(!grepl('^PP\\-', station))
 
 save(rsphypts, file = 'data/rsphypts.RData', version = 2)
 
@@ -869,10 +881,12 @@ out1all <- out1 %>%
   mutate(
     station = case_when(
       grepl('^\\(Piney\\sPoint\\sOutfall|^\\(PP\\sOutfall', station) ~ 'PM Out', 
-      grepl('^\\(Piney\\sPoint\\sCreek|^\\(PP\\sCreek', station) ~ 'PPC41'
+      grepl('^\\(Piney\\sPoint\\sCreek|^\\(PP\\sCreek', station) ~ 'PPC41', 
+      T ~ station
     ), 
   ) %>% 
-  select(station, date, source, var, uni, val, qual)
+  select(station, date, source, var, uni, val, qual) %>% 
+  unique
 
 # mpnrd, estuary samples
 ids <- fls[grep('Results_By_Test_Param', fls$name), 'id'] %>% pull(id)
@@ -1125,7 +1139,14 @@ out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
 #   filter(!station %in% 'MC- FB') %>% # this is a validation site, no data
 #   unique
 
-pinco1 <- bind_rows(out1, out2)
+# there are diff samples by depth for in situ, avg out
+pinco1 <- bind_rows(out1, out2) %>% 
+  group_by(station, date, source, var, uni, qual) %>% 
+  summarise(
+    val = mean(val, na.rm = T), 
+    .groups = 'drop'
+  ) %>% 
+  select(station, date, source, var, uni, val, qual)
 
 ##
 # new college dump 20210410
@@ -1199,6 +1220,7 @@ epc1 <- epcout
 # combine all
 
 rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1) %>%
+  ungroup %>% 
   unique %>%
   filter(!is.na(val)) %>%
   arrange(source, station, date, var)

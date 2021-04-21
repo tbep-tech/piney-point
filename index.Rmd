@@ -1036,10 +1036,15 @@ rsphytxt1 <- reactive({
   
   # inputs
   rsphydat1 <- rsphydat1()
-  
+
   typ <- unique(rsphydat1$phy$typ)
   
-  out <- HTML(paste0('<b>', typ, ' samples</b><br></br>'))
+  out <- paste0(typ, ' algae samples')
+  
+  if(nrow(rsphydat1$wq) == 0)
+    out <- paste0(out, ', no water quality data')
+  
+  out <- HTML(paste0('<b>', out, '</b><br></br>'))
   
   return(out)
   
@@ -1067,9 +1072,6 @@ rsphyplo1 <- reactive({
   
   # inputs
   rsphydat1 <- rsphydat1()
-  # varsel2 <- input$varsel2
-
-  # req(varsel2)
 
   phydat <- rsphydat1$phy
   
@@ -1082,16 +1084,27 @@ rsphyplo1 <- reactive({
     
     toplo <- phydat %>% 
       select(date, species, val, valqual) %>% 
+      complete(species, date, fill = list(val = 0, valqual = 'Very low'))
+    
+    levs <- toplo %>% 
+      filter(date == min(date)) %>% 
       arrange(val) %>% 
+      pull(species)
+    
+    toplo <- toplo %>% 
       mutate(
-        species = factor(species, levels = species), 
+        species = factor(species, levels = levs),
         val = val / 1000
-        )
-  
+        ) %>% 
+      filter(val != 0)
+    
+    cols <- RColorBrewer::brewer.pal(length(levels(toplo$valqual)) - 1, 'Greens')
+    cols <- c('white', cols)
+    
     out <- ggplot(toplo, aes(y = species, x = val)) + 
       geom_bar(stat = 'identity', aes(fill = valqual), colour = 'black') + 
       scale_x_continuous(expand = c(0, 0), limits = c(0, phymax)) +
-      scale_fill_manual(values = RColorBrewer::brewer.pal(length(levels(toplo$valqual)), 'Reds')) +
+      scale_fill_manual(values = cols, drop = F) +
       facet_wrap(~date) + 
       theme_minimal(base_size = 16) + 
       theme(
@@ -1170,17 +1183,7 @@ rstab2 <- reactive({
       resizable = TRUE, 
       align = 'left'
     ),
-    defaultPageSize = nrow(totab),
-    rowStyle = JS("function(rowInfo) {
-      if (rowInfo.row['In normal range?'] == 'no') {
-        return { background: 'rgba(0, 0, 0, 0.05)' }
-      }
-    }"),
-    rowClass = JS("function(rowInfo) {
-      if (rowInfo.row['In normal range?'] == 'no') {
-        return 'bold'
-      }
-    }")
+    defaultPageSize = nrow(totab)
   )
   
   return(out)
@@ -1414,6 +1417,158 @@ valueBox(stsm, 'Sites with data', color = boxcol, icon = 'fa-map-marked')
 valueBox(smsm, 'Measurements available', color = boxcol, icon = 'fa-tint')
 ```
 
+ALGAL SURVEYS {data-navmenu="CURRENT DATA"}
+=======================================================================
+
+Column {data-width=275}
+-----------------------------------------------------------------------
+
+### __STATION LOCATIONS - PINEY POINT AT MARKER__
+
+```{r}
+output$rsphymap1 <- renderLeaflet(rsphymap1())
+leafletOutput('rsphymap1')
+```
+
+Column {data-width=650 .tabset .tabset-fade}
+-----------------------------------------------------------------------
+
+<br>
+```{r}
+column(12, 
+  column(4, 
+    selectInput(inputId = 'stasel3', label = 'Select station:', choices = rsphys, selected = rsphys[1])
+    ), 
+  column(4,
+    renderUI({
+
+      # inputs
+      rsphydat1 <- rsphydat1()
+
+      req(nrow(rsphydat1$wq) > 0)
+      
+      tosel <- rsphydat1$wq %>%
+        select(var) %>%
+        left_join(parms, by = 'var') %>%
+        select(lbs, var) %>%
+        unique %>%
+        deframe %>%
+        as.list
+
+      selectInput('varsel2', 'Select water quality variable:', choices = tosel, selected = tosel[1])
+
+    })
+  ),
+  column(4,
+    renderUI(bswqtxt2())
+  )
+)
+column(12,
+  column(4, 
+    renderUI(rsphytxt1())
+  )
+)
+```
+
+### SUMMARY
+
+```{r}
+output$rsphyplo1 <- renderPlot(rsphyplo1())
+output$rsphytab1 <- renderReactable(rsphytab1())
+output$rstab2 <- renderReactable(rstab2())
+output$physum1 <- renderUI({
+  
+  # input
+  rsphydat1 <- rsphydat1()
+  
+  typ <- rsphydat1$phy %>% 
+    pull(typ) %>% 
+    unique
+  
+  if(typ == 'Quantitative'){
+    plotOutput('rsphyplo1')
+  } else {
+    if(typ == 'Qualitative')
+      reactableOutput('rsphytab1')
+  }
+  
+})
+fillCol(flex = c(NA, 1, NA, 0.5),
+  HTML('<b>Algal results</b>'),
+  uiOutput('physum1'), 
+  HTML('<b>Paired water quaility results</b>'),
+  reactableOutput('rstab2')
+)
+```
+
+### INFORMATION 
+
+This tab shows results of phytoplankton (algae) surveys provided from different sources.  The data are either qualitative (e.g., description of taxa observed at a site) or quantitative (counts of taxa observed at a site) depending on the data source.  Phytoplankton are also collected at many, but not all, of the same stations where water quality samples are collected, which allows a comparison of both to determine potential associations between water quality (e.g., nutrient concentrations) and changes in the algal community.  
+
+Select the station to view from the menu on the top.  The station map on the left shows which stations provide qualitative or quantitative data.  If a qualitative station is selected, a tabular summary of species observed by date will be shown.  If a quantitative station is selected, a plot of algal cell counts (a measure of abundance) by date will be shown.  The cell counts are categorized into relative amounts (Very low, Low, etc.) following breakpoints used by Florida DEP for *Karenia brevis* ([https://myfwc.com/research/redtide/statewide/](https://myfwc.com/research/redtide/statewide/)).  Note that these breakpoints may not have ecological relevance for algal taxa in Lower Tampa Bay and are only provided as guidelines to assess relative differences.  Results for nanoplankton have been removed because of typically high concentrations that cannot be enumerated in the lab.  
+
+For all stations, water quality data collected at the station will also be shown in a table below the algal results, if available.  You can choose which water quality variable is shown. Observations outside of the normal range will be highlighted in the table. 
+
+RAPID RESPONSE SEAGRASS/MACROALGAE SURVEYS {data-navmenu="CURRENT DATA"}
+=======================================================================
+
+Column {data-width=275}
+-----------------------------------------------------------------------
+
+### __TRANSECT LOCATIONS - PINEY POINT AT MARKER__
+
+```{r}
+output$rstrnmap1 <- renderLeaflet(rstrnmap1())
+leafletOutput('rstrnmap1')
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### __TRANSECT RESULTS__
+
+```{r}
+fillCol(flex = c(0.1, 0.8),
+  fillRow(
+    selectInput(inputId = 'trnsel2', label = 'Select transect:', choices = rstrns, selected = rstrns[1]), 
+    renderUI(
+      selectInput(inputId = 'savsel', label = 'Select SAV species:', choices = rstrnsavsel(), selected = rstrnsavsel(), multiple = T, selectize = T)
+    ),
+    renderUI(
+      selectInput(inputId = 'mcrsel', label = 'Select macroalgae species:', choices = rstrnmcrsel(), selected = rstrnmcrsel(), multiple = T, selectize = T)
+    )
+  ),
+  renderPlot(rstrnplo1())
+)
+```
+
+BENTHIC SURVEYS {data-navmenu="CURRENT DATA"}
+=======================================================================
+
+Column {data-width=275}
+-----------------------------------------------------------------------
+
+### __STATION LOCATIONS - PINEY POINT AT MARKER__
+
+```{r}
+output$rsbntmap1 <- renderLeaflet(rsbntmap1())
+leafletOutput('rsbntmap1')
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### __STATION RESULTS__
+
+```{r}
+fillCol(flex = c(0.1, 0.8),
+  fillRow(
+    selectInput(inputId = 'stasel2', label = 'Select station:', choices = rsbnts, selected = rsbnts[1])
+  ),
+  HTML('<h5>Samples collected 2021-04-12 (biology, sediment chemistry), data forthcoming</h5>')
+)
+```
+
 CONTAMINANT RESULTS {data-navmenu="CURRENT DATA"}
 =======================================================================
 
@@ -1495,158 +1650,6 @@ fillCol(
 <!-- output$rscnttab1 <- renderReactable(rscnttab1()) -->
 <!-- reactableOutput('rscnttab1') -->
 <!-- ``` -->
-
-RAPID RESPONSE SEAGRASS/MACROALGAE SURVEYS {data-navmenu="CURRENT DATA"}
-=======================================================================
-
-Column {data-width=275}
------------------------------------------------------------------------
-
-### __TRANSECT LOCATIONS - PINEY POINT AT MARKER__
-
-```{r}
-output$rstrnmap1 <- renderLeaflet(rstrnmap1())
-leafletOutput('rstrnmap1')
-```
-
-Column {data-width=650}
------------------------------------------------------------------------
-
-### __TRANSECT RESULTS__
-
-```{r}
-fillCol(flex = c(0.1, 0.8),
-  fillRow(
-    selectInput(inputId = 'trnsel2', label = 'Select transect:', choices = rstrns, selected = rstrns[1]), 
-    renderUI(
-      selectInput(inputId = 'savsel', label = 'Select SAV species:', choices = rstrnsavsel(), selected = rstrnsavsel(), multiple = T, selectize = T)
-    ),
-    renderUI(
-      selectInput(inputId = 'mcrsel', label = 'Select macroalgae species:', choices = rstrnmcrsel(), selected = rstrnmcrsel(), multiple = T, selectize = T)
-    )
-  ),
-  renderPlot(rstrnplo1())
-)
-```
-
-BENTHIC SURVEYS {data-navmenu="CURRENT DATA"}
-=======================================================================
-
-Column {data-width=275}
------------------------------------------------------------------------
-
-### __STATION LOCATIONS - PINEY POINT AT MARKER__
-
-```{r}
-output$rsbntmap1 <- renderLeaflet(rsbntmap1())
-leafletOutput('rsbntmap1')
-```
-
-Column {data-width=650}
------------------------------------------------------------------------
-
-### __STATION RESULTS__
-
-```{r}
-fillCol(flex = c(0.1, 0.8),
-  fillRow(
-    selectInput(inputId = 'stasel2', label = 'Select station:', choices = rsbnts, selected = rsbnts[1])
-  ),
-  HTML('<h5>Samples collected 2021-04-12 (biology, sediment chemistry), data forthcoming</h5>')
-)
-```
-
-ALGAL SURVEYS {data-navmenu="CURRENT DATA"}
-=======================================================================
-
-Column {data-width=275}
------------------------------------------------------------------------
-
-### __STATION LOCATIONS - PINEY POINT AT MARKER__
-
-```{r}
-output$rsphymap1 <- renderLeaflet(rsphymap1())
-leafletOutput('rsphymap1')
-```
-
-Column {data-width=650 .tabset .tabset-fade}
------------------------------------------------------------------------
-
-<br>
-```{r}
-column(12, 
-  column(4, 
-    selectInput(inputId = 'stasel3', label = 'Select station:', choices = rsphys, selected = rsphys[1])
-    ), 
-  column(4,
-    renderUI({
-
-      # inputs
-      rsphydat1 <- rsphydat1()
-
-      req(rsphydat1)
-
-      tosel <- rsphydat1$wq %>%
-        select(var) %>%
-        left_join(parms, by = 'var') %>%
-        select(lbs, var) %>%
-        unique %>%
-        deframe %>%
-        as.list
-
-      selectInput('varsel2', 'Select water quality variable:', choices = tosel, selected = tosel[1])
-
-    })
-  ),
-  column(4,
-    renderUI(bswqtxt2())
-  )
-)
-column(12,
-  column(4, 
-    renderUI(rsphytxt1())
-  )
-)
-```
-
-### SUMMARY
-
-```{r}
-output$rsphyplo1 <- renderPlot(rsphyplo1())
-output$rsphytab1 <- renderReactable(rsphytab1())
-output$rstab2 <- renderReactable(rstab2())
-output$physum1 <- renderUI({
-  
-  # input
-  rsphydat1 <- rsphydat1()
-  
-  typ <- rsphydat1$phy %>% 
-    pull(typ) %>% 
-    unique
-  
-  if(typ == 'Quantitative'){
-    plotOutput('rsphyplo1')
-  } else {
-    if(typ == 'Qualitative')
-      reactableOutput('rsphytab1')
-  }
-  
-})
-fillCol(flex = c(NA, 1, NA, 0.5),
-  HTML('<b>Algal results</b>'),
-  uiOutput('physum1'), 
-  HTML('<b>Paired water quaility results</b>'),
-  reactableOutput('rstab2')
-)
-```
-
-### INFORMATION 
-
-This tab shows results of phytoplankton (algae) surveys provided from different sources.  The data are either qualitative (e.g., description of taxa observed at a site) or quantitative (counts of taxa observed at a site) depending on the data source.  Phytoplankton are also collected at many, but not all, of the same stations where water quality samples are collected, which allows a comparison of both to determine potential associations between water quality (e.g., nutrient concentrations) and changes in the algal community.  
-
-Select the station to view from the menu on the top.  The station map on the left shows which stations provide qualitative or quantitative data.  If a qualitative station is selected, a tabular summary of species observed by date will be shown.  If a quantitative station is selected, a plot of algal cell counts (a measure of abundance) by date will be shown.  The cell counts are categorized into relative amounts (Very low, Low, etc.) following breakpoints used by Florida DEP for *Karenia brevis* ([https://myfwc.com/research/redtide/statewide/](https://myfwc.com/research/redtide/statewide/)).  Note that these breakpoints may not have ecological relevance for algal taxa in Lower Tampa Bay and are only provided as guidelines to assess relative differences.  Results for nanoplankton have been removed because of typically high concentrations that cannot be enumerated in the lab.  
-
-For all stations, water quality data collected at the station will also be shown in a table below the algal results, if available.  You can choose which water quality variable is shown. Observations outside of the normal range will be highlighted in the table. 
 
 WATER QUALITY {data-navmenu="BASELINE DATA"}
 =======================================================================
