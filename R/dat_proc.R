@@ -978,6 +978,7 @@ for(id in ids) {
       station = case_when(
         station == 'PMOutfall' ~ 'PM Out',
         station == 'TBEP-MCBHO2' ~ 'TBEP-MCBH02',
+        station %in% c('BH0', 'BH15', 'BH25') ~ paste0('TBEP-', station),
         T ~ station
       ),
       station = gsub('^PC\\s', 'PC', station),
@@ -1006,7 +1007,7 @@ for(id in ids) {
       ),
       date = as.Date(date)
     ) %>%
-    filter(!station %in% 'MC- FB') %>% # this is a validation sample, no data
+    filter(!station %in% c('MC- FB', 'PP-FB')) %>% # these are validation samples, no data
     filter(var %in% parms$var)
 
   out1 <- bind_rows(out1, tmp)
