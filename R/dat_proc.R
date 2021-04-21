@@ -775,7 +775,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ##
 # fldep dump 20210411
-fl <- fls[which(fls$name == 'FLDEP_20210419'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210421'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 fldep1 <- flsht %>% 
   clean_names %>% 
@@ -1182,7 +1182,7 @@ ncf1 <- flsht %>%
 ##
 # epc
 
-ids <- fls[grep('^EPC\\_PP\\_InSitu', fls$name), 'id'] %>% pull(id)
+ids <- fls[grep('^EPC\\_PP\\_', fls$name), 'id'] %>% pull(id)
 epcout <- NULL
 for(id in ids){
   
@@ -1203,6 +1203,8 @@ for(id in ids){
     mutate(
       date = date(date), 
       source = 'epchc', 
+      station = as.character(station),
+      station = gsub('^PP', '', station),
       qual = NA_character_
     ) %>% 
     gather('var', 'val', -station, -date, -source, -qual) %>% 
