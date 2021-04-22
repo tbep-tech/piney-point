@@ -191,10 +191,6 @@ rswqmap <- rsstatloc %>%
   mapview(zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = rscolsin, map.types = mptyps, alpha.regions = 0.9) %>% 
   .@map %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
-rswqmapall <- rsstatloc %>% 
-  mapview(zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = stacols, map.types = mptyps, alpha.regions = 0.9) %>% 
-  .@map %>% 
-  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
 # summary of agencies reporting for value boxes
 agns <- rswqdat %>% 
@@ -1191,21 +1187,19 @@ rstab2 <- reactive({
 })
 ```
 
-OVERVIEW
+OVERVIEW {data-orientation=rows}
 =======================================================================
 
-Column {data-width=650}
------------------------------------------------------------------------
+Row
+-------------------------------------
 
 ### __DASHBOARD INFORMATION__
 
 <div class = "row">
-<div class = "col-md-2"></div>
-<div class = "col-md-8">
+<div class = "col-md-1"></div>
+<div class = "col-md-10">
 
-####
-
-```{r out.width='80%', fig.align='center'}
+```{r out.width='100%', fig.align='center'}
 knitr::include_graphics('www/Piney_Dashboard_Header.png')
 ```
 
@@ -1217,15 +1211,15 @@ The primary pollutants of concern for this discharge are phosphorus and nitrogen
 
 The dashboard is a synthesis of data that can be used to assess baseline conditions prior to discharge and to evaluate changing water quality conditions as new data become available. __All data are provisional and subject to revision.__ The dashboard is arranged as follows:
 
-1) __CURRENT DATA__: Locations being sampled by our partners in response to changing conditions, with an [overview summary](#water-quality-overview) of sampling events to date and [current results](#water-quality-results). Current  [seagrass/macroalgae](https://shiny.tbep.org/piney-point/#section-rapid-response-seagrassmacroalgae-surveys) data are also presented. [Contaminants](#contaminant-results), [sediment](#benthic-surveys) (biology and chemistry), and [algal samples](#algal-surveys) have also been collected and the data are being processed.
+1) __CURRENT DATA__: Current [water quality](#water-quality-results), [algal surveys](#algal-surveys), and [seagrass/macroalgae](https://shiny.tbep.org/piney-point/#section-rapid-response-seagrassmacroalgae-surveys) results are presented. [Contaminants](#contaminant-results) and [sediment](#benthic-surveys) (biology and chemistry) samples have also been collected, but the data are being processed.
 1) __BASELINE DATA__: Long-term [water quality](#water-quality) and [seagrass data](#seagrasses) over a 25 year period.  
 
 #### Additional resources
 
-* Florida DEP Piney Point regional notification: <https://protectingfloridatogether.gov/PineyPointUpdate>
-* USF Piney Point circulation modeling: <http://ocgweb.marine.usf.edu/~liu/Tracer/>
-* NOAA algal bloom satellite imagery: <https://coastalscience.noaa.gov/research/stressor-impacts-mitigation/hab-monitoring-system/red-tide-from-satellite-for-southwest-florida/tampa-bay/>
-* USF Optical Oceanography Lab algal bloom satellite imagery: <https://optics.marine.usf.edu/cgi-bin/animation?productSensor=MPH.olcis3a&amp;animateFrom=03/29/2021&amp;animateTo=04/30/2021&amp;roi=CWFL>
+* Florida DEP Piney Point regional notification: [link](https://protectingfloridatogether.gov/PineyPointUpdate){target="_blank"}
+* USF Piney Point circulation modeling: [link](http://ocgweb.marine.usf.edu/~liu/Tracer/){target="_blank"}
+* NOAA algal bloom satellite imagery: [link](https://coastalscience.noaa.gov/research/stressor-impacts-mitigation/hab-monitoring-system/red-tide-from-satellite-for-southwest-florida/tampa-bay/){target="_blank"}
+* USF Optical Oceanography Lab algal bloom satellite imagery: [link](https://optics.marine.usf.edu/cgi-bin/animation?productSensor=MPH.olcis3a&amp;animateFrom=03/29/2021&amp;animateTo=04/30/2021&amp;roi=CWFL){target="_blank"}
 
 #### Website information
 
@@ -1238,8 +1232,48 @@ Questions and comments about the dashboard can be sent to [Marcus Beck](mailto:m
 [![DOI](https://zenodo.org/badge/353409644.svg)](https://zenodo.org/badge/latestdoi/353409644)
 
 </div>
-<div class = "col-md-2"></div>
+<div class = "col-md-1"></div>
 </div>
+
+### __LOCATIONS WITH DATA - PINEY POINT AT MARKER__ 
+
+```{r}
+rswqmap
+```
+
+Row
+-----------------------------------------------------------------------
+
+### 
+
+```{r}
+valueBox(agns, 'Agencies reporting', color = boxcol, icon = 'fa-university')
+```
+
+### 
+
+```{r}
+valueBox(vars, 'Parameters monitored', color = boxcol, icon = 'fa-vial')
+```
+
+### 
+
+```{r}
+valueBox(dysm, 'Days of sampling', color = boxcol, icon = 'fa-calendar')
+```
+
+### 
+
+```{r}
+valueBox(stsm, 'Sites with data', color = boxcol, icon = 'fa-map-marked')
+```
+
+### 
+
+```{r}
+valueBox(smsm, 'Measurements available', color = boxcol, icon = 'fa-tint')
+```
+
 
 WATER QUALITY RESULTS {data-navmenu="CURRENT DATA"}
 =======================================================================
@@ -1365,57 +1399,6 @@ __TP (mg/L)__: Total phosphorus concentration is the sum of orthophosphate, cond
 
 __TSS (mg/l)__: Total suspended solids is a general measure of water clarity that includes silt and clay particles, plankton, algae, fine organic matter, and other particulate matter. Higher values can indicate algal response or other matter from external sources. 
 
-WATER QUALITY OVERVIEW {data-navmenu="CURRENT DATA" data-orientation=rows}
-=======================================================================
-
-Row {.tabset .tabset-fade}
------------------------------------------------------------------------
-
-### __STATIONS WITH DATA - PINEY POINT AT MARKER__
-
-```{r}
-rswqmap
-```
-
-
-### __ALL STATIONS - PINEY POINT AT MARKER__
-
-```{r}
-rswqmapall
-```
-
-Row
------------------------------------------------------------------------
-
-### 
-
-```{r}
-valueBox(agns, 'Agencies reporting', color = boxcol, icon = 'fa-university')
-```
-
-### 
-
-```{r}
-valueBox(vars, 'Parameters monitored', color = boxcol, icon = 'fa-vial')
-```
-
-### 
-
-```{r}
-valueBox(dysm, 'Days of sampling', color = boxcol, icon = 'fa-calendar')
-```
-
-### 
-
-```{r}
-valueBox(stsm, 'Sites with data', color = boxcol, icon = 'fa-map-marked')
-```
-
-### 
-
-```{r}
-valueBox(smsm, 'Measurements available', color = boxcol, icon = 'fa-tint')
-```
 
 ALGAL SURVEYS {data-navmenu="CURRENT DATA"}
 =======================================================================
