@@ -991,6 +991,7 @@ for(id in ids) {
         var == 'Total Suspended Solids' ~ 'tss',
         var == 'Turbidity' ~ 'turb',
         var == 'Chlorophyll a (Corrected)' ~ 'chla',
+        var == 'Total Kjeldahl Nitrogen' ~ 'tkn', 
         T ~ var
       ),
       val = as.numeric(gsub('[^0-9.-]', '', val)),
