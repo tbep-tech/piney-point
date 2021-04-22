@@ -511,6 +511,8 @@ save(macrodat, file = 'data/macrodat.RData', version = 2)
 
 # contaminants from DEP ---------------------------------------------------
 
+##
+# from ftp
 fl <- 'http://publicfiles.dep.state.fl.us/DEAR/DEARweb/_PP_EventResponse/Latest_Analytical_Results_Final.xlsx'
 
 tmpfl <- tempfile()
@@ -520,30 +522,33 @@ rawdat <- read_excel(tmpfl)
 
 file.remove(tmpfl)
 
+# from gdrive
+# https://docs.google.com/spreadsheets/d/1CzyJEPAmvUntUFAbTOgjnyOglHHrS03iV1tDk_NbXBE/edit#gid=749260864
+
+rawdat <- read_sheet('1CzyJEPAmvUntUFAbTOgjnyOglHHrS03iV1tDk_NbXBE')
+
+# duplicate wq data are removed with rswqdat
 rscntdat <- rawdat %>% 
   select(
     station = `SITE LOCATION`, 
     date = `DATE SAMPLED`, 
     var = COMPONENT, 
-    val = RESULT
+    val = RESULT, 
+    uni = UNITS, 
+    qual = `QUALIFIER CODE`
   ) %>% 
   mutate(
     date = as.Date(date, origin = as.Date('1899-12-30')),
     date = date(date),
-    val = gsub('\\"', '', val),
-    qual = gsub('^\\d+\\.\\d+|^\\d+', '', val),
-    qual = gsub('^\\s+', '', qual),
-    qual = case_when(
-      qual == '' ~ NA_character_, 
-      T ~ qual
-    ),
-    val = gsub('(^\\d+\\.\\d+|^\\d+)\\s.*$', '\\1', val),
-    val = as.numeric(val),
+    uni2 = paste0('(', uni, ')'),
     source = 'fldep', 
     station = gsub('Point\\-', 'Point ', station), 
     station = gsub('\\sPoint\\s', ' ', station)
   ) %>% 
-  filter(!grepl('Blank', station))
+  filter(!grepl('Blank', station)) %>% 
+  filter(!var %in% c('Ammonia-N', 'Chlorophyll-a, Corrected', 'Chlorophyll-a, Uncorrected', 'Dominant sample taxon', 'Kjeldahl Nitrogen', 'NO2NO3-N', 'O-Phosphate-P', 'Total-P', 'TSS', 'Turbidity')) %>% 
+  unite('var', var, uni2, remove = F, sep = ' ') %>% 
+  select(-uni2) 
 
 save(rscntdat, file = 'data/rscntdat.RData', version = 2)
 

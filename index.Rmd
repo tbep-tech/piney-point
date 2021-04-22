@@ -72,9 +72,13 @@ cols <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = 'Set1'))(length(
 stacols <- colorRampPalette(RColorBrewer::brewer.pal(n = 7, name = 'Accent'))(length(unique(rsstatloc$source_lng)))
 names(stacols) <- sort(unique(rsstatloc$source_lng))
 
-# variable color on maps
+# variable color on wq maps
 vrscols <- RColorBrewer::brewer.pal(n = 9, name = 'Blues')
 
+# variable color on cnt maps
+cntcols <- RColorBrewer::brewer.pal(n = 9, name = 'Purples')
+
+# variable color on 
 # value box colors
 boxcol <- '#00806E'
 
@@ -697,7 +701,7 @@ cntcolfun <- reactive({
   
   # color palette function
   out <- colorNumeric(
-    palette = vrscols,
+    palette = cntcols,
     na.color = 'yellow',
     domain = cntrng1
     )
@@ -785,7 +789,7 @@ rscntmap1 <- reactive({
   cntrng1 <- cntrng1()
   cntsel1 <- input$cntsel1
 
-  req(rscntdat1)
+  req(nrow(rscntdat1) > 0)
 
   # make sf
   tomap <- rscntdat1 %>% 
@@ -1211,7 +1215,7 @@ The primary pollutants of concern for this discharge are phosphorus and nitrogen
 
 The dashboard is a synthesis of data that can be used to assess baseline conditions prior to discharge and to evaluate changing water quality conditions as new data become available. __All data are provisional and subject to revision.__ The dashboard is arranged as follows:
 
-1) __CURRENT DATA__: Current [water quality](#water-quality-results), [algal surveys](#algal-surveys), and [seagrass/macroalgae](https://shiny.tbep.org/piney-point/#section-rapid-response-seagrassmacroalgae-surveys) results are presented. [Contaminants](#contaminant-results) and [sediment](#benthic-surveys) (biology and chemistry) samples have also been collected, but the data are being processed.
+1) __CURRENT DATA__: Current [water quality](#water-quality-results), [algal surveys](#algal-surveys), [seagrass/macroalgae](https://shiny.tbep.org/piney-point/#section-rapid-response-seagrassmacroalgae-surveys), and [contaminant](#contaminant-results) results are presented.  [Sediment](#benthic-surveys) (biology and chemistry) samples have also been collected, but the data are being processed.
 1) __BASELINE DATA__: Long-term [water quality](#water-quality) and [seagrass data](#seagrasses) over a 25 year period.  
 
 #### Additional resources
@@ -1525,6 +1529,66 @@ fillCol(flex = c(0.1, 0.8),
 )
 ```
 
+CONTAMINANT RESULTS {data-navmenu="CURRENT DATA"}
+=======================================================================
+
+Column {data-width=400}
+-----------------------------------------------------------------------
+
+### __STATION LOCATIONS - PINEY POINT AT MARKER__
+
+```{r}
+output$rscntmap1 <- renderLeaflet(rscntmap1())
+leafletOutput('rscntmap1')
+```
+
+Column {.tabset .tabset-fade}
+-----------------------------------------------------------------------
+
+<br>
+```{r}
+column(12,
+  column(3, HTML('<b>ALL DATA ARE PROVISIONAL</b><br></br>')),
+  column(9,
+    materialSwitch(inputId = 'rmvsta2', label = 'Remove stations on land near Piney Point (these can skew in-bay results)?', width = '100%')
+  )
+)
+column(12,
+  column(3,
+    selectInput('cntsel1', HTML('<b>Select variable:</b>'), choices = cntvrs)
+  ),
+  column(3,
+    materialSwitch(inputId = 'mapsel2', label = 'Map results by date?', width = '100%')
+    ),
+  column(6,
+    renderUI({
+
+      # inputs
+      cntsel1 <- input$cntsel1
+      mapsel2 <- input$mapsel2
+
+      if(!mapsel2)
+        return(NULL)
+
+      dys <- rscntdat %>%
+        filter(var %in% cntsel1) %>%
+        pull(date) %>%
+        unique
+
+      sliderInput('dyssel2', 'Select date:', min = min(dys), max = max(dys), value = max(dys), animate = T, timeFormat="%m-%d", width = '100%')
+
+    })
+  )
+)
+```
+
+### __TABLE DATA__
+
+```{r}
+output$rscnttab1 <- renderReactable(rscnttab1())
+reactableOutput('rscnttab1')
+```
+
 BENTHIC SURVEYS {data-navmenu="CURRENT DATA"}
 =======================================================================
 
@@ -1551,88 +1615,6 @@ fillCol(flex = c(0.1, 0.8),
   HTML('<h5>Samples collected 2021-04-12 (biology, sediment chemistry), data forthcoming</h5>')
 )
 ```
-
-CONTAMINANT RESULTS {data-navmenu="CURRENT DATA"}
-=======================================================================
-
-Column {data-width=275}
------------------------------------------------------------------------
-
-### __STATION LOCATIONS - PINEY POINT AT MARKER__
-
-```{r}
-rsphymap %>% 
-  clearMarkers() %>% 
-  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
-```
-
-Column {data-width=650}
------------------------------------------------------------------------
-
-### __STATION RESULTS__
-
-```{r}
-fillCol(
-  HTML('<h5>Data forthcoming</h5>')
-)
-```
-
-<!-- Column {data-width=400} -->
-<!-- ----------------------------------------------------------------------- -->
-
-<!-- ### __STATION LOCATIONS - PINEY POINT AT MARKER__ -->
-
-<!-- ```{r} -->
-<!-- output$rscntmap1 <- renderLeaflet(rscntmap1()) -->
-<!-- leafletOutput('rscntmap1') -->
-<!-- ``` -->
-
-<!-- Column {.tabset .tabset-fade} -->
-<!-- ----------------------------------------------------------------------- -->
-
-<!-- <br> -->
-<!-- ```{r} -->
-<!-- column(12, -->
-<!--   column(3, HTML('<b>ALL DATA ARE PROVISIONAL</b><br></br>')), -->
-<!--   column(9, -->
-<!--     materialSwitch(inputId = 'rmvsta2', label = 'Remove stations on land near Piney Point (these can skew in-bay results)?', width = '100%') -->
-<!--   ) -->
-<!-- ) -->
-<!-- column(12, -->
-<!--   column(3,  -->
-<!--     selectInput('cntsel1', HTML('<b>Select variable:</b>'), choices = cntvrs)        -->
-<!--   ),  -->
-<!--   column(3,  -->
-<!--     materialSwitch(inputId = 'mapsel2', label = 'Map results by date?', width = '100%') -->
-<!--     ), -->
-<!--   column(6,  -->
-<!--     renderUI({ -->
-
-<!--       # inputs -->
-<!--       cntsel1 <- input$cntsel1 -->
-<!--       mapsel2 <- input$mapsel2 -->
-
-<!--       if(!mapsel2) -->
-<!--         return(NULL) -->
-
-<!--       dys <- rscntdat %>%  -->
-<!--         filter(var %in% cntsel1) %>%  -->
-<!--         pull(date) %>%  -->
-<!--         unique -->
-
-<!--       sliderInput('dyssel2', 'Select date:', min = min(dys), max = max(dys), value = max(dys), animate = T, timeFormat="%m-%d", width = '100%') -->
-
-<!--     })      -->
-<!--   ) -->
-<!-- ) -->
-<!-- ``` -->
-
-<!-- ### __TABLE DATA__ -->
-
-<!-- ```{r} -->
-<!-- output$rscnttab1 <- renderReactable(rscnttab1()) -->
-<!-- reactableOutput('rscnttab1') -->
-<!-- ``` -->
 
 WATER QUALITY {data-navmenu="BASELINE DATA"}
 =======================================================================
