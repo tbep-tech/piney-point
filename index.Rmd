@@ -1687,7 +1687,7 @@ fillCol(flex = c(0.1, 0.8),
   fillRow(
     selectInput(inputId = 'stasel2', label = 'Select station:', choices = rsbnts, selected = rsbnts[1])
   ),
-  HTML('<h5>Samples collected 2021-04-12 (biology, sediment chemistry), data forthcoming</h5>')
+  HTML('<h5>Baseline samples (biology, sediment chemistry) near Piney Point were collected 2021-04-12. Data will be made available after analysis is finalized (expected no earlier than December 2021 due to sample processing times).<br></br>Additional information regarding the Tampa Bay Benthic Monitoring Program is available at <a href="https://tbep.org/tampa-bay-benthic-index/">https://tbep.org/tampa-bay-benthic-index/</a>.</h5>')
 )
 ```
 
