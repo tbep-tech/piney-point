@@ -104,7 +104,13 @@ portsdat <- out %>%
 # combine ports with lobo -------------------------------------------------
 
 lobodat <- lobodat %>% 
-  left_join(portsdat, by = 'DateTimeStamp')
+  left_join(portsdat, by = 'DateTimeStamp') %>% 
+  mutate(
+    evnt = case_when(
+      DateTimeStamp >= as.Date('2021-03-30') & DateTimeStamp <= as.Date('2021-04-08') ~ T, 
+      T ~ F
+    )
+  )
 
 save(lobodat, file = 'data/lobodat.RData', version = 2)
 
