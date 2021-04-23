@@ -49,6 +49,13 @@ vrs <- list(
 
 buoylat <- 27.6594677
 buoylng <- -82.6043877
+
+# event start, stop
+evnts <- lobodat %>% 
+  filter(evnt) %>% 
+  pull(DateTimeStamp) %>% 
+  range
+
 # date range on input data
 dtrng <- range(lobodat$DateTimeStamp) %>% 
   as.Date
@@ -90,14 +97,24 @@ tsplo <- reactive({
   # inputs
   varsel1 <- input$varsel1
   varsel2 <- input$varsel2
+  dtsel <- input$dtsel
   datsel <- datsel()
+  
+  # dtsel to posix for coord_cartesian
+  dtsel <- as.POSIXct(c(dtsel[1], dtsel[2] + 1), tz = attr(datsel$DateTimeStamp, 'tzone'))
   
   lb1 <- names(vrs)[which(unlist(vrs) == varsel1)]
   lb2 <- names(vrs)[which(unlist(vrs) == varsel2)]
-  browser()
+
+  # y text location
+  ytxt <- max(datsel[, varsel1], na.rm = T)
+
   p1 <- ggplot(datsel, aes_string(x = 'DateTimeStamp', y = varsel1)) + 
     geom_line() + 
     geom_point() + 
+    annotate('rect', xmin = evnts[1], xmax = evnts[2], ymin = -Inf, ymax = Inf, fill = 'orange', alpha = 0.2) +
+    annotate('text', x = evnts[1] + 2e4, y = ytxt, hjust = 0, label = 'Active discharge', color = 'orange') +
+    coord_cartesian(xlim = dtsel) + 
     theme_minimal(base_size = 16) + 
     labs(y = lb1) + 
     theme(
@@ -107,6 +124,8 @@ tsplo <- reactive({
   p2 <- ggplot(datsel, aes_string(x = 'DateTimeStamp', y = varsel2)) + 
     geom_line() + 
     geom_point() + 
+    annotate('rect', xmin = evnts[1], xmax = evnts[2], ymin = -Inf, ymax = Inf, fill = 'orange', alpha = 0.2) +
+    coord_cartesian(xlim = dtsel) + 
     theme_minimal(base_size = 16) + 
     labs(y = lb2) + 
     theme(
@@ -130,10 +149,16 @@ ecoplo <- reactive({
   
   # input
   ecosel <- ecosel()
+  dtsel <- input$dtsel
+  # y text location
+  ytxt <- max(ecosel[, -1], na.rm = T)
   
   out <- plot(ecosel, by = 'days') + 
+    annotate('rect', xmin = as.Date(evnts[1]), xmax = as.Date(evnts[2]), ymin = -Inf, ymax = Inf, fill = 'orange', alpha = 0.2) +
+    annotate('text', x = as.Date(evnts[1]) + 0.2, y = ytxt, hjust = 0, label = 'Active discharge', color = 'orange') +
+    coord_cartesian(xlim = dtsel) + 
     theme_bw(base_size = 20)
-  
+
   return(out)
   
 })
