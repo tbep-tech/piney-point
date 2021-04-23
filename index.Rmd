@@ -1494,7 +1494,7 @@ Column {data-width=650 .tabset .tabset-fade}
 ```{r}
 column(12, 
   column(4, 
-    selectInput(inputId = 'stasel3', label = 'Select station (hover mouse on map for names):', choices = rsphys, selected = rsphys[1])
+    selectInput(inputId = 'stasel3', label = HTML('<b>Select station (hover on map for names):</b>'), choices = rsphys, selected = rsphys[1])
     ), 
   column(4,
     renderUI({
@@ -1512,7 +1512,7 @@ column(12,
         deframe %>%
         as.list
 
-      selectInput('varsel2', 'Select water quality variable:', choices = tosel, selected = tosel[1])
+      selectInput('varsel2', HTML('<b>Select water quality variable:</b>'), choices = tosel, selected = tosel[1])
 
     })
   ),
@@ -1598,12 +1598,12 @@ Column {data-width=650}
 ```{r}
 fillCol(flex = c(0.1, 0.8),
   fillRow(
-    selectInput(inputId = 'trnsel2', label = 'Select transect:', choices = rstrns, selected = rstrns[1]), 
+    selectInput(inputId = 'trnsel2', label = HTML('<b>Select transect:</b>'), choices = rstrns, selected = rstrns[1]), 
     renderUI(
-      selectInput(inputId = 'savsel', label = 'Select SAV species:', choices = rstrnsavsel(), selected = rstrnsavsel(), multiple = T, selectize = T)
+      selectInput(inputId = 'savsel', label = HTML('<b>Select SAV species:</b>'), choices = rstrnsavsel(), selected = rstrnsavsel(), multiple = T, selectize = T)
     ),
     renderUI(
-      selectInput(inputId = 'mcrsel', label = 'Select macroalgae species:', choices = rstrnmcrsel(), selected = rstrnmcrsel(), multiple = T, selectize = T)
+      selectInput(inputId = 'mcrsel', label = HTML('<b>Select macroalgae species:</b>'), choices = rstrnmcrsel(), selected = rstrnmcrsel(), multiple = T, selectize = T)
     )
   ),
   renderPlot(rstrnplo1())
@@ -1691,7 +1691,7 @@ Column {data-width=650}
 ```{r}
 fillCol(flex = c(0.1, 0.8),
   fillRow(
-    selectInput(inputId = 'stasel2', label = 'Select station:', choices = rsbnts, selected = rsbnts[1])
+    selectInput(inputId = 'stasel2', label = HTML('<b>Select station:</b>'), choices = rsbnts, selected = rsbnts[1])
   ),
   HTML('<h5>Baseline samples (biology, sediment chemistry) near Piney Point were collected 2021-04-12. Data will be made available after analysis is finalized (expected no earlier than December 2021 due to sample processing times).<br></br>Additional information regarding the Tampa Bay Benthic Monitoring Program is available at <a href="https://tbep.org/tampa-bay-benthic-index/">https://tbep.org/tampa-bay-benthic-index/</a>.</h5>')
 )
@@ -1743,7 +1743,7 @@ Column {.tabset .tabset-fade data-width=650}
 <br>
 ```{r}
 column(12, 
-  selectInput('stasel1', 'Select station:', choices = bsstas, selected = bsstas[1])
+  selectInput('stasel1', HTML('<b>Select station:</b>'), choices = bsstas, selected = bsstas[1])
 )
 ```
 
@@ -1806,7 +1806,7 @@ Column {data-width=650}
 ```{r}
 fillCol(flex = c(0.1, 1),
   column(12, 
-    selectInput(inputId = 'trnsel1', label = 'Select transect:', choices = trns, selected = trns[1])
+    selectInput(inputId = 'trnsel1', label = HTML('<b>Select transect:</b>'), choices = trns, selected = trns[1])
   ),
   fillCol(flex = c(1, 1),
     renderPlotly(bssgtrnplo1()),
