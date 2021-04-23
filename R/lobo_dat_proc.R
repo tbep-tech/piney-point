@@ -4,7 +4,7 @@ library(lubridate)
 library(WtRegDO)
 
 dt2 <- Sys.Date() 
-dt1 <- dt2 - 2
+dt1 <- as.Date('2021-03-21')
 
 dtend <- dt2 %>% 
   as.character %>% 
@@ -43,28 +43,53 @@ lobodat <- datraw
 # PORTS/NOAA API description is here https://api.tidesandcurrents.noaa.gov/api/prod/#units
 # Data can be retrieved here https://tidesandcurrents.noaa.gov/met.html?id=8726412
 
-url <- paste('https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=ENTERVAR&application=NOS.COOPS.TAC.MET&begin_date=', dtstr, '&end_date=', dtend, '&station=8726412&time_zone=LST&units=metric&format=CSV', sep = '')
+# do this by days since the API will bonk if date range is too long
 
 # metric units selected, wind is m/2, air temp is C, pressure is mb
 vrs <- c('wind', 'air_temperature', 'air_pressure')
 
-out <-  list()
-for(vr in vrs){
+dts <- seq.Date(dt1, dt2, by = 'day')
+
+out <- NULL
+for(i in seq_along(dts)){
   
-  url_tmp <- gsub('ENTERVAR', vr, url)
+  cat(i, 'of', length(dts), '\n')
   
-  dat <- try({read.table(url_tmp, sep = ',', header = T) %>% 
-    .[, c(1:2)] %>% 
-    gather('var', 'val', -Date.Time)
-    })
-  
-  if(inherits(dat, 'try-error'))
+  if(dts[i] == max(dts))
     next()
-  out <- rbind(out, dat)
+  
+  dtstr <- dts[i] %>% 
+    as.character %>% 
+    gsub('\\-', '', .)
+  dtend <- dts[i + 1] %>% 
+    as.character %>% 
+    gsub('\\-', '', .)
+
+  url <- paste('https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=ENTERVAR&application=NOS.COOPS.TAC.MET&begin_date=', dtstr, '&end_date=', dtend, '&station=8726520&time_zone=LST&units=metric&format=CSV', sep = '')
+  
+  vrout <- list()
+  for(vr in vrs){
+    
+    url_tmp <- gsub('ENTERVAR', vr, url)
+    
+    dat <- try({read.table(url_tmp, sep = ',', header = T) %>% 
+      .[, c(1:2)] %>% 
+      gather('var', 'val', -Date.Time)
+      })
+    
+    if(inherits(dat, 'try-error'))
+      next()
+    
+    vrout <- rbind(vrout, dat)
+    
+  }
+  
+  out <- rbind(out, vrout)
   
 }
 
 portsdat <- out %>% 
+  unique %>% 
   mutate(var = factor(var, levels = c('Speed', 'Air.Temperature', 'Pressure'), labels = vrs)) %>% 
   complete(Date.Time, var) %>% 
   spread(var, val) %>% 
@@ -78,16 +103,8 @@ portsdat <- out %>%
 
 # combine ports with lobo -------------------------------------------------
 
-lobodatnew <- lobodat %>% 
-  left_join(portsdat, by = 'DateTimeStamp')
-
-# add new data to existing file -------------------------------------------
-
-data(lobodat)
-
 lobodat <- lobodat %>% 
-  filter(DateTimeStamp < dt1) %>% 
-  bind_rows(lobodatnew)
+  left_join(portsdat, by = 'DateTimeStamp')
 
 save(lobodat, file = 'data/lobodat.RData', version = 2)
 
@@ -105,7 +122,7 @@ tz <- attr(lobodat$DateTimeStamp, which = 'tzone')
 lat <- 27.6594677
 long <- -82.6043877
 
-loboeco <- WtRegDO::ecometab(lobodat, DO_var = "DO_obs", tz = tz, lat = lat, long = long, gasex = 'Wanninkhof')
+loboeco <- WtRegDO::ecometab(lobodat, DO_var = "DO_obs", tz = tz, lat = lat, long = long, depth_val = NULL, depth_vec = lobodat$Tide)
 
 save(loboeco, file = 'data/loboeco.RData', version = 2)
 
