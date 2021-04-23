@@ -84,7 +84,20 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   colpal <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = 'Dark2'))
   
   szrng <- c(2, 16)
-
+  
+  # xlims
+  savxlms <- rstrndatsav %>%
+    filter(station %in% !!station) %>%  
+    pull(location) %>% 
+    range(na.rm = T)
+  
+  mcrxlms <- rstrndatmcr %>%
+    filter(station %in% !!station) %>%  
+    pull(location) %>% 
+    range(na.rm = T)
+  
+  xlms <- range(savxlms, mcrxlms)
+  
   # prep sav plot data
   savdat <- rstrndatsav %>%
     dplyr::filter(station %in% !!station) %>%
@@ -122,6 +135,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     ggplot2::scale_fill_manual(values = savcol) +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng) +
     ggplot2::theme_minimal(base_size = base_size) +
+    ggplot2::scale_x_continuous(limits = xlms) +
     ggplot2::theme(
       panel.grid.major.y = ggplot2::element_blank(),
       panel.grid.minor.y = ggplot2::element_blank(),
@@ -173,6 +187,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     ggplot2::scale_fill_manual(values = mcrcol) +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng) +
     ggplot2::theme_minimal(base_size = base_size) +
+    ggplot2::scale_x_continuous(limits = xlms) +
     ggplot2::theme(
       panel.grid.major.y = ggplot2::element_blank(),
       panel.grid.minor.y = ggplot2::element_blank(),
