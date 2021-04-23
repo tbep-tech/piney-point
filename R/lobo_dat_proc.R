@@ -3,14 +3,19 @@ library(janitor)
 library(lubridate)
 library(WtRegDO)
 
-dt <- Sys.Date() %>% 
+dt2 <- Sys.Date() 
+dt1 <- dt2 - 2
+
+dtend <- dt2 %>% 
+  as.character %>% 
+  gsub('\\-', '', .)
+dtstr <- dt1 %>%  
   as.character %>% 
   gsub('\\-', '', .)
 
-
 # lobo data retrieval -----------------------------------------------------
 
-url <- paste('http://tampabay.loboviz.com/cgi-data/nph-data.cgi?node=82&min_date=20210321&max_date=', dt, '&y=salinity,temperature,co2,oxygen,pht,par,pressure&data_format=text', sep = '')
+url <- paste('http://tampabay.loboviz.com/cgi-data/nph-data.cgi?node=82&min_date=', dtstr, '&max_date=', dtend, '&y=salinity,temperature,co2,oxygen,pht,par,pressure&data_format=text', sep = '')
 
 # note that do is ml/L, to convert use [mg/L] = [ml/L] * 1.42903 (from email 4/16/21)
 datraw <- read.table(url, skip = 2, sep = '\t', header = T) %>% 
@@ -38,7 +43,7 @@ lobodat <- datraw
 # PORTS/NOAA API description is here https://api.tidesandcurrents.noaa.gov/api/prod/#units
 # Data can be retrieved here https://tidesandcurrents.noaa.gov/met.html?id=8726412
 
-url <- paste('https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=ENTERVAR&application=NOS.COOPS.TAC.MET&begin_date=20210321&end_date=', dt, '&station=8726412&time_zone=LST&units=metric&format=CSV', sep = '')
+url <- paste('https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=ENTERVAR&application=NOS.COOPS.TAC.MET&begin_date=', dtstr, '&end_date=', dtend, '&station=8726412&time_zone=LST&units=metric&format=CSV', sep = '')
 
 # metric units selected, wind is m/2, air temp is C, pressure is mb
 vrs <- c('wind', 'air_temperature', 'air_pressure')
@@ -48,28 +53,41 @@ for(vr in vrs){
   
   url_tmp <- gsub('ENTERVAR', vr, url)
   
-  dat <- read.table(url_tmp, sep = ',', header = T) %>% 
+  dat <- try({read.table(url_tmp, sep = ',', header = T) %>% 
     .[, c(1:2)] %>% 
     gather('var', 'val', -Date.Time)
+    })
   
+  if(inherits(dat, 'try-error'))
+    next()
   out <- rbind(out, dat)
   
 }
 
 portsdat <- out %>% 
+  mutate(var = factor(var, levels = c('Speed', 'Air.Temperature', 'Pressure'), labels = vrs)) %>% 
+  complete(Date.Time, var) %>% 
   spread(var, val) %>% 
   select(
     DateTimeStamp = Date.Time, 
-    ATemp = Air.Temperature, 
-    BP = Pressure, 
-    WSpd = Speed
+    ATemp = air_temperature, 
+    BP = air_pressure, 
+    WSpd = wind
   ) %>% 
   mutate(DateTimeStamp = ymd_hm(DateTimeStamp, tz = 'America/Jamaica'))
 
 # combine ports with lobo -------------------------------------------------
 
-lobodat <- lobodat %>% 
+lobodatnew <- lobodat %>% 
   left_join(portsdat, by = 'DateTimeStamp')
+
+# add new data to existing file -------------------------------------------
+
+data(lobodat)
+
+lobodat <- lobodat %>% 
+  filter(DateTimeStamp < dt1) %>% 
+  bind_rows(lobodatnew)
 
 save(lobodat, file = 'data/lobodat.RData', version = 2)
 
