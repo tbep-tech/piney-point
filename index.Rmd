@@ -1201,6 +1201,12 @@ rsphytab1 <- reactive({
   out <- NULL
   if(typ == 'Qualitative') 
     out <- phydat %>% 
+      mutate(
+        source_lng = case_when(
+          source_lng %in% c('Florida DEP', 'USF') ~ 'FWC-FWRI', 
+          T ~ source_lng
+        )
+      ) %>% 
       select(
         Source = source_lng,
         Station = station,
