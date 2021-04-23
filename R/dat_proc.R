@@ -560,13 +560,35 @@ gdrive_phypth <- 'https://drive.google.com/drive/u/0/folders/1_69VmwAPA3i0aeEHZg
 fls <- drive_ls(gdrive_phypth, type = 'spreadsheet')
 
 ##
-# fldep
+# fldep, fwri
 
-# data from DEP, by way of FWI
-# https://docs.google.com/spreadsheets/d/1ZSeAzDX4fGQHDbyRGOaJnkEy4ttZzNva1zWs1fKFFRU/edit#gid=1764340772
+# data from DEP, by way of FWRI
+# https://docs.google.com/spreadsheets/d/12hmzOLidRSEZkZnk7lW5aoWilyVqg4Vjx-r8wBQxLy8/edit#gid=979605237
 id <- fls[grep('^FLDEP', fls$name), 'id'] %>% pull(id)
-flphy <- read_sheet(id)
-rsphydatfldep <- flphy %>% 
+
+# fldep
+# rework stations to match those from wq, don't need to do for fwri since usf has its own stations
+flphy1 <- read_sheet(id, sheet = 'FDEP')
+rsphydatfldep <- flphy1 %>% 
+  select(
+    date = `Site Visit Date and Time`, 
+    station = `Sample Location`, 
+    species = `Algal ID`, 
+    microcyst_ugl = `Total Microcystin Toxin (micrograms/L)`, 
+    othertox_ugl = `Other Toxin (micrograms/L)`
+  ) %>% 
+  mutate(
+    date = as.Date(date),
+    station = gsub('^FDEP\\s', '', station), 
+    station = gsub('\\s0', ' ', station), 
+    station = gsub('^Piney Port', 'P Port', station),
+    source = 'fldep',
+    typ = 'Qualitative'
+  )
+
+# fwri - usf-rains
+flphy2 <- read_sheet(id, sheet = 'Other Agencies')
+rsphydatfwri <- flphy2 %>% 
   select(
     date = `Site Visit Date and Time`, 
     station = `Sample Location`, 
@@ -576,8 +598,7 @@ rsphydatfldep <- flphy %>%
   ) %>% 
   mutate(
     date = as.Date(date), 
-    station = gsub('\\s0', ' ', station), 
-    source = 'fldep', 
+    source = 'usf-rains', 
     typ = 'Qualitative'
   )
 
@@ -650,7 +671,7 @@ rsphydatepc <- flphy %>%
 ## 
 # combine all
 
-rsphydat <- bind_rows(rsphydatfldep, rsphydatpinco, rsphydatepc) %>% 
+rsphydat <- bind_rows(rsphydatfldep, rsphydatfwri, rsphydatpinco, rsphydatepc) %>% 
   filter(!valqual == 'Not present/Background' | is.na(valqual)) %>% 
   mutate(
     valqual = factor(valqual, levels = c('Very low', 'Low', 'Medium', 'High'))
@@ -666,8 +687,7 @@ typs <- rsphydat %>%
   select(station, typ) %>% 
   unique
 
-##
-# make point object
+# read master sheet
 rsphypts <- read_sheet('1ju1vJpCxR58Iayr8DhBxGVqloZDTI4TDoQUohS0h-6c') %>%
   mutate_if(is.list, as.character) %>% 
   left_join(typs, by = 'station') %>% 
@@ -675,6 +695,17 @@ rsphypts <- read_sheet('1ju1vJpCxR58Iayr8DhBxGVqloZDTI4TDoQUohS0h-6c') %>%
     typ == 'Quantitative' ~ col2hcl('burlywood1'), 
     typ == 'Qualitative' ~ col2hcl('cyan3')
     )
+  )
+
+# remove PP- stations from epc, these were sampled week of 4/19, will need to add once I have data in hand
+rsphypts <- rsphypts %>% 
+  filter(!grepl('^PP\\-', station))
+
+# jitter overlapping
+rsphypts <- rsphypts %>% 
+  mutate(
+    # lng = ifelse(duplicated(lng), jitter(lng, factor = 300), lng),
+    lat = ifelse(duplicated(lat), jitter(lat, factor = 100), lat)
   ) %>% 
   st_as_sf(coords = c('lng', 'lat'), crs = 4326) %>% 
   mutate( 
@@ -684,10 +715,6 @@ rsphypts <- read_sheet('1ju1vJpCxR58Iayr8DhBxGVqloZDTI4TDoQUohS0h-6c') %>%
   select(
     station, lng, lat, typ, col
   )
-
-# remove PP- stations, these were sampled week of 4/19, will need to add once I have data in hand
-rsphypts <- rsphypts %>% 
-  filter(!grepl('^PP\\-', station))
 
 save(rsphypts, file = 'data/rsphypts.RData', version = 2)
 

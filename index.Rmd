@@ -91,6 +91,9 @@ mapcenter <- c(-82.57862105363802, 27.624588580411267)
 # seagrass transect prj
 st_crs(trnpts) <- 4326
 
+# baseline wq stations
+bsstas <- c('21', '22', '90', '336', '357', '361', '362')
+
 # non-bay stations
 nonbay <- c('BH01', 'P Port 2', 'P Port 3', 'PM Out', '20120409-01', 'PPC41', 'P Port 4', 'PMB01')
 
@@ -180,6 +183,17 @@ bswqmap <- mapview(tomap, homebutton = F, layer.name = 'Data source', map.types 
     textsize = "20px", 
     offset = c(0, 1)
   ) %>% 
+  addCircleMarkers(
+      data = tomap[tomap$station %in% bsstas[1], ],
+      layerId = 'selsta',
+      stroke = TRUE,
+      color = 'black',
+      fill = TRUE,
+      fillColor = 'red',
+      weight = 1,
+      fillOpacity = 1,
+      radius= 6
+    ) %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point') %>% 
   addLegend("topright", title = 'Data source', opacity = 1, labels = tomapcols$source, colors = tomapcols$col) 
 
@@ -225,11 +239,11 @@ smsm <- rswqdat %>%
   nrow
 
 # seagrass base map
-sgmap <- mapview(trnpts, homebutton = F, legend = F) %>% 
+bssgmap <- mapview(trnpts, homebutton = F, legend = F) %>% 
   .@map %>% 
   clearMarkers()
 for(i in unique(trnlns$station))
-  sgmap <- sgmap %>% 
+  bssgmap <- bssgmap %>% 
     addPolylines(
       data = trnlns[trnlns$station %in% i, ], 
       lng = ~lng, 
@@ -237,7 +251,7 @@ for(i in unique(trnlns$station))
       color = 'grey', 
       label = ~station
     )
-sgmap <- sgmap %>% 
+bssgmap <- bssgmap %>% 
   addCircleMarkers(
     data = trnpts,
     layerId = ~station,
@@ -256,6 +270,18 @@ sgmap <- sgmap %>%
     direction = 'top', 
     textsize = '15px',
     offset = c(0, 1)
+  ) %>% 
+  addCircleMarkers(
+    data = trnpts[trnpts$station %in% trns[1], ],
+    layerId = 'seltrn',
+    stroke = TRUE,
+    color = 'black',
+    fill = TRUE,
+    fillColor = 'red',
+    weight = 1,
+    fillOpacity = 1,
+    radius= 6,
+    label = ~paste0('Transect ', station)
   ) %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
@@ -292,7 +318,20 @@ rstrnmap <- rstrnmap %>%
     textsize = '15px',
     offset = c(0, 1)
   ) %>% 
-  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
+  addCircleMarkers(
+      data = rstrnpts[rstrnpts$station %in% rstrns[1], ],
+      layerId = 'seltrn',
+      stroke = TRUE,
+      color = 'black',
+      fill = TRUE,
+      fillColor = 'red',
+      weight = 1,
+      fillOpacity = 1,
+      radius= 6,
+      label = ~paste0('Transect ', station, ' (', toupper(source), ')')
+    ) %>% 
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point') %>% 
+  setView(mapcenter[1], mapcenter[2], zoom = 12)
 
 # response benthic sampling base map
 rsbntmap <- mapview(rsbntpts, homebutton = F, legend = F) %>% 
@@ -317,6 +356,18 @@ rsbntmap <- mapview(rsbntpts, homebutton = F, legend = F) %>%
     textsize = '15px',
     offset = c(0, 1)
   ) %>% 
+  addCircleMarkers(
+      data = rsbntpts[rsbntpts$station %in% rsbnts[1], ],
+      layerId = 'selpt',
+      stroke = TRUE,
+      color = 'black',
+      fill = TRUE,
+      fillColor = 'red',
+      weight = 1,
+      fillOpacity = 1,
+      radius= 6,
+      label = ~paste0('Station ', station)
+    ) %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
 # response phytoplankton sampling base map
@@ -346,13 +397,25 @@ rsphymap <- mapview(rsphypts, homebutton = F, legend = F) %>%
     textsize = '15px',
     offset = c(0, 1)
   ) %>% 
+  addCircleMarkers(
+    data = rsphypts[rsphypts$station %in% rsphys[1], ],
+    layerId = 'selpt',
+    stroke = TRUE,
+    color = 'black',
+    fill = TRUE,
+    fillColor = 'red',
+    weight = 1,
+    fillOpacity = 1,
+    radius= 6,
+    label = ~paste0('Station ', station)
+  ) %>%  
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point') %>% 
   addLegend("topright", title = 'Data type', opacity = 1, labels = phyleg$typ, colors = phyleg$col) 
 ```
 
 ```{r reactives}
-# water quality map, baseline data
-bswqmap1 <- reactive({
+# water quality map, baseline data, bswqmap1
+observe({
   
   # inputs
   stasel1 <- input$stasel1
@@ -360,10 +423,11 @@ bswqmap1 <- reactive({
   toadd <- bsstatloc %>% 
     filter(station %in% stasel1)
 
-  mout <- bswqmap %>% 
+  mout <- leafletProxy('bswqmap1') %>%
+    removeMarker('selsta') %>% 
     addCircleMarkers(
       data = toadd,
-      layerId = ~station,
+      layerId = 'selsta',
       stroke = TRUE,
       color = 'black',
       fill = TRUE,
@@ -371,8 +435,7 @@ bswqmap1 <- reactive({
       weight = 1,
       fillOpacity = 1,
       radius= 6
-    ) %>% 
-    setView(mapcenter[1], mapcenter[2], zoom = 12)
+    )
   
   return(mout)
 })
@@ -815,18 +878,19 @@ rscntmap1 <- reactive({
   
 })
 
-# seagrass map selection
-bssgmap1 <- reactive({
+# seagrass map selection, bssgmap1
+observe({
   
   # input
   trnsel1 <- input$trnsel1
   
   toadd <- trnpts %>% 
     filter(station %in% trnsel1)
-  mout <- sgmap %>% 
+  mout <- leafletProxy('bssgmap1') %>% 
+    removeMarker('seltrn') %>% 
     addCircleMarkers(
       data = toadd,
-      layerId = ~station,
+      layerId = 'seltrn',
       stroke = TRUE,
       color = 'black',
       fill = TRUE,
@@ -835,8 +899,7 @@ bssgmap1 <- reactive({
       fillOpacity = 1,
       radius= 6,
       label = ~paste0('Transect ', station)
-    ) %>% 
-    setView(mapcenter[1], mapcenter[2], zoom = 12)
+    ) 
   
   return(mout)
   
@@ -876,18 +939,19 @@ bssgsumplo1 <- reactive({
   
 })
 
-# rapid response transect map selection
-rstrnmap1 <- reactive({
+# rapid response transect map selection, rstrnmap1
+observe({
   
   # input
   trnsel2 <- input$trnsel2
   
   toadd <- rstrnpts %>% 
     filter(station %in% trnsel2)
-  mout <- rstrnmap %>% 
+  mout <- leafletProxy('rstrnmap1') %>% 
+    removeMarker('seltrn') %>% 
     addCircleMarkers(
       data = toadd,
-      layerId = ~station,
+      layerId = 'seltrn',
       stroke = TRUE,
       color = 'black',
       fill = TRUE,
@@ -896,8 +960,7 @@ rstrnmap1 <- reactive({
       fillOpacity = 1,
       radius= 6,
       label = ~paste0('Transect ', station, ' (', toupper(source), ')')
-    ) %>% 
-    setView(mapcenter[1], mapcenter[2], zoom = 12)
+    ) 
   
   return(mout)
   
@@ -954,18 +1017,19 @@ rstrnplo1 <- reactive({
   
 })
 
-# rapid response benthic map selection
-rsbntmap1 <- reactive({
+# rapid response benthic map selection, rsbntmap1
+observe({
   
   # input
   stasel2 <- input$stasel2
   
   toadd <- rsbntpts %>% 
     filter(station %in% stasel2)
-  mout <- rsbntmap %>% 
+  mout <- leafletProxy('rsbntmap1') %>% 
+    removeMarker('selpt') %>% 
     addCircleMarkers(
       data = toadd,
-      layerId = ~station,
+      layerId = 'selpt',
       stroke = TRUE,
       color = 'black',
       fill = TRUE,
@@ -974,25 +1038,25 @@ rsbntmap1 <- reactive({
       fillOpacity = 1,
       radius= 6,
       label = ~paste0('Station ', station)
-    ) %>% 
-    setView(mapcenter[1], mapcenter[2], zoom = 12)
+    ) 
   
   return(mout)
   
 })
 
-# rapid response phyto map selection
-rsphymap1 <- reactive({
+# rapid response phyto map selection, rsphymap1
+observe({
   
   # input
   stasel3 <- input$stasel3
   
   toadd <- rsphypts %>% 
     filter(station %in% stasel3)
-  mout <- rsphymap %>% 
+  mout <- leafletProxy('rsphymap1') %>%
+    removeMarker('selpt') %>% 
     addCircleMarkers(
       data = toadd,
-      layerId = ~station,
+      layerId = 'selpt',
       stroke = TRUE,
       color = 'black',
       fill = TRUE,
@@ -1001,8 +1065,7 @@ rsphymap1 <- reactive({
       fillOpacity = 1,
       radius= 6,
       label = ~paste0('Station ', station)
-    ) %>% 
-    setView(mapcenter[1], mapcenter[2], zoom = 11)
+    ) 
   
   return(mout)
   
@@ -1013,7 +1076,7 @@ rsphydat1 <- reactive({
   
   # input
   stasel3 <- input$stasel3
-  
+
   phyout <- rsphydat %>% 
     filter(station %in% stasel3) %>% 
     left_join(srcs, by = 'source')
@@ -1144,7 +1207,8 @@ rsphytab1 <- reactive({
         Date = date, 
         `Taxa observed` = species
         ) %>% 
-      unique %>% 
+      unique %>%
+      arrange(desc(Date)) %>% 
       reactable()
   
   return(out)
@@ -1407,13 +1471,13 @@ __TSS (mg/l)__: Total suspended solids is a general measure of water clarity tha
 ALGAL SURVEYS {data-navmenu="CURRENT DATA"}
 =======================================================================
 
-Column {data-width=275}
+Column {data-width=400}
 -----------------------------------------------------------------------
 
 ### __STATION LOCATIONS - PINEY POINT AT MARKER__
 
 ```{r}
-output$rsphymap1 <- renderLeaflet(rsphymap1())
+output$rsphymap1 <- renderLeaflet(rsphymap)
 leafletOutput('rsphymap1')
 ```
 
@@ -1494,7 +1558,18 @@ This tab shows results of phytoplankton (algae) surveys provided from different 
 
 Select the station to view from the menu on the top.  The station map on the left shows which stations provide qualitative or quantitative data.  If a qualitative station is selected, a tabular summary of species observed by date will be shown.  If a quantitative station is selected, a plot of algal cell counts (a measure of abundance) by date will be shown.  The cell counts are categorized into relative amounts (Very low, Low, etc.) following breakpoints used by Florida DEP for *Karenia brevis* ([https://myfwc.com/research/redtide/statewide/](https://myfwc.com/research/redtide/statewide/)).  Note that these breakpoints may not have ecological relevance for algal taxa in Lower Tampa Bay and are only provided as guidelines to assess relative differences.  Results for nanoplankton have been removed because of typically high concentrations that cannot be enumerated in the lab.  
 
-For all stations, water quality data collected at the station will also be shown in a table below the algal results, if available.  You can choose which water quality variable is shown. Observations outside of the normal range will be highlighted in the table. 
+For all stations, water quality data collected at the station will also be shown in a table below the algal results, if available.  You can choose which water quality variable is shown from the selection menu at the top. 
+
+Stations on the map that have different names but occur at the same location are slightly offset from each other for easier viewing.  Data (phytoplankton or water quality) from stations at the same location are not combined in the tables or plots to not mix data collected with potentially different methods used by different labs.  Overlapping stations include:
+
+* USF Piney 26 - USF Piney 15
+* USF Piney 32 - USF Piney 23
+* USF Piney 27 - USF Piney 19
+* USF Piney B - USF Piney 16
+* Piney 6 - 90
+* Piney 19 - 16
+* Piney 20 - 84
+* Piney 7 - 21
 
 RAPID RESPONSE SEAGRASS/MACROALGAE SURVEYS {data-navmenu="CURRENT DATA"}
 =======================================================================
@@ -1505,7 +1580,7 @@ Column {data-width=275}
 ### __TRANSECT LOCATIONS - PINEY POINT AT MARKER__
 
 ```{r}
-output$rstrnmap1 <- renderLeaflet(rstrnmap1())
+output$rstrnmap1 <- renderLeaflet(rstrnmap)
 leafletOutput('rstrnmap1')
 ```
 
@@ -1598,7 +1673,7 @@ Column {data-width=275}
 ### __STATION LOCATIONS - PINEY POINT AT MARKER__
 
 ```{r}
-output$rsbntmap1 <- renderLeaflet(rsbntmap1())
+output$rsbntmap1 <- renderLeaflet(rsbntmap)
 leafletOutput('rsbntmap1')
 ```
 
@@ -1625,7 +1700,7 @@ Column {data-width=275 .tabset .tabset-fade}
 ### __STATION LOCATIONS - PINEY POINT AT MARKER__
 
 ```{r}
-output$bswqmap1 <- renderLeaflet(bswqmap1())
+output$bswqmap1 <- renderLeaflet(bswqmap)
 leafletOutput('bswqmap1')
 ```
 
@@ -1662,7 +1737,7 @@ Column {.tabset .tabset-fade data-width=650}
 <br>
 ```{r}
 column(12, 
-  selectInput('stasel1', 'Select station:', choices = c('21', '22', '90', '336', '357', '361', '362'))
+  selectInput('stasel1', 'Select station:', choices = bsstas, selected = bsstas[1])
 )
 ```
 
@@ -1689,7 +1764,7 @@ Column {data-width=275 .tabset .tabset-fade}
 ### __TRANSECT LOCATIONS - PINEY POINT AT MARKER__
 
 ```{r}
-output$bssgmap1 <- renderLeaflet(bssgmap1())
+output$bssgmap1 <- renderLeaflet(bssgmap)
 leafletOutput('bssgmap1')
 ```
 
