@@ -26,6 +26,36 @@ parms <- tibble(
 
 save(parms, file = 'data/parms.RData', version = 2)
 
+
+# tb high res boundary ----------------------------------------------------
+
+# https://drive.google.com/file/d/1EjIDcpNbBHvoJ09-wlEJDdDE7v323qEe/view?usp=sharing
+
+tmp1 <- tempfile(fileext = '.zip')
+tmp2 <- tempdir()
+
+drive_download(as_id("1EjIDcpNbBHvoJ09-wlEJDdDE7v323qEe"), path = tmp1, overwrite = TRUE)
+
+unzip(temp, exdir = tmp2) 
+
+bnd <- list.files(tmp2, full.names = T) %>% 
+  grep('\\.shp$', ., value = T) %>% 
+  st_read %>%
+  st_transform(crs = 4326) %>% 
+  st_intersection(tbshed) %>% 
+  st_union()
+
+segmask <- bnd %>% 
+  st_bbox %>% 
+  st_as_sfc() %>% 
+  st_as_sf() %>% 
+  st_difference(bnd)
+
+file.remove(tmp1)
+file.remove(list.files(tmp2, full.names = T))
+
+save(segmask, file = 'data/segmask.RData', version = 2)
+
 # normal ranges -----------------------------------------------------------
 
 # get March, April ranges from 2006 to present
@@ -511,16 +541,16 @@ save(macrodat, file = 'data/macrodat.RData', version = 2)
 
 # contaminants from DEP ---------------------------------------------------
 
-##
-# from ftp
-fl <- 'http://publicfiles.dep.state.fl.us/DEAR/DEARweb/_PP_EventResponse/Latest_Analytical_Results_Final.xlsx'
-
-tmpfl <- tempfile()
-download.file(fl, tmpfl, mode = 'wb')
-
-rawdat <- read_excel(tmpfl)
-
-file.remove(tmpfl)
+# ##
+# # from ftp
+# fl <- 'http://publicfiles.dep.state.fl.us/DEAR/DEARweb/_PP_EventResponse/Latest_Analytical_Results_Final.xlsx'
+# 
+# tmpfl <- tempfile()
+# download.file(fl, tmpfl, mode = 'wb')
+# 
+# rawdat <- read_excel(tmpfl)
+# 
+# file.remove(tmpfl)
 
 # from gdrive
 # https://docs.google.com/spreadsheets/d/1CzyJEPAmvUntUFAbTOgjnyOglHHrS03iV1tDk_NbXBE/edit#gid=749260864
@@ -807,7 +837,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ##
 # fldep dump 20210411
-fl <- fls[which(fls$name == 'FLDEP_20210421'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210424'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 fldep1 <- flsht %>% 
   clean_names %>% 

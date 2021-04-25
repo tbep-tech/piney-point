@@ -23,29 +23,18 @@ library(raster)
 
 data(rswqdat)
 data(rsstatloc)
+data(segmask)
 
-seg <- tbseg %>% 
-  st_geometry() %>% 
-  as_Spatial()
-shed <- tbsegshed %>% 
-  filter(bay_segment %in% c('LTB', 'TCB', 'MTB')) %>% 
-  st_union() %>% 
-  st_geometry() %>% 
-  as_Spatial()
-
-# empty grid for interpolation
-grd <- as.data.frame(spsample(shed, "regular", n = 100000))
-names(grd) <- c("X", "Y")
-coordinates(grd) <- c("X", "Y")
-gridded(grd) <- TRUE  # Create SpatialPixel object
-fullgrid(grd) <- TRUE  # Create SpatialGrid object
+prj <- "+proj=longlat +datum=WGS84 +no_defs"
 
 # non-bay stations
 nonbay <- c('BH01', 'P Port 2', 'P Port 3', 'PM Out', '20120409-01', 'PPC41', 'P Port 4', 'PMB01')
 
+# station locations
 locs <- rsstatloc %>% 
   dplyr::select(station)
 
+# current chl data
 chldat <- rswqdat %>%
   filter(!station %in% nonbay) %>% 
   filter(var %in% 'chla') %>% 
@@ -55,22 +44,29 @@ chldat <- rswqdat %>%
     date = floor_date(date, unit = 'week')
   )
 
-colfun <- colorNumeric(
+colfun <- colorBin(
   RColorBrewer::brewer.pal(9, 'Blues'),
-  domain = c(0, max(chldat$val, na.rm = T)),
+  domain = c(0, max(chldat$val, na.rm = T)), 
+  bins = 8,
   na.color = "#FFFFFF00" ,
   alpha = FALSE,
   reverse = FALSE
 )
 
-colfun2 <- colorBin(
-  RColorBrewer::brewer.pal(9, 'Blues'),
-  domain = c(0, max(chldat$val, na.rm = T)), 
-  bins = 10,
-  na.color = "#FFFFFF00" ,
-  alpha = FALSE,
-  reverse = FALSE
-)
+# chldat bbox
+bbox <- chldat %>% 
+  st_bbox %>% 
+  st_as_sfc() %>% 
+  st_as_sf() %>% 
+  as_Spatial()
+
+# empty grid for interpolation
+grd <- as.data.frame(spsample(bbox, "regular", n = 200000))
+names(grd) <- c("X", "Y")
+coordinates(grd) <- c("X", "Y")
+gridded(grd) <- TRUE  # Create SpatialPixel object
+fullgrid(grd) <- TRUE  # Create SpatialGrid object
+proj4string(grd) <- prj
 
 wk <- chldat %>% 
   filter(date == as.Date('2021-04-04')) %>% 
@@ -81,24 +77,13 @@ wk <- chldat %>%
 wkspa <- wk %>% 
   as_Spatial
 
-bbox <- chldat %>% 
-  st_bbox %>% 
-  st_as_sfc() %>% 
-  st_as_sf() %>% 
-  as_Spatial()
-
 # add crs to grid
-proj4string(wkspa) <- proj4string(wkspa)
-proj4string(grd) <- proj4string(wkspa)
+proj4string(wkspa) <- prj
 
-# Create an empty grid where n is the total number of cells
-# Interpolate the grid cells using a power value of 2 (idp=2.0)
-wkspa.idw <- gstat::idw(val ~ 1, wkspa, newdata = grd, idp = 3.0)
-
-# Convert to raster object then clip by relevant boundaries
-r <- raster(wkspa.idw)
-r.m <- crop(r, bbox)
-r.m <- mask(r.m, seg)
+# interpolate
+interp <- gstat::idw(val ~ 1, wkspa, newdata = grd, idp = 3.0) %>% 
+  raster %>% 
+  mask(segmask)
 ```
 
 ### Week of 2021-04-04
@@ -107,7 +92,7 @@ r.m <- mask(r.m, seg)
 mapview(wk, homebutton = F, legend = F) %>% 
   .@map %>% 
   clearMarkers() %>% 
-  addRasterImage(r.m, colors = colfun2) %>% 
+  addRasterImage(interp, colors = colfun) %>% 
   addCircleMarkers(
     data = wk,
     stroke = TRUE,
@@ -119,5 +104,5 @@ mapview(wk, homebutton = F, legend = F) %>%
     radius= 3,
     label = ~val
   ) %>%
-  addLegend("topright", title = 'Chla (ug/L)', opacity = 1, values = chldat$val, pal = colfun2)
+  addLegend("topright", title = 'Chla (ug/L)', opacity = 1, values = chldat$val, pal = colfun)
 ```
