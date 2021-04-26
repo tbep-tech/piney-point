@@ -690,7 +690,16 @@ rsphydatepc <- flphy %>%
       val >= 1e6 & val ~ 'High'
     ),
     station = case_when(
-      station %in% c('01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '20') ~ paste0('21PP', station, 's'), 
+      station %in% c('01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '20') ~ paste0('21PP', station, 's'),
+      station %in% 'BP01' ~ 'PP-BP1',
+      station %in% 'C01' ~ 'PP-C1',
+      station %in% 'DB01' ~ 'PP-DB1',
+      station %in% 'EGS01' ~ 'PP-EGS1',
+      station %in% 'LC01' ~ 'PP-LC1',
+      station %in% 'LM01' ~ 'PP-LM1',
+      station %in% 'RP01' ~ 'PP-RP1',
+      station %in% 'SC01' ~ 'PP-SC1',
+      station %in% 'WB01' ~ 'PP-WB1',
       T ~ station
     ),
     source = 'epchc',
@@ -726,10 +735,6 @@ rsphypts <- read_sheet('1ju1vJpCxR58Iayr8DhBxGVqloZDTI4TDoQUohS0h-6c') %>%
     typ == 'Qualitative' ~ col2hcl('cyan3')
     )
   )
-
-# remove PP- stations from epc, these were sampled week of 4/19, will need to add once I have data in hand
-rsphypts <- rsphypts %>% 
-  filter(!grepl('^PP\\-', station))
 
 # jitter overlapping
 rsphypts <- rsphypts %>% 
