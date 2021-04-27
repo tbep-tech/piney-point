@@ -19,9 +19,9 @@ gs4_deauth()
 
 # parameter names, units
 parms <- tibble(
-  var = c('bod', 'chla', 'color', 'do', 'dosat', 'nh34', 'no23', 'orthop', 'ph', 'sal', 'secchi', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
-  uni = c('mgl', 'ugl', 'pcu', 'mgl', 'per', 'mgl', 'mgl', 'mgl', 'none', 'ppt', 'm', 'c', 'mgl', 'mgl', 'mgl', 'mgl', 'ntu'), 
-  lbs = c('BOD (mg/L)', 'Chl-a (ug/L)', 'Color (PCU)', 'DO (mg/L)', 'DO (% sat.)', 'NH3, NH4+ (mg/L)', 'Nitrate/Nitrite (mg/L)', 'Ortho-P (mg/L)', 'pH', 'Sal (ppt)', 'Secchi (m)', 'Temp (C)', 'TKN (mg/L)', 'TN (mg/L)', 'TP (mg/L)', 'TSS (mg/l)', 'Turb (NTU)')
+  var = c('bod', 'chla', 'color', 'do', 'dosat', 'nh34', 'no23', 'orthop', 'ph', 'sal', 'secchi', 'sulf', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
+  uni = c('mgl', 'ugl', 'pcu', 'mgl', 'per', 'mgl', 'mgl', 'mgl', 'none', 'ppt', 'm', 'mgl', 'c', 'mgl', 'mgl', 'mgl', 'mgl', 'ntu'), 
+  lbs = c('BOD (mg/L)', 'Chl-a (ug/L)', 'Color (PCU)', 'DO (mg/L)', 'DO (% sat.)', 'NH3, NH4+ (mg/L)', 'Nitrate/Nitrite (mg/L)', 'Ortho-P (mg/L)', 'pH', 'Sal (ppt)', 'Secchi (m)', 'Sulfate (mg/L)', 'Temp (C)', 'TKN (mg/L)', 'TN (mg/L)', 'TP (mg/L)', 'TSS (mg/l)', 'Turb (NTU)')
 )
 
 save(parms, file = 'data/parms.RData', version = 2)
@@ -802,8 +802,31 @@ ncfsta1 <- read.csv('data/raw/ncf_stations.csv') %>%
 usfsta1 <- read.csv('data/raw/usf_stations.csv')
 tbepsta1 <- read.csv('data/raw/tbep_stations.csv')
 
+# esa
+esa <- read.csv('data/raw/esa_stations.csv') 
+chd <- substr(esa$lat, 3, 3)[1]
+esastat1 <- esa %>% 
+  separate(lat, c('lat1', 'lat2'), sep = chd) %>% 
+  separate(lon, c('lon1', 'lon2'), sep = chd) %>% 
+  mutate(
+    lon2 = gsub("\\'", '', lon2),
+    lat2 = gsub("\\'", '', lat2),
+    lat1 = as.numeric(lat1),
+    lat2 = as.numeric(lat2) / 60,
+    lon1 = as.numeric(lon1),
+    lon2 = as.numeric(lon2) / 60
+  ) %>% 
+  rowwise() %>% 
+  mutate(
+    lat = lat1 + lat2,
+    lon = lon1 + lon2, 
+    lon = -1 * lon
+  ) %>% 
+  ungroup() %>% 
+  select(source, station, lon, lat)
+
 # combine all
-rsstatloc <- bind_rows(epchcsta1, fldepsta1, mpnrdsta1, pincosta1, ncfsta1, usfsta1, tbepsta1) %>% 
+rsstatloc <- bind_rows(epchcsta1, fldepsta1, mpnrdsta1, pincosta1, ncfsta1, usfsta1, tbepsta1, esastat1) %>% 
   mutate(
     source = source,
     source_lng = case_when(
@@ -813,7 +836,8 @@ rsstatloc <- bind_rows(epchcsta1, fldepsta1, mpnrdsta1, pincosta1, ncfsta1, usfs
       source == 'mpnrd' ~ 'Manatee Co.', 
       source == 'ncf' ~ 'New College Fl.', 
       source == 'tbep' ~ 'TBEP', 
-      source == 'usf-rains' ~ 'USF'
+      source == 'usf-rains' ~ 'USF', 
+      source == 'esa' ~ 'ESA'
     )
   ) %>% 
   select(source_lng, source, station, lat, lon, comment) %>% 
@@ -1259,8 +1283,10 @@ ncf1 <- flsht %>%
 ##
 # epc
 
+# original 
+
 ids <- fls[grep('^EPC\\_PP\\_', fls$name), 'id'] %>% pull(id)
-epcout <- NULL
+epcout1 <- NULL
 for(id in ids){
   
   # sleep to not bonk api limit
@@ -1290,16 +1316,151 @@ for(id in ids){
     summarise(val = mean(val, na.rm = T), .groups = 'drop') %>% 
     select(station, date, source, var, uni, val, qual)
   
-  epcout <- bind_rows(epcout, epctmp)
+  epcout1 <- bind_rows(epcout1, epctmp)
   
 }
 
-epc1 <- epcout
+# rwm
+ids <- fls[grep('^EPC\\_RWM\\_', fls$name), 'id'] %>% pull(id)
+epcout2 <- NULL
+for(id in ids){
+
+  # sleep to not bonk api limit
+  Sys.sleep(wait)
+  flsht <- read_sheet(id)
+  epctmp <- flsht %>% 
+    select(
+      station = `StationNumber`, 
+      date = `SampleTime`, 
+      secchi_m = SecchiDepth, 
+      secchi_qual = Secchi_Q, 
+      temp_c_top = `TempWater-T`,
+      temp_c_mid = `TempWater-M`,
+      temp_c_bot = `TempWater-B`,
+      ph_none_top = `pH-T`, 
+      ph_none_mid = `pH-M`, 
+      ph_none_bot = `pH-B`, 
+      sal_ppt_top = `Sal-T`,
+      sal_ppt_mid = `Sal-M`,
+      sal_ppt_bot = `Sal-B`,
+      do_mgl_top = `DO-T`,
+      do_mgl_mid = `DO-M`,
+      do_mgl_bot = `DO-B`,
+      dosat_per_top = `DOp-T`,
+      dosat_per_mid = `DOp-M`,
+      dosat_per_bot = `DOp-B`,
+      nh34_mgl = `Ammonia`,
+      nh34_qual = `AmmoniaQ`, 
+      tkn_mgl = Kjeldahl_Nitrogen,
+      tkn_qual = Kjeldahl_NitrogenQ,
+      no23_mgl = Nitrates_Nitrites, 
+      no23_qual = Nitrates_NitritesQ,
+      tn_mgl = Total_Nitrogen,
+      tn_qual = Total_NitrogenQ,
+      tp_mgl = Total_Phosphorus, 
+      tp_qual = Total_PhosphorusQ, 
+      bod_mgl = BOD, 
+      bod_qual = BODQ,
+      orthop_mgl = Ortho_Phosphates, 
+      orthop_qual = Ortho_PhosphatesQ, 
+      chla_ugl = Chlorophylla_Corr,
+      chla_qual = Chlorophylla_CorrQ,
+      color_pcu = `Color(345)C`, 
+      color_qual = `Color(345)CQ`,
+      tss_mgl = Total_Suspended_Solids, 
+      tss_qual = Total_Suspended_SolidsQ, 
+      turb_ntu = Turbidity, 
+      turb_qual = TurbidityQ, 
+      sulf_mgl = `Sulfates(modified)`,
+      sulf_qual = `Sulfates(modified)Q`
+    ) %>% 
+    rowwise() %>% 
+    mutate(
+      temp_c = mean(c(temp_c_top, temp_c_mid, temp_c_bot), na.rm = T),
+      ph_none = mean(c(ph_none_top, ph_none_mid, ph_none_bot), na.rm = T), 
+      sal_ppt = mean(c(sal_ppt_top, sal_ppt_mid, sal_ppt_bot), na.rm = T),
+      do_mgl = mean(c(do_mgl_top, do_mgl_mid, do_mgl_bot), na.rm = T),
+      dosat_per = mean(c(dosat_per_top, dosat_per_mid, dosat_per_bot), na.rm = T),
+      dosat_per = mean(c(dosat_per_top, dosat_per_mid, dosat_per_bot), na.rm = T)
+    ) %>% 
+    ungroup() %>% 
+    select(-matches('bot$|mid$|top$'))
+      
+  epctmpwq <- epctmp %>%
+    select(-matches('\\_qual$')) %>%
+    gather('var', 'val', -station, -date) %>%
+    separate(var, c('var', 'uni'), sep = '_')
+  
+  epctmpqual <- epctmp %>%
+    select(date, station, matches('\\_qual$')) %>%
+    gather('var', 'qual', -date, -station) %>%
+    mutate(var = gsub('\\_qual$', '', var)) 
+  
+  epctmp <- full_join(epctmpwq, epctmpqual, by = c('date', 'station', 'var')) %>% 
+    mutate(
+      date = date(date), 
+      source = 'epchc', 
+      station = as.character(station),
+      station = gsub('^PP', '', station), 
+      val = as.numeric(val)
+    ) %>% 
+    group_by(station, date, source, var, uni, qual) %>% 
+    summarise(val = mean(val, na.rm = T), .groups = 'drop') %>% 
+    select(station, date, source, var, uni, val, qual) %>% 
+    filter(!is.na(val))
+  
+  epcout2 <- bind_rows(epcout2, epctmp)
+  
+}
+
+# combine
+epc1 <- bind_rows(epcout1, epcout2)
+
+##
+# esa
+
+ids <- fls[grep('ESA\\_PP', fls$name), 'id'] %>% pull(id)
+out1 <- NULL
+for(id in ids){
+  
+  Sys.sleep(wait)
+  flsht <- read_sheet(id)
+  out <- flsht %>% 
+    select(
+      station = `ESA Station`, 
+      date = Date, 
+      matches('^Temp-C$|^pH$|^Salin\\-PSU$|^Salin\\-PPT$|^DO\\%\\-Sat$|^DO\\-mg/L$|^Chl\\sug/L-2')
+    ) %>% 
+    gather('var', 'val', -station, -date) %>% 
+    mutate(
+      var = case_when(
+        var == 'Temp-C' ~ 'temp_c', 
+        var == 'pH' ~ 'ph_none', 
+        var %in%  c('Salin-PSU', 'Salin-PPT') ~ 'sal_ppt', 
+        var == 'DO%-Sat' ~ 'dosat_per', 
+        var == 'DO-mg/L' ~ 'do_mgl', 
+        var == 'Chl ug/L-2' ~ 'chla_ugl'
+      ), 
+      date = as.Date(date), 
+      qual = NA_character_, 
+      source = 'esa'
+    ) %>% 
+    separate(var, c('var', 'uni'), sep = '_') %>% 
+    group_by(source, station, date, var, uni, qual) %>% 
+    summarise(val = mean(val, na.rm = T), .groups = 'drop') %>% 
+    select(station, date, source, var, uni, val, qual) %>% 
+    filter(!is.na(val))
+  
+  out1 <- bind_rows(out1, out)
+  
+}
+
+esa1 <- out1
 
 ##
 # combine all
 
-rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1) %>%
+rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1) %>%
   ungroup %>% 
   unique %>%
   filter(!is.na(val)) %>%

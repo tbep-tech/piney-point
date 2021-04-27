@@ -69,7 +69,7 @@ fml <- 'Lato Light'
 cols <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = 'Set1'))(length(unique(bswqdat$var)))
 
 # station colors on maps
-stacols <- colorRampPalette(RColorBrewer::brewer.pal(n = 7, name = 'Accent'))(length(unique(rsstatloc$source_lng)))
+stacols <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = 'Accent'))(length(unique(rsstatloc$source_lng)))
 names(stacols) <- sort(unique(rsstatloc$source_lng))
 
 # variable color on wq maps
