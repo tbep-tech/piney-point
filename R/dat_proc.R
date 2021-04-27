@@ -1429,7 +1429,7 @@ for(id in ids){
     select(
       station = `ESA Station`, 
       date = Date, 
-      matches('^Temp-C$|^pH$|^Salin\\-PSU$|^Salin\\-PPT$|^DO\\%\\-Sat$|^DO\\-mg/L$|^Chl\\sug/L-2')
+      matches('^Temp-C$|^pH$|^Salin\\-PSU$|^Salin\\-PPT$|^DO\\%\\-Sat$|^DO\\-mg/L$')
     ) %>% 
     gather('var', 'val', -station, -date) %>% 
     mutate(
