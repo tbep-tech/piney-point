@@ -864,9 +864,9 @@ wait <- 10
 # csv files must be opened/saved as spreadsheet in google sheets
 fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
-##
-# fldep dump 20210411
-fl <- fls[which(fls$name == 'FLDEP_20210427'), 'id'] %>% pull(id)
+## fldep ------------------------------------------------------------------
+
+fl <- fls[which(fls$name == 'FLDEP_20210428'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 fldep1 <- flsht %>% 
   clean_names %>% 
@@ -908,8 +908,7 @@ fldep1 <- flsht %>%
   select(station, date, source, var, uni, val, qual) %>% 
   filter(!is.na(val))
 
-##
-# mpnrd dump 2021-04-06
+## mpnrd ------------------------------------------------------------------
 
 # mpnrd, creek and outfall samples
 ids <- fls[grep('Comp', fls$name), 'id'] %>% pull(id)
@@ -1042,8 +1041,7 @@ out2all <- out2 %>%
 
 mpnrd1 <- bind_rows(out1all, out2all)
 
-##
-# pinellas co
+## pinco ------------------------------------------------------------------
 
 # lab results
 ids <- fls[grep('^PINCO_labresults', fls$name), 'id'] %>% pull(id)
@@ -1250,8 +1248,7 @@ pinco1 <- bind_rows(out1, out2) %>%
   ) %>% 
   select(station, date, source, var, uni, val, qual)
 
-##
-# new college dump 20210410
+## ncf --------------------------------------------------------------------
 
 # sleep to not bonk api limit
 Sys.sleep(wait)
@@ -1280,12 +1277,10 @@ ncf1 <- flsht %>%
     )
   )
 
-##
-# epc
+## epc --------------------------------------------------------------------
 
-# original 
-
-ids <- fls[grep('^EPC\\_PP\\_', fls$name), 'id'] %>% pull(id)
+# in situ
+ids <- fls[grep('^EPC\\_PP\\_insitu', fls$name), 'id'] %>% pull(id)
 epcout1 <- NULL
 for(id in ids){
   
@@ -1295,7 +1290,7 @@ for(id in ids){
   flsht <- read_sheet(id)
   epctmp <- flsht %>% 
     select(
-      station = `EPC Station`, 
+      station = `EPCStation`, 
       date = `Date`, 
       temp = `Temp-C`, 
       ph = `pH`, 
@@ -1320,7 +1315,7 @@ for(id in ids){
   
 }
 
-# rwm
+# rwm, runs (routine monitoring)
 ids <- fls[grep('^EPC\\_RWM\\_', fls$name), 'id'] %>% pull(id)
 epcout2 <- NULL
 for(id in ids){
@@ -1413,11 +1408,56 @@ for(id in ids){
   
 }
 
-# combine
-epc1 <- bind_rows(epcout1, epcout2)
+# lab results
+ids <- fls[grep('^EPC\\_PP\\_labresults', fls$name), 'id'] %>% pull(id)
+epcout3 <- NULL
+for(id in ids){
+  
+  # sleep to not bonk api limit
+  Sys.sleep(wait)
+  
+  flsht <- read_sheet(id)
+  epctmp <- flsht %>% 
+    select(
+      station = `EPCStation`, 
+      date = `Time Received`, 
+      var = Parameter,
+      val = Value, 
+      qual = DEPQualifier
+    ) %>% 
+    mutate(
+      date = date(date), 
+      source = 'epchc', 
+      station = as.character(station),
+      station = gsub('^PP', '', station),
+      qual = case_when(
+        qual == 'NULL' ~ NA_character_, 
+        T ~ qual
+      ),
+      var = case_when(
+        var == 'Chlorophyll a' ~ 'chla_ugl', 
+        var == 'Kjeldahl Nitrogen' ~ 'tkn_mgl', 
+        var == 'Nitrates/Nitrites' ~ 'no23_mgl', 
+        var == 'pH' ~ 'ph_none', 
+        var == 'Sulfates(modified)' ~ 'sulf_mgl', 
+        var == 'Total Nitrogen' ~ 'tn_mgl', 
+        var == 'Total Phosphorus' ~ 'tp_mgl', 
+        var == 'Turbidity' ~ 'turb_ntu'
+      )
+    ) %>% 
+    filter(!is.na(var)) %>% 
+    separate(var, c('var', 'uni'), remove = F) %>% 
+    select(station, date, source, var, uni, val, qual) %>% 
+    filter(!is.na(val))
 
-##
-# esa
+  epcout3 <- bind_rows(epcout3, epctmp)
+  
+}
+
+# combine
+epc1 <- bind_rows(epcout1, epcout2, epcout3)
+
+## esa --------------------------------------------------------------------
 
 ids <- fls[grep('ESA\\_PP', fls$name), 'id'] %>% pull(id)
 out1 <- NULL
@@ -1457,8 +1497,7 @@ for(id in ids){
 
 esa1 <- out1
 
-##
-# combine all
+## combine all ------------------------------------------------------------
 
 rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1) %>%
   ungroup %>% 
