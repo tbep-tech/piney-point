@@ -147,10 +147,9 @@ pall <- ggplot() +
   ) + 
   guides(fill = guide_legend(direction = 'vertical', title.position = 'left'))
 
-tiff('figure/chlall.tif', width = 6, height = 7, units = 'in', compression = 'lzw', res = 400, family = 'Lato')
+tiff('figure/chl-all.tif', width = 6, height = 7, units = 'in', compression = 'lzw', res = 400, family = 'Lato')
 print(pall)
 dev.off()
-
 
 for(i in levels(ests$datelb)){
     
