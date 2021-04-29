@@ -1,14 +1,29 @@
 source,source_abbr,station,lat,lon,comment
-Manatee Co.,mpnrd,PMB01,27.63084,-82.5638,NA
-Manatee Co.,mpnrd,PMB02,27.63403,-82.56072,NA
-Manatee Co.,mpnrd,PMB03,27.63517,-82.56434,NA
-Manatee Co.,mpnrd,362,27.612975,-82.577642,NA
+Manatee Co.,mpnrd,202,27.665703,-82.559067,NA
 Manatee Co.,mpnrd,336,27.647422,-82.565161,NA
 Manatee Co.,mpnrd,357,27.649478,-82.578453,NA
 Manatee Co.,mpnrd,361,27.628517,-82.591933,NA
-Manatee Co.,mpnrd,SCI N,27.66504,-82.59946,NA
-Manatee Co.,mpnrd,SCI S,27.65432,-82.6076,NA
-Manatee Co.,mpnrd,PM Out,27.631487,-82.543727,NA
-Manatee Co.,mpnrd,PPC41,27.640414,-82.531956,NA
+Manatee Co.,mpnrd,362,27.612975,-82.577642,NA
+Manatee Co.,mpnrd,386,27.605986,-82.617833,NA
+Manatee Co.,mpnrd,400,27.572583,-82.629644,NA
+Manatee Co.,mpnrd,408,27.547833,-82.599167,NA
+Manatee Co.,mpnrd,425,27.548272,-82.660733,NA
+Manatee Co.,mpnrd,433,27.520964,-82.632681,NA
+Manatee Co.,mpnrd,455,27.535,-82.731333,NA
+Manatee Co.,mpnrd,458,27.497,-82.656833,NA
+Manatee Co.,mpnrd,460,27.516708,-82.685317,NA
+Manatee Co.,mpnrd,535,27.503333,-82.5675,NA
+Manatee Co.,mpnrd,589,27.481503,-82.683075,NA
+Manatee Co.,mpnrd,600,27.418747,-82.605933,NA
+Manatee Co.,mpnrd,604,27.402419,-82.580642,NA
+Manatee Co.,mpnrd,608,27.380203,-82.592244,NA
+Manatee Co.,mpnrd,667,27.437144,-82.660781,NA
 Manatee Co.,mpnrd,BH01,27.60949,-82.54345,NA
 Manatee Co.,mpnrd,BH02,27.60739,-82.56236,NA
+Manatee Co.,mpnrd,PM Out,27.631487,-82.543727,NA
+Manatee Co.,mpnrd,PMB01,27.63084,-82.5638,NA
+Manatee Co.,mpnrd,PMB02,27.63403,-82.56072,NA
+Manatee Co.,mpnrd,PMB03,27.63517,-82.56434,NA
+Manatee Co.,mpnrd,PPC41,27.640414,-82.531956,NA
+Manatee Co.,mpnrd,SCI N,27.66504,-82.59946,NA
+Manatee Co.,mpnrd,SCI S,27.65432,-82.6076,NA
