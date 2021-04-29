@@ -130,10 +130,10 @@ pall <- ggplot() +
   theme_bw() + 
   theme(
     panel.background = element_rect(fill = 'lightgrey'),
-    plot.background = element_rect(fill = 'transparent', colour = NA),
-    legend.background = element_rect(fill = 'transparent', colour = NA),
+    # plot.background = element_rect(fill = 'transparent', colour = NA),
+    # legend.background = element_rect(fill = 'transparent', colour = NA),
     strip.background = element_blank(), 
-    strip.text = element_text(size = 12, colour = 'white'),
+    strip.text = element_text(size = 12),#, colour = 'white'),
     axis.title = element_blank(), 
     legend.position = 'top',
     panel.grid.major = element_blank(), 
@@ -141,13 +141,13 @@ pall <- ggplot() +
     axis.text = element_blank(), 
     axis.ticks = element_blank(), 
     legend.text = element_text(size = 12),
-    legend.title = element_text(size = 14),
-    text = element_text(colour = 'white')
+    legend.title = element_text(size = 14)#,
+    # text = element_text(colour = 'white')
   ) + 
   guides(fill = guide_legend(direction = 'vertical', title.position = 'left'))
 pall
 
-png('figure/chl-all.png', width = 6, height = 4.5, units = 'in', res = 400, family = 'Lato', bg = 'transparent')
+png('figure/chl-all.png', width = 6, height = 4.5, units = 'in', res = 400, family = 'Lato')#, bg = 'transparent')
 print(pall)
 dev.off()
 
@@ -165,10 +165,10 @@ for(i in levels(ests$date)){
     theme_bw() + 
     theme(
       panel.background = element_rect(fill = 'lightgrey'),
-      legend.background = element_rect(fill = 'transparent', colour = NA),
-      plot.background = element_rect(fill = 'transparent', colour = NA),
+      # legend.background = element_rect(fill = 'transparent', colour = NA),
+      # plot.background = element_rect(fill = 'transparent', colour = NA),
       strip.background = element_blank(), 
-      strip.text = element_text(size = 14, colour = 'white'),
+      strip.text = element_text(size = 14),#, colour = 'white'),
       axis.title = element_blank(), 
       legend.position = 'top',
       panel.grid.major = element_blank(), 
@@ -176,12 +176,12 @@ for(i in levels(ests$date)){
       axis.text = element_blank(), 
       axis.ticks = element_blank(), 
       legend.text = element_text(size = 8),
-      legend.title = element_text(size = 10),
-      text = element_text(colour = 'white')
+      legend.title = element_text(size = 10)#,
+      # text = element_text(colour = 'white')
     ) + 
     guides(fill = guide_legend(direction = 'vertical', title.position = 'left'))
   
-  png(paste0('figure/', i, '.png'), width = 4, height = 5, units = 'in', res = 400, family = 'Lato', bg = 'transparent')
+  png(paste0('figure/', i, '.png'), width = 4, height = 5, units = 'in', res = 400, family = 'Lato')#, bg = 'transparent')
   print(pi)
   dev.off()
 
