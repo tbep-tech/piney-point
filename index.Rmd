@@ -1670,6 +1670,10 @@ output$rscnttab1 <- renderReactable(rscnttab1())
 reactableOutput('rscnttab1')
 ```
 
+### __INFORMATION__
+
+__All results shown relative to Florida DEP standards are provided as reference only and do not indicate regulatory non-compliance.__ The thresholds apply to surface water quality standards for Class II (shellfish propagation and harvest) or Class III marine waters (fish consumption, recreation, propagation and maintenance of a healthy, well-balanced population of fish and wildlife).  Standards are not available for all contaminants on the dashboard.  The lower standard was used in instances when two different standards for class II or III waters applied to a parameter.  Some standards are also based on annual averages and not from a single observation.  
+
 BENTHIC SURVEYS {data-navmenu="CURRENT DATA"}
 =======================================================================
 

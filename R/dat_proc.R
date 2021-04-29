@@ -541,6 +541,19 @@ save(macrodat, file = 'data/macrodat.RData', version = 2)
 
 # contaminants from DEP ---------------------------------------------------
 
+## thresholds -------------------------------------------------------------
+
+# https://docs.google.com/spreadsheets/d/1cq75oTocUTsHOKnw8y2TAnSrT19aVOSXOHN_RotogmQ/edit#gid=74722523
+
+rscntthr <- read_sheet('1cq75oTocUTsHOKnw8y2TAnSrT19aVOSXOHN_RotogmQ') %>% 
+  mutate_if(is.list, as.numeric)
+
+save(rscntthr, file = 'data/rscntthr.RData', version = 2)
+
+## data -------------------------------------------------------------------
+
+data(rscntthr)
+
 # ##
 # # from ftp
 # fl <- 'http://publicfiles.dep.state.fl.us/DEAR/DEARweb/_PP_EventResponse/Latest_Analytical_Results_Final.xlsx'

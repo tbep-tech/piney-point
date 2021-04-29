@@ -1,0 +1,48 @@
+var,uni,thresh
+Aluminum (ug/L),ug/L,1500
+Antimony (ug/L),ug/L,4300
+Arsenic (ug/L),ug/L,50
+Beryllium (ug/L),ug/L,0.13
+Boron (ug/L),ug/L,NA
+Cadmium (ug/L),ug/L,8.8
+Calcium (mg/L),mg/L,NA
+Chloride (mg Cl/L),mg Cl/L,NA
+Chromium (ug/L),ug/L,50
+Cobalt (ug/L),ug/L,NA
+Copper (ug/L),ug/L,3.7
+Fluoride (mg F/L),mg F/L,1.5
+Iron (ug/L),ug/L,300
+Lead (ug/L),ug/L,8.5
+Magnesium (mg/L),mg/L,NA
+Manganese (ug/L),ug/L,100
+Molybdenum (ug/L),ug/L,NA
+Nickel (ug/L),ug/L,8.3
+Phaeophytin-a (ug/L),ug/L,NA
+Potassium (mg/L),mg/L,NA
+Selenium (ug/L),ug/L,71
+Silver (ug/L),ug/L,2.3
+Sodium (mg/L),mg/L,NA
+Strontium (ug/L),ug/L,NA
+Sulfate (mg SO4/L),mg SO4/L,NA
+Thallium (ug/L),ug/L,6.3
+Tin (ug/L),ug/L,NA
+Titanium (ug/L),ug/L,NA
+Uranium (ug/L),ug/L,NA
+Vanadium (ug/L),ug/L,NA
+Zinc (ug/L),ug/L,86
+Anatoxin-a (ug/L),ug/L,NA
+Cylindrospermopsin (ug/L),ug/L,NA
+Desmethyl microcystin LR (ug/L),ug/L,NA
+Microcystin HilR (ug/L),ug/L,NA
+Microcystin HtyR (ug/L),ug/L,NA
+Microcystin LA (ug/L),ug/L,NA
+Microcystin LF (ug/L),ug/L,NA
+Microcystin LR (ug/L),ug/L,NA
+Microcystin LW (ug/L),ug/L,NA
+Microcystin LY (ug/L),ug/L,NA
+Microcystin RR (ug/L),ug/L,NA
+Microcystin WR (ug/L),ug/L,NA
+Microcystin YR (ug/L),ug/L,NA
+Neosaxitoxin (ug/L),ug/L,NA
+Nodularin-R (ug/L),ug/L,NA
+Saxitoxin (ug/L),ug/L,NA
