@@ -18,6 +18,8 @@ library(sp)
 library(raster)
 library(mapview)
 library(leaflet)
+library(stars)
+library(leafem)
 
 data(rswqdat)
 data(rsstatloc)
@@ -36,6 +38,7 @@ locs <- rsstatloc %>%
 # current chl data
 chldat <- rswqdat %>%
   filter(!station %in% nonbay) %>%
+  # filter(source %in% 'fldep') %>%
   filter(var %in% 'chla') %>%
   dplyr::select(station, date, var, val) %>%
   inner_join(locs, ., by = 'station') %>%
@@ -61,7 +64,7 @@ bbox <- chldat %>%
   as_Spatial()
 
 # empty grid for interpolation
-grd <- as.data.frame(spsample(bbox, "regular", n = 200000))
+grd <- as.data.frame(spsample(bbox, "regular", n = 100000))
 names(grd) <- c("X", "Y")
 coordinates(grd) <- c("X", "Y")
 gridded(grd) <- TRUE  # Create SpatialPixel object
@@ -82,18 +85,22 @@ mps <- chldat %>%
     
       wkspa <- wk %>%
         as_Spatial
-    
+
       # add crs to grid
       proj4string(wkspa) <- prj
     
       # interpolate
-      interp <- suppressMessages(gstat::idw(val ~ 1, wkspa, newdata = grd, idp = 2.0)) %>%
+      interp <- gstat::idw(log(val) ~ 1, wkspa, newdata = grd, idp = 2.0) %>%
         raster %>%
-        mask(segmask)
-    
+        mask(segmask) %>% 
+        st_as_stars %>% 
+        mutate(
+          var1.pred = exp(var1.pred)
+        )
+
       out <- leaflet() %>% 
         addProviderTiles(providers$CartoDB.Positron) %>%
-        addRasterImage(interp, colors = colfun) %>%
+        addStarsImage(interp, colors = colfun) %>%
         addCircleMarkers(
           data = wk,
           stroke = TRUE,
@@ -120,7 +127,7 @@ leaflet() %>% addProviderTiles(providers$CartoDB.Positron)
 ```
 
 ```{r, results = 'asis'}
-dts <- unique(chldat$date)
+dts <- unique(chldat$date) %>% sort
 for(i in seq_along(dts)){
   
   mp <- mps %>% 
