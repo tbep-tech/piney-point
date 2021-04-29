@@ -593,6 +593,14 @@ rscntdat <- rawdat %>%
   unite('var', var, uni2, remove = F, sep = ' ') %>% 
   select(-uni2) 
 
+# add threshold info
+rscntdat <- rscntdat %>% 
+  left_join(rscntthr, by = c('var', 'uni')) %>% 
+  mutate(
+    inrng = ifelse(val < thresh, 'below', 'above'), 
+    inrng = ifelse(is.na(inrng), 'no threshold', inrng)
+  )
+
 save(rscntdat, file = 'data/rscntdat.RData', version = 2)
 
 # phytoplankton data ------------------------------------------------------

@@ -47,6 +47,7 @@ load('data/macrodat.RData')
 load('data/rsbntpts.RData')
 load('data/bswqrngs.RData')
 load('data/rscntdat.RData')
+load('data/rscntthr.RData')
 load('data/rsphydat.RData')
 load('data/rsphypts.RData')
 
@@ -812,31 +813,79 @@ rscntdat1 <- reactive({
   
 })
 
+# response contamint variable threshold\
+rscnttxt1 <- reactive({
+  
+  # input
+  cntsel1 <- input$cntsel1
+
+  tmp <- rscntthr %>% 
+    filter(var == !!cntsel1) 
+  
+  if(is.na(tmp$thresh))
+    txt <- "no threshold"
+  
+  if(!is.na(tmp$thresh))
+    txt <- paste0(tmp$thresh, ' (', tmp$uni, ')')
+  
+  out <- HTML(paste('Relevant threshold (see information tab):<b>', txt, '</b><br></br>'))
+  
+  return(out)
+  
+})
+
 # response contaminant data table
 rscnttab1 <- reactive({
   
   # input
   rscntdat1 <- rscntdat1()
   cntsel1 <- input$cntsel1
-  
+  thremph <- input$thremph
+
   totab <- rscntdat1 %>% 
     select(
       Station = station ,
       Date = date, 
-      val 
+      val, 
+      `Above threshold?` = inrng
     ) %>% 
     arrange(desc(Date))
   names(totab)[names(totab) == 'val'] <- cntsel1
   
-  out <- reactable(totab,
-    defaultColDef = colDef(
-      footerStyle = list(fontWeight = "bold"),
-      format = colFormat(separators = F),
-      resizable = TRUE, 
-      align = 'left'
-    ),
-    filterable = T,
-    defaultPageSize = nrow(totab)
+  # do not emphasize out of range
+  if(!thremph)
+    out <- reactable(totab,
+      defaultColDef = colDef(
+        footerStyle = list(fontWeight = "bold"),
+        format = colFormat(separators = F),
+        resizable = TRUE, 
+        align = 'left'
+      ),
+      filterable = T,
+      defaultPageSize = nrow(totab)
+      )
+  
+  # emphasize out or range  
+  if(thremph)  
+    out <- reactable(totab,
+      defaultColDef = colDef(
+        footerStyle = list(fontWeight = "bold"),
+        format = colFormat(separators = F),
+        resizable = TRUE, 
+        align = 'left'
+      ),
+      filterable = T,
+      defaultPageSize = nrow(totab),
+      rowStyle = JS("function(rowInfo) {
+        if (rowInfo.row['Above threshold?'] == 'above') {
+          return { background: 'rgba(0, 0, 0, 0.05)' }
+        }
+      }"),
+      rowClass = JS("function(rowInfo) {
+        if (rowInfo.row['Above threshold?'] == 'above') {
+          return 'bold'
+        }
+      }")
     )
   
   return(out)
@@ -851,7 +900,8 @@ rscntmap1 <- reactive({
   cntcolfun <- cntcolfun()
   cntrng1 <- cntrng1()
   cntsel1 <- input$cntsel1
-
+  thremph <- input$thremph
+  
   req(nrow(rscntdat1) > 0)
 
   # make sf
@@ -859,14 +909,59 @@ rscntmap1 <- reactive({
     inner_join(rsstatloc, ., by = c('source', 'station'))
 
   leglab <- cntsel1
-
+  vrlb <- cntsel1
+  
   if(nrow(tomap) == 0)
     m <- mapview()
 
-  # hover pt labels
-  labs <- paste0('Station: ', tomap$station, ', Date: ', tomap$date, ', ', cntsel1, ': ', round(tomap$val, 2))
+  # no threshold emphasis
+  if(nrow(tomap) != 0 & !thremph){
+    
+    # hover pt labels
+    labs <- paste0('Station: ', tomap$station, ', Date: ', tomap$date, ', ', cntsel1, ': ', round(tomap$val, 2))
+  
+    m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, map.types = mptyps)
+    
+  }
+    
+  # threshold emphasis
+  if(nrow(tomap) != 0 & thremph){
 
-  m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, map.types = mptyps)
+    # check if no threshold
+    chk <- any(tomap$inrng %in% 'no threshold')
+    
+    # exit if no threshold
+    if(chk){
+      
+      # hover pt labels
+      labs <- paste0('Station: ', tomap$station, ', Date: ', tomap$date, ', ', cntsel1, ': ', round(tomap$val, 2))
+      
+      m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, map.types = mptyps)
+          
+    }
+
+    if(!chk){
+      
+      tomap1 <- tomap %>% filter(inrng == 'below')
+      tomap2 <- tomap %>% filter(inrng == 'above')
+    
+      # hover pt labels
+      labs1 <- paste0('Station: ', tomap1$station, ', Date: ', tomap1$date, ', ', vrlb, ': ', round(tomap1$val, 2))
+      labs2 <- paste0('Station: ', tomap2$station, ', Date: ', tomap2$date, ', ', vrlb, ': ', round(tomap2$val, 2))
+  
+      if(nrow(tomap1) == 0)
+        m <- mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F, map.types = mptyps)
+    
+      if(nrow(tomap2) == 0)
+        m <- mapview(tomap1, cex = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0)
+      
+      if(nrow(tomap1) > 0 & nrow(tomap2) > 0)
+        m <- mapview(tomap1, cex = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0) +
+          mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F, map.types = mptyps)
+      
+    }    
+    
+  }
   
   # add legend
   out <- m@map %>% 
@@ -1661,6 +1756,27 @@ column(12,
     })
   )
 )
+column(12, 
+  column(3, 
+    renderUI(rscnttxt1())
+  ), 
+  column(9,
+    fillRow(
+      # renderUI({
+      #   
+      #   # input
+      #   cntsel1 <- input$cntsel1
+      # 
+      #   tmp <- rscntthr %>% 
+      #     filter(var == !!cntsel1) 
+      #   
+      #   if(is.na(tmp$thresh))
+      #     return()
+      #   
+        materialSwitch(inputId = 'thremph', label = 'Emphasize results above threshold (only applies if one is available)?', width = '100%')
+      # })
+  )
+))
 ```
 
 ### __TABLE DATA__
@@ -1672,7 +1788,15 @@ reactableOutput('rscnttab1')
 
 ### __INFORMATION__
 
-__All results shown relative to Florida DEP standards are provided as reference only and do not indicate regulatory non-compliance.__ The thresholds apply to surface water quality standards for Class II (shellfish propagation and harvest) or Class III marine waters (fish consumption, recreation, propagation and maintenance of a healthy, well-balanced population of fish and wildlife).  Standards are not available for all contaminants on the dashboard.  The lower standard was used in instances when two different standards for class II or III waters applied to a parameter.  Some standards are also based on annual averages and not from a single observation.  
+This tab shows results for contaminants collected by Florida DEP at the same locations where water quality samples have been collected.  Most of the contaminants are metals.  Limited data are available for concentrations of toxins associated with harmful algal blooms.  
+
+Use the variable selection menu on the top to view results for a contaminant of interest. The map on the left will show results at locations that have been sampled for the contaminant, with the same results shown in the table. All points on the map are sized and colored by the range of values in the data for the selected contaminant and based on the selected viewing options. There are a few options for how the results are shown in the map and table:
+
+1. You can choose to show all samples or remove those that are on land near Piney Point (i.e., creeks or other discharge points where wastewater is leaving the holding ponds). Removing sampling stations on land will typically shift the color and sizing on the map to a narrower range that provides a better representation of impacts in the bay.
+1. You can choose to show all dates or filter by a particular date. If results are filtered by date, hit the “play” button below the date slider to view a time lapse of data. The data table will show only results for the selected day.
+1. You can choose to emphasize results that are above a threshold for the contaminant (see the information below).  Points below the threshold will no longer be outlined on the map, making those above the threshold easier to view. The same values that are above the threshold will be highlighted in the table. The threshold that applies to each contaminant is displayed as text below the selection options.  Some contaminants do not have a threshold.  If this is the case, the switch to emphasize values will do nothing.
+
+__All results shown relative to a threshold are provided as reference only and do not indicate regulatory non-compliance.__ The thresholds apply to surface water quality standards from Florida DEP for Class II (shellfish propagation and harvest) or Class III marine waters (fish consumption, recreation, propagation and maintenance of a healthy, well-balanced population of fish and wildlife).  Standards are not available for all contaminants on the dashboard.  The lower standard was used in instances when two different standards for Class II or III waters applied to a parameter.  Some standards are also based on annual averages and not from a single observation.  
 
 BENTHIC SURVEYS {data-navmenu="CURRENT DATA"}
 =======================================================================
