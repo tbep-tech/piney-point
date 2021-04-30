@@ -51,8 +51,11 @@ load('data/rscntthr.RData')
 load('data/rsphydat.RData')
 load('data/rsphypts.RData')
 
-# log
-log <- readLines('https://tbep-tech.github.io/piney-point/logs/indexlog.txt')
+# logs
+rswqlog <- readLines('https://tbep-tech.github.io/piney-point/logs/rswqlog.txt')
+rscntlog <- readLines('https://tbep-tech.github.io/piney-point/logs/rscntlog.txt')
+rsphylog <- readLines('https://tbep-tech.github.io/piney-point/logs/rsphylog.txt')
+rstrnlog <- readLines('https://tbep-tech.github.io/piney-point/logs/rstrnlog.txt')
 
 ##
 # globals
@@ -1372,7 +1375,7 @@ Row
 knitr::include_graphics('www/Piney_Dashboard_Header.png')
 ```
 
-[__JUMP TO LATEST DATA__](#water-quality-results), last update `r log`
+[__JUMP TO LATEST DATA__](#water-quality-results), last water quality update `r rswqlog`
 
 From March 30th to April 9th, approximately 215 million gallons of wastewater from Piney Point were released into Tampa Bay.  The Tampa Bay Estuary Program is working with regional partners to coordinate and synthesize water quality, benthic, seagrass, and fisheries monitoring data. We are also consulting with USF to model forecasted plume trajectory from the Piney Point discharge. 
 
@@ -1532,7 +1535,7 @@ Use the variable selection menu on the top to view results for a measured water 
 
 How are the data interpreted? 
 
-As of `r log`, data from `r vars` parameters and `r agns` agencies have been added to this dashboard.  These parameters were chosen primarily to track the flow of nutrients from wastewater being discharged into the bay.  The primary environmental threat is an algae response as a result of high concentrations of nutrients in this wastewater. Excess algal can have adverse effects on seagrass, fish, and other wildlife.  __Nitrogen, either total nitrogen (TN) or total ammonia nitrogen (NH3, NH4+), is the primary concern for tracking potential impacts of discharge from Piney Point.__
+As of `r rswqlog`, data from `r vars` parameters and `r agns` agencies have been added to this dashboard.  These parameters were chosen primarily to track the flow of nutrients from wastewater being discharged into the bay.  The primary environmental threat is an algae response as a result of high concentrations of nutrients in this wastewater. Excess algal can have adverse effects on seagrass, fish, and other wildlife.  __Nitrogen, either total nitrogen (TN) or total ammonia nitrogen (NH3, NH4+), is the primary concern for tracking potential impacts of discharge from Piney Point.__
 
 The parameters being monitored include: 
 
@@ -1575,7 +1578,7 @@ ALGAL SURVEYS {data-navmenu="CURRENT DATA"}
 Column {data-width=400}
 -----------------------------------------------------------------------
 
-### __STATION LOCATIONS - PINEY POINT AT MARKER__
+### __STATION LOCATIONS - PINEY POINT AT MARKER__, last update `r rsphylog`
 
 ```{r}
 output$rsphymap1 <- renderLeaflet(rsphymap)
@@ -1675,10 +1678,10 @@ Stations on the map that have different names but occur at the same location are
 RAPID RESPONSE SEAGRASS/MACROALGAE SURVEYS {data-navmenu="CURRENT DATA"}
 =======================================================================
 
-Column {data-width=275}
+Column {data-width=400}
 -----------------------------------------------------------------------
 
-### __TRANSECT LOCATIONS - PINEY POINT AT MARKER__
+### __TRANSECT LOCATIONS - PINEY POINT AT MARKER__, last update `r rstrnlog`
 
 ```{r}
 output$rstrnmap1 <- renderLeaflet(rstrnmap)
@@ -1735,7 +1738,7 @@ CONTAMINANT RESULTS {data-navmenu="CURRENT DATA"}
 Column {data-width=400}
 -----------------------------------------------------------------------
 
-### __STATION LOCATIONS - PINEY POINT AT MARKER__
+### __STATION LOCATIONS - PINEY POINT AT MARKER__, last update `r rscntlog`
 
 ```{r}
 output$rscntmap1 <- renderLeaflet(rscntmap1())

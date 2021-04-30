@@ -513,6 +513,13 @@ rstrndatmcr <- rstrndat %>%
 save(rstrndatsav, file = 'data/rstrndatsav.RData', version = 2)
 save(rstrndatmcr, file = 'data/rstrndatmcr.RData', version = 2)
 
+# for log
+tms <- Sys.time()
+attr(tms, 'tzone') <- 'America/New_York'
+tms <- paste(as.character(tms), 'Eastern')
+
+writeLines(tms, 'logs/rstrnlog.txt')
+
 # macroalgae weight data --------------------------------------------------
 
 gdrive_pth <- 'https://drive.google.com/drive/u/0/folders/1xiLuuvXQsiOWxLBZKq_81dA8ajVn9w2G'
@@ -606,7 +613,17 @@ rscntdat <- rscntdat %>%
 
 save(rscntdat, file = 'data/rscntdat.RData', version = 2)
 
-# phytoplankton data ------------------------------------------------------
+# for log
+tms <- Sys.time()
+attr(tms, 'tzone') <- 'America/New_York'
+tms <- paste(as.character(tms), 'Eastern')
+
+writeLines(tms, 'logs/rscntlog.txt')
+
+
+# phytoplankton -----------------------------------------------------------
+
+## data ------------------------------------------------------------------
 
 gdrive_phypth <- 'https://drive.google.com/drive/u/0/folders/1_69VmwAPA3i0aeEHZg_-qJU5TqLiITBf'
 
@@ -742,7 +759,7 @@ rsphydat <- bind_rows(rsphydatfldep, rsphydatfwri, rsphydatpinco, rsphydatepc) %
   
 save(rsphydat, file = 'data/rsphydat.RData', version = 2)
 
-# phytoplankon sampling stations ------------------------------------------
+## locations --------------------------------------------------------------
 
 data(rsphydat)
 
@@ -776,6 +793,13 @@ rsphypts <- rsphypts %>%
   )
 
 save(rsphypts, file = 'data/rsphypts.RData', version = 2)
+
+# for log
+tms <- Sys.time()
+attr(tms, 'tzone') <- 'America/New_York'
+tms <- paste(as.character(tms), 'Eastern')
+
+writeLines(tms, 'logs/rsphylog.txt')
 
 # benthic sampling stations -----------------------------------------------
 
@@ -1591,7 +1615,7 @@ tms <- Sys.time()
 attr(tms, 'tzone') <- 'America/New_York'
 tms <- paste(as.character(tms), 'Eastern')
 
-writeLines(tms, 'logs/indexlog.txt')
+writeLines(tms, 'logs/rswqlog.txt')
 
 
 
