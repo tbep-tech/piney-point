@@ -1066,7 +1066,7 @@ rstrnsavsel <- reactive({
   
   # input
   trnsel2 <- input$trnsel2
-  
+
   out <- rstrndatsav %>% 
     filter(station %in% !!trnsel2) %>% 
     filter(sav_bb > 0) %>% 
@@ -1102,9 +1102,9 @@ rstrnplo1 <- reactive({
   trnsel2 <- input$trnsel2
   savsel <- input$savsel
   mcrsel <- input$mcrsel
-  
-  # req(mcrsel)
-  # req(savsel)
+  rstrnsavsel <- rstrnsavsel()
+
+  req(!is.null(mcrsel) | !is.null(savsel))
   
   p <- show_rstransect(rstrndatsav, rstrndatmcr, station = trnsel2, savsel = savsel, mcrsel = mcrsel, base_size = 18) 
  

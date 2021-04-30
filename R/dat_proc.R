@@ -389,8 +389,8 @@ save(trnlns, file = 'data/trnlns.RData', version = 2)
 
 # rapid response seagrass, macroalgae surveys -----------------------------
 
-##
-# locations
+## locations --------------------------------------------------------------
+
 # https://docs.google.com/spreadsheets/d/1_wxkXJPjSlVRt9oVLO_AGxjupg8PI_PHkkLA6rq2zGQ/edit#gid=379130523
 rstrnfl <- read_sheet('1_wxkXJPjSlVRt9oVLO_AGxjupg8PI_PHkkLA6rq2zGQ')
 
@@ -411,8 +411,7 @@ rstrnlns <- rstrnfl %>%
 save(rstrnpts, file = 'data/rstrnpts.RData', version = 2)
 save(rstrnlns, file = 'data/rstrnlns.RData', version = 2)
 
-##
-# data
+## data -------------------------------------------------------------------
 
 savlevs <- c('Thalassia testudinum', 'Halodule wrightii', 'Syringodium filiforme', 'Ruppia maritima', 'Halophila engelmannii', 'Halophila decipiens')
 mcrlevs <- c('Gracilaria', 'Hypnea', 'Acanthophora', 'Caulerpa', 'Eucheuma', 'Halymenia', 'Ulva', 'Enteromorpha', 'Cladophora', 'Chaetomorpha', 'Codium', 'Unknown', 'Mixed Drift Reds')
@@ -462,6 +461,7 @@ rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>%
     sav_abundance = factor(sav_abundance, levels = abulevs),
     macroalgae_abundance = factor(macroalgae_abundance, levels = abulevs),
     sav_species = factor(sav_species, levels = savlevs),
+    macroalgae_species= ifelse(macroalgae_species == 'NA', NA, macroalgae_species),
     epibiota_density = factor(epibiota_density, levels = epilevs), 
     station = factor(station), 
     location = factor(location)
@@ -469,11 +469,12 @@ rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>%
 
 rstrndatsav <- rstrndat %>% 
   select(date, station, location, sav_species, sav_abundance, sav_bb, epibiota_density) %>% 
+  group_by(date, station, location) %>% 
   tidyr::complete(
-    sav_species, 
-    tidyr::nesting(date, station, location), 
+    sav_species,  
     fill = list(sav_bb = 0)
   ) %>% 
+  ungroup() %>% 
   mutate(
     station = as.character(station), 
     location = as.numeric(as.character(location))
@@ -488,23 +489,25 @@ maxcols <- rstrndat$macroalgae_species %>%
   seq(1, .) %>% 
   paste('sppcol', ., sep = '')
 
+# you will get a warning with separate, this is normal
 rstrndatmcr <- rstrndat %>% 
   select(date, station, location, macroalgae_species, macroalgae_abundance, macroalgae_bb) %>% 
   separate(macroalgae_species, maxcols, sep = ', ') %>% 
   gather('var', 'macroalgae_species', !!maxcols) %>% 
-  filter(!is.na(macroalgae_species)) %>% 
   mutate(
     macroalgae_species = factor(macroalgae_species, levels = mcrlevs)
   ) %>% 
+  group_by(station, date, location) %>% 
   tidyr::complete(
-    macroalgae_species, 
-    tidyr::nesting(tidyr::expand(., date, station, location)), 
+    macroalgae_species,
     fill = list(macroalgae_bb = 0)
-  ) %>% 
+  ) %>%
+  ungroup() %>% 
   mutate(
     station = as.character(station), 
     location = as.numeric(as.character(location))
   ) %>% 
+  filter(!is.na(macroalgae_species)) %>%
   select(date, station, location, macroalgae_species, macroalgae_abundance, macroalgae_bb) 
 
 save(rstrndatsav, file = 'data/rstrndatsav.RData', version = 2)

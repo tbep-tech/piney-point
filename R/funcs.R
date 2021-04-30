@@ -84,7 +84,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   colpal <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = 'Dark2'))
   
   szrng <- c(2, 16)
-  
+
   # xlims
   savxlms <- rstrndatsav %>%
     filter(station %in% !!station) %>%  
@@ -104,7 +104,9 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     dplyr::mutate(
       Year = lubridate::year(date),
       location = as.numeric(location),
-      pa = ifelse(sav_bb == 0, 0, 1)
+      pa = ifelse(sav_bb == 0, 0, 1), 
+      date = format(date, '%b %d'), 
+      date = factor(date, ordered = T)
     ) 
   
   # sort color palette so its the same regardless of species selected
@@ -156,7 +158,9 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     dplyr::mutate(
       Year = lubridate::year(date),
       location = as.numeric(location),
-      pa = ifelse(macroalgae_bb == 0, 0, 1)
+      pa = ifelse(macroalgae_bb == 0, 0, 1), 
+      date = format(date, '%b %d'), 
+      date = factor(date, ordered = T)
     ) 
   
   # sort color palette so its the same regardless of species selected
