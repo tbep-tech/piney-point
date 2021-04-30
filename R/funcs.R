@@ -133,6 +133,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
 
   pa <- ggplot2::ggplot(toplo1a, ggplot2::aes(y = date, x = location)) +
     ggplot2::geom_point(data = toplo2a, alpha = 1, colour = 'black', size = 2) +
+    # ggplot2::geom_jitter(aes(size = sav_bb, fill = sav_species), alpha = 0.8, pch = 21, width = 0.07, height = 0.07) +
     ggplot2::geom_point(aes(size = sav_bb, fill = sav_species), alpha = 0.8, pch = 21) +
     ggplot2::scale_fill_manual(values = savcol) +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng) +
@@ -184,10 +185,11 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     ungroup() %>%
     select(date, location) %>%
     unique()
-
+  
   pb <- ggplot2::ggplot(toplo1b, ggplot2::aes(y = date, x = location)) +
     ggplot2::geom_point(data = toplo2b, colour = 'black', alpha = 1, size = 2) +
     ggplot2::geom_point(inherit.aes = F, aes(colour = 'Empty sample'), x = NA, y = NA) +
+    # ggplot2::geom_jitter(aes(size = macroalgae_bb, fill = macroalgae_species), alpha = 0.8, pch = 21, width = 0.07, height = 0.07) +
     ggplot2::geom_point(aes(size = macroalgae_bb, fill = macroalgae_species), alpha = 0.8, pch = 21) +
     ggplot2::scale_fill_manual(values = mcrcol) +
     ggplot2::scale_colour_manual(values = 'black') +
