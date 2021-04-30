@@ -150,7 +150,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
       x = 'Transect distance (m)',
       title = 'Submerged aquatic vegetation'
     ) + 
-    guides(fill = guide_legend(override.aes = list(size = 7)))
+    guides(fill = guide_legend(override.aes = list(size = 7), order = 1))
   
   # prep mcr plot data
   mcrdat <- rstrndatmcr %>%
@@ -184,12 +184,14 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     ungroup() %>%
     select(date, location) %>%
     unique()
-  
+
   pb <- ggplot2::ggplot(toplo1b, ggplot2::aes(y = date, x = location)) +
-    ggplot2::geom_point(data = toplo2b, alpha = 1, colour = 'black', size = 2) +
-    ggplot2::geom_point(aes(size = macroalgae_bb, fill = macroalgae_species), alpha = 0.8, pch = 23) +
+    ggplot2::geom_point(data = toplo2b, colour = 'black', alpha = 1, size = 2) +
+    ggplot2::geom_point(inherit.aes = F, aes(colour = 'Empty sample'), x = NA, y = NA) +
+    ggplot2::geom_point(aes(size = macroalgae_bb, fill = macroalgae_species), alpha = 0.8, pch = 21) +
     ggplot2::scale_fill_manual(values = mcrcol) +
-    ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng) +
+    ggplot2::scale_colour_manual(values = 'black') +
+    ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng, guide = F) +
     ggplot2::theme_minimal(base_size = base_size) +
     ggplot2::scale_x_continuous(limits = xlms) +
     ggplot2::theme(
@@ -203,7 +205,10 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
       x = 'Transect distance (m)', 
       title = 'Macroalgae'
     ) +
-    guides(fill = guide_legend(override.aes = list(size = 7)))
+    guides(
+      fill = guide_legend(override.aes = list(size = 7), order = 1), 
+      colour = guide_legend(override.aes = list(size = 2))
+      )
   
   # out
   p <- pa + pb + plot_layout(ncol = 1, heights = c(0.9, 1), guides = 'collect')
