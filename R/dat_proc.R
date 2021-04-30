@@ -1064,75 +1064,75 @@ mpnrd1 <- bind_rows(out1all, out2all)
 
 ## pinco ------------------------------------------------------------------
 
-# lab results
-ids <- fls[grep('^PINCO_labresults', fls$name), 'id'] %>% pull(id)
-out1 <- NULL
-for(id in ids) {
-
-  # sleep to not bonk api limit
-  Sys.sleep(wait)
-
-  dat <- read_sheet(id)
-
-  tmp <- dat %>%
-    clean_names() %>%
-    select(
-      station = collection_site,
-      date = collect_date,
-      var = analyte_name,
-      val = formatted_result,
-      uni = result_units,
-      qual = qualifiers
-    ) %>%
-    mutate(
-      station = case_when(
-        station == 'PMOutfall' ~ 'PM Out',
-        station == 'TBEP-MCBHO2' ~ 'TBEP-MCBH02',
-        station %in% c('BH0', 'BH15', 'BH25') ~ paste0('TBEP-', station),
-        station == 'TBEP0' ~ 'TBEP-BH0',
-        station == 'TBEP15' ~ 'TBEP-BH15',
-        station == 'TBEP25' ~ 'TBEP-BH25',
-        station == 'Clamber 4' ~ 'CB4', 
-        station == 'Clamber 6' ~ 'CB6', 
-        station == 'E7-2A' ~ 'E7-A', 
-        station == 'E7-2B' ~ 'E7-B',
-        station == 'E7-2C' ~ 'E7-C', 
-        station == 'E7-2D' ~ 'E7-D', 
-        T ~ station
-      ),
-      station = gsub('^PC\\s', 'PC', station),
-      station = gsub('^MC\\s', 'MC', station),
-      var = case_when(
-        var == 'Ammonia' ~ 'nh34',
-        var == 'Nitrate+Nitrite (N)' ~ 'no23',
-        var == 'Orthophosphate as P(Dissolved)' ~ 'orthop',
-        var == 'Total Phosphorus' ~ 'tp',
-        var == 'Total Suspended Solids' ~ 'tss',
-        var == 'Turbidity' ~ 'turb',
-        var == 'Chlorophyll a (Corrected)' ~ 'chla',
-        var == 'Total Kjeldahl Nitrogen' ~ 'tkn', 
-        T ~ var
-      ),
-      val = as.numeric(gsub('[^0-9.-]', '', val)),
-      uni = case_when(
-        uni == 'mg/L' ~ 'mgl',
-        uni == 'NTU' ~ 'ntu',
-        uni == 'mg/m3' ~ 'ugl',
-        T ~ uni
-      ),
-      source = 'pinco',
-      source = case_when(
-        station %in% c("TBEP-BH0", "TBEP-BH15", "TBEP-BH25", "TBEP-MCBH02") ~ 'tbep', 
-        T ~ source
-      ),
-      date = as.Date(date)
-    ) %>%
-    filter(!station %in% c('MC- FB', 'PP-FB')) %>% # these are validation samples, no data
-    filter(var %in% parms$var)
-
-  out1 <- bind_rows(out1, tmp)
-
-}
+# # lab results
+# ids <- fls[grep('^PINCO_labresults', fls$name), 'id'] %>% pull(id)
+# out1 <- NULL
+# for(id in ids) {
+# 
+#   # sleep to not bonk api limit
+#   Sys.sleep(wait)
+# 
+#   dat <- read_sheet(id)
+# 
+#   tmp <- dat %>%
+#     clean_names() %>%
+#     select(
+#       station = collection_site,
+#       date = collect_date,
+#       var = analyte_name,
+#       val = formatted_result,
+#       uni = result_units,
+#       qual = qualifiers
+#     ) %>%
+#     mutate(
+#       station = case_when(
+#         station == 'PMOutfall' ~ 'PM Out',
+#         station == 'TBEP-MCBHO2' ~ 'TBEP-MCBH02',
+#         station %in% c('BH0', 'BH15', 'BH25') ~ paste0('TBEP-', station),
+#         station == 'TBEP0' ~ 'TBEP-BH0',
+#         station == 'TBEP15' ~ 'TBEP-BH15',
+#         station == 'TBEP25' ~ 'TBEP-BH25',
+#         station == 'Clamber 4' ~ 'CB4', 
+#         station == 'Clamber 6' ~ 'CB6', 
+#         station == 'E7-2A' ~ 'E7-A', 
+#         station == 'E7-2B' ~ 'E7-B',
+#         station == 'E7-2C' ~ 'E7-C', 
+#         station == 'E7-2D' ~ 'E7-D', 
+#         T ~ station
+#       ),
+#       station = gsub('^PC\\s', 'PC', station),
+#       station = gsub('^MC\\s', 'MC', station),
+#       var = case_when(
+#         var == 'Ammonia' ~ 'nh34',
+#         var == 'Nitrate+Nitrite (N)' ~ 'no23',
+#         var == 'Orthophosphate as P(Dissolved)' ~ 'orthop',
+#         var == 'Total Phosphorus' ~ 'tp',
+#         var == 'Total Suspended Solids' ~ 'tss',
+#         var == 'Turbidity' ~ 'turb',
+#         var == 'Chlorophyll a (Corrected)' ~ 'chla',
+#         var == 'Total Kjeldahl Nitrogen' ~ 'tkn', 
+#         T ~ var
+#       ),
+#       val = as.numeric(gsub('[^0-9.-]', '', val)),
+#       uni = case_when(
+#         uni == 'mg/L' ~ 'mgl',
+#         uni == 'NTU' ~ 'ntu',
+#         uni == 'mg/m3' ~ 'ugl',
+#         T ~ uni
+#       ),
+#       source = 'pinco',
+#       source = case_when(
+#         station %in% c("TBEP-BH0", "TBEP-BH15", "TBEP-BH25", "TBEP-MCBH02") ~ 'tbep', 
+#         T ~ source
+#       ),
+#       date = as.Date(date)
+#     ) %>%
+#     filter(!station %in% c('MC- FB', 'PP-FB')) %>% # these are validation samples, no data
+#     filter(var %in% parms$var)
+# 
+#   out1 <- bind_rows(out1, tmp)
+# 
+# }
 
 # compiled results
 ids <- fls[grep('^PINCO_compiledresults', fls$name), 'id'] %>% pull(id)
@@ -1172,7 +1172,15 @@ pincowide <- flsht1 %>%
 pinco1wq <- pincowide %>%
   select(-matches('\\_qual$')) %>%
   gather('var', 'val', -station, -date) %>%
-  separate(var, c('var', 'uni'), sep = '_')
+  separate(var, c('var', 'uni'), sep = '_') %>% 
+  mutate(
+    val = as.character(val), 
+    val = case_when(
+      grepl('^NULL$|^NA$|^\\.$', val) ~ NA_character_, 
+      T ~ val
+      ),
+    val = as.numeric(val)
+  )
 
 pinco1qual <- pincowide %>%
   select(date, station, matches('\\_qual$')) %>%
@@ -1261,7 +1269,7 @@ out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
 #   unique
 
 # there are diff samples by depth for in situ, avg out
-pinco1 <- bind_rows(out1, out2) %>% 
+pinco1 <- bind_rows(out2) %>% 
   group_by(station, date, source, var, uni, qual) %>% 
   summarise(
     val = mean(val, na.rm = T), 
