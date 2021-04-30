@@ -121,7 +121,14 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   toplo1a <- savdat %>%
     dplyr::filter(sav_species %in% !!savsel) %>% 
     dplyr::filter(pa == 1) %>%
-    dplyr::mutate(sav_bb = round(sav_bb, 1))
+    dplyr::mutate(sav_bb = round(sav_bb, 1)) %>% 
+    dplyr::arrange(date, location)
+
+  # # find overplots
+  # dups1 <- which(duplicated(toplo1a[, c('date', 'location')]))
+  # dups2 <- which(duplicated(toplo1a[, c('date', 'location')], fromLast = T))
+  # dups <- c(dups1, dups2) %>% unique %>% sort
+  # toplo1a$location[dups] <- toplo1a$location[dups] + runif(sum(dups), -2, 2)
   
   # data w/o species, no facet
   toplo2a <- savdat %>%
@@ -177,6 +184,12 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     dplyr::filter(macroalgae_species %in% mcrsel) %>% 
     dplyr::filter(pa == 1) %>%
     dplyr::mutate(macroalgae_bb = round(macroalgae_bb, 1))
+  
+  # # jitter duplicates
+  # dups1 <- which(duplicated(toplo1b[, c('date', 'location')]))
+  # dups2 <- which(duplicated(toplo1b[, c('date', 'location')], fromLast = T))
+  # dups <- c(dups1, dups2) %>% unique %>% sort
+  # toplo1b$location[dups] <- toplo1b$location[dups] + runif(sum(dups), -2, 2)
   
   # data w/o species, no facet
   toplo2b <- mcrdat %>%

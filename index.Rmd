@@ -1696,7 +1696,7 @@ Column {data-width=650 .tabset .tabset-fade}
 ```{r}
 fillCol(flex = c(0.1, 0.8),
   fillRow(
-    selectInput(inputId = 'trnsel2', label = HTML('<b>Select transect:</b>'), choices = rstrns, selected = rstrns[1]), 
+    selectInput(inputId = 'trnsel2', label = HTML('<b>Select transect:</b>'), choices = rstrns, selected = 'SCRB2'),#rstrns[1]), 
     renderUI(
       selectInput(inputId = 'savsel', label = HTML('<b>Select SAV species:</b>'), choices = rstrnsavsel(), selected = rstrnsavsel(), multiple = T, selectize = T)
     ),
