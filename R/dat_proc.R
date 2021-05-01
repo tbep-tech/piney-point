@@ -1220,9 +1220,11 @@ out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
     source = 'pinco',
     date = ymd(date),
     station = gsub('\\s+', '', station),
+    station = gsub('\\-21\\-PP$', '', station),
     station = case_when(
       station == 'PMOutfall' ~ 'PM Out',
       station == 'TBEP-MCBHO2' ~ 'TBEP-MCBH02',
+      station %in% c('BH0', 'BH15', 'BH25') ~ paste0('TBEP-', station),
       T ~ station
     ), 
     source = case_when(
@@ -1232,7 +1234,7 @@ out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
   ) %>%
   select(station, date, source, var, uni, val, qual) %>%
   filter(!is.na(val)) %>%
-  filter(!station %in% 'MC- FB') %>% # this is a validation site, no data
+  filter(!station %in% c('MC- FB', 'PP-FB')) %>% # this is a validation site, no data
   unique
 
 # # sleep to not bonk api limit
