@@ -143,6 +143,9 @@
 "Pinellas Co.","pinco","CB8",27.5976517,-82.5859968,"visited 20210405"
 "Pinellas Co.","pinco","CR1",27.6861018,-82.5233517,"visited 20210409"
 "Pinellas Co.","pinco","CR2",27.6870898,-82.527336,"visited 20210409"
+"Pinellas Co.","pinco","Desoto-1",27.610558,-82.72444,NA
+"Pinellas Co.","pinco","Desoto-2",27.618507,-82.707695,NA
+"Pinellas Co.","pinco","Desoto-3",27.634237,-82.689767,NA
 "Pinellas Co.","pinco","E7-A",27.72306,-82.6212,NA
 "Pinellas Co.","pinco","E7-B",27.7542,-82.621,NA
 "Pinellas Co.","pinco","E7-C",27.70455,-82.6226,NA
@@ -172,10 +175,23 @@
 "Pinellas Co.","pinco","SC1",27.6780451,-82.5311983,NA
 "Pinellas Co.","pinco","SCR1",27.6780451,-82.5311983,"visited 20210409"
 "Pinellas Co.","pinco","SCR2",27.6788432,-82.5342024,"visited 20210409"
+"Pinellas Co.","pinco","SkywayE-1",27.690718,-82.634453,NA
+"Pinellas Co.","pinco","SkywayE-2",27.689679,-82.66452,NA
+"Pinellas Co.","pinco","SkywayE-3",27.673814,-82.656761,NA
+"Pinellas Co.","pinco","SkywayW-1",27.689037,-82.692304,NA
+"Pinellas Co.","pinco","SkywayW-2",27.676516,-82.687936,NA
+"Pinellas Co.","pinco","W7 A 21 03",27.71442779,-82.72712875,NA
+"Pinellas Co.","pinco","W7 B 21 03",27.71469137,-82.73582841,NA
+"Pinellas Co.","pinco","W7 C 21 03",27.73410924,-82.6930255,NA
+"Pinellas Co.","pinco","W7 D 21 03",27.72662635,-82.71902639,NA
 "Pinellas Co.","pinco","W8-A",27.65292,-82.694,NA
 "Pinellas Co.","pinco","W8-B",27.64857,-82.7207,NA
 "Pinellas Co.","pinco","W8-C",27.65134,-82.7002,NA
 "Pinellas Co.","pinco","W8-D",27.66779,-82.6994,NA
+"Pinellas Co.","pinco","W8 A 21 03",27.67559883,-82.71452197,NA
+"Pinellas Co.","pinco","W8 B 21 03",27.70071243,-82.66337973,NA
+"Pinellas Co.","pinco","W8 C 21 03",27.64412691,-82.73153366,NA
+"Pinellas Co.","pinco","W8 D 21 03",27.66953064,-82.68993651,NA
 "TBEP","tbep","TBEP-BH0",27.605423,-82.552508,"visited 20210410"
 "TBEP","tbep","TBEP-BH15",27.611731,-82.559575,"visited 20210410"
 "TBEP","tbep","TBEP-BH25",27.600785,-82.556658,"visited 20210410"
