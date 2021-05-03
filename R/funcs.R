@@ -112,7 +112,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   # sort color palette so its the same regardless of species selected
   savcol <- colpal(length(savlevs))
   names(savcol) <- savlevs
-  savcol <- savcol[as.character(unique(savdat$sav_species))]
+  savcol <- savcol[savsel]
   
   # legend labels
   leglab <- 'Abundance (bb)'
@@ -123,12 +123,23 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     dplyr::filter(pa == 1) %>%
     dplyr::mutate(sav_bb = round(sav_bb, 1)) %>% 
     dplyr::arrange(date, location)
-
-  # # find overplots
-  # dups1 <- which(duplicated(toplo1a[, c('date', 'location')]))
-  # dups2 <- which(duplicated(toplo1a[, c('date', 'location')], fromLast = T))
-  # dups <- c(dups1, dups2) %>% unique %>% sort
-  # toplo1a$location[dups] <- toplo1a$location[dups] + runif(sum(dups), -2, 2)
+  browser()
+  # find overplots
+  dups1 <- duplicated(toplo1a[, c('date', 'location')])
+  dups2 <- duplicated(toplo1a[, c('date', 'location')], fromLast = T)
+  dups <- apply(cbind(dups1, dups2), 1, any)
+  toplo1a <- toplo1a %>% 
+    mutate(
+      dups = dups
+    ) %>% 
+    group_by(date, location) %>% 
+    mutate(
+      location = case_when(
+        dups ~ location + seq(-1 * length(dups) / 3, length(dups) / 3, length.out = length(dups)), 
+        T ~ location
+      )
+    ) %>% 
+    ungroup()
   
   # data w/o species, no facet
   toplo2a <- savdat %>%
@@ -137,18 +148,19 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     ungroup() %>%
     select(date, location) %>%
     unique()
-
+  
   pa <- ggplot2::ggplot(toplo1a, ggplot2::aes(y = date, x = location)) +
     ggplot2::geom_point(data = toplo2a, alpha = 1, colour = 'black', size = 2) +
-    # ggplot2::geom_jitter(aes(size = sav_bb, fill = sav_species), alpha = 0.8, pch = 21, width = 0.07, height = 0.07) +
     ggplot2::geom_point(aes(size = sav_bb, fill = sav_species), alpha = 0.8, pch = 21) +
     ggplot2::scale_fill_manual(values = savcol) +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng) +
     ggplot2::theme_minimal(base_size = base_size) +
-    ggplot2::scale_x_continuous(limits = xlms) +
+    ggplot2::scale_x_continuous(breaks = seq(xlms[1], xlms[2], by = 10)) +
+    ggplot2::coord_cartesian(xlim = xlms) +
     ggplot2::theme(
       panel.grid.major.y = ggplot2::element_blank(),
       panel.grid.minor.y = ggplot2::element_blank(),
+      panel.grid.minor.x = ggplot2::element_blank(),
       legend.title = ggplot2::element_blank(),
       strip.text = ggplot2::element_text(hjust = 0), 
       axis.title.y = element_blank(), 
@@ -174,7 +186,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   # sort color palette so its the same regardless of species selected
   mcrcol <- colpal(length(mcrlevs))
   names(mcrcol) <- mcrlevs
-  mcrcol <- mcrcol[as.character(unique(mcrdat$macroalgae_species))]
+  mcrcol <- mcrcol[mcrsel]
   
   # legend labels
   leglab <- 'Abundance (bb)'
@@ -185,11 +197,22 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     dplyr::filter(pa == 1) %>%
     dplyr::mutate(macroalgae_bb = round(macroalgae_bb, 1))
   
-  # # jitter duplicates
-  # dups1 <- which(duplicated(toplo1b[, c('date', 'location')]))
-  # dups2 <- which(duplicated(toplo1b[, c('date', 'location')], fromLast = T))
-  # dups <- c(dups1, dups2) %>% unique %>% sort
-  # toplo1b$location[dups] <- toplo1b$location[dups] + runif(sum(dups), -2, 2)
+  # jitter duplicates
+  dups1 <- duplicated(toplo1b[, c('date', 'location')])
+  dups2 <- duplicated(toplo1b[, c('date', 'location')], fromLast = T)
+  dups <- apply(cbind(dups1, dups2), 1, any)
+  toplo1b <- toplo1b %>% 
+    mutate(
+      dups = dups
+    ) %>% 
+    group_by(date, location) %>% 
+    mutate(
+      location = case_when(
+        dups ~ location + seq(-1 * length(dups) / 3, length(dups) / 3, length.out = length(dups)), 
+        T ~ location
+      )
+    ) %>% 
+    ungroup()
   
   # data w/o species, no facet
   toplo2b <- mcrdat %>%
@@ -202,16 +225,17 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   pb <- ggplot2::ggplot(toplo1b, ggplot2::aes(y = date, x = location)) +
     ggplot2::geom_point(data = toplo2b, colour = 'black', alpha = 1, size = 2) +
     ggplot2::geom_point(inherit.aes = F, aes(colour = 'Empty sample'), x = NA, y = NA) +
-    # ggplot2::geom_jitter(aes(size = macroalgae_bb, fill = macroalgae_species), alpha = 0.8, pch = 21, width = 0.07, height = 0.07) +
     ggplot2::geom_point(aes(size = macroalgae_bb, fill = macroalgae_species), alpha = 0.8, pch = 21) +
     ggplot2::scale_fill_manual(values = mcrcol) +
     ggplot2::scale_colour_manual(values = 'black') +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng, guide = F) +
     ggplot2::theme_minimal(base_size = base_size) +
-    ggplot2::scale_x_continuous(limits = xlms) +
+    ggplot2::scale_x_continuous(breaks = seq(xlms[1], xlms[2], by = 10)) +
+    ggplot2::coord_cartesian(xlim = xlms) +
     ggplot2::theme(
       panel.grid.major.y = ggplot2::element_blank(),
       panel.grid.minor.y = ggplot2::element_blank(),
+      panel.grid.minor.x = ggplot2::element_blank(),
       legend.title = ggplot2::element_blank(),
       strip.text = ggplot2::element_text(hjust = 0), 
       axis.title.y = element_blank()
