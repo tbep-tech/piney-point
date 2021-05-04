@@ -961,7 +961,7 @@ bswqloc <- bswqloc %>%
 
 wqrefmap <- mapview(rswqlns, color = 'grey', homebutton = F, layer.name = 'Distance to closest') +
   mapview(rsstatloc, col.regions = 'lightblue', alpha.regions = 1, lwd = 0.5, cex = 3, label = paste0('Current station ', rsstatloc$station), layer.name = 'Current stations', homebutton = F) +
-  mapview(bswqloc, col.regions = 'tomato1', alpha.regions = 1, lwd = 0.5, cex = 3, label = paste0('Long-term station ', bswqloc$bswqstation), layer.name = 'Long-term stations', homebutton = F)
+  mapview(bswqloc, col.regions = 'tomato1', alpha.regions = 1, lwd = 0.5, cex = 3, label = paste0('Reference station ', bswqloc$bswqstation), layer.name = 'Reference stations', homebutton = F)
 
 save(wqrefmap, file = 'data/wqrefmap.RData', version = 2)
 
