@@ -13,6 +13,7 @@ css: styles.css
 knitr::opts_chunk$set(echo = F, message = F, warning = F)
 
 # libraries
+library(shiny)
 library(flexdashboard)
 library(mapview)
 library(leaflet)
@@ -50,6 +51,7 @@ load('data/rscntdat.RData')
 load('data/rscntthr.RData')
 load('data/rsphydat.RData')
 load('data/rsphypts.RData')
+load('data/wqrefmap.RData')
 
 # logs
 rswqlog <- readLines('https://tbep-tech.github.io/piney-point/logs/rswqlog.txt')
@@ -468,21 +470,6 @@ baseplo2 <- reactive({
   
 })
 
-# baseline variable text ranges
-bswqtxt1 <- reactive({
-  
-  # input
-  varsel1 <- input$varsel1
-
-  tmp <- bswqrngs %>% 
-    filter(var == !!varsel1) 
-  
-  out <- HTML(paste('Normal range for March/April (mean +/- 1 sd):<b>', tmp$minv, '-', tmp$maxv, tmp$lbunis, '</b><br></br>'))
-  
-  return(out)
-  
-})
-
 # variable range
 varrng1 <- reactive({
   
@@ -588,6 +575,8 @@ rstab1 <- reactive({
       Source = source_lng,
       Station = station ,
       Date = date, 
+      `Reference station` = bswqstation, 
+      `Normal range` = nrmrng,
       `In normal range?` = inrng,
       val 
     ) %>% 
@@ -1211,23 +1200,6 @@ rsphytxt1 <- reactive({
   
 })
 
-# baseline variable text ranges
-bswqtxt2 <- reactive({
-
-  # input
-  varsel2 <- input$varsel2
-
-  req(varsel2)
-  
-  tmp <- bswqrngs %>%
-    filter(var == !!varsel2)
-
-  out <- HTML(paste(tmp$lbs, 'normal range for March/April (mean +/- 1 sd):<b>', tmp$minv, '-', tmp$maxv, '</b><br></br>'))
-
-  return(out)
-
-})
-
 # rapid response phyto plot
 rsphyplo1 <- reactive({
   
@@ -1338,6 +1310,8 @@ rstab2 <- reactive({
       Source = source_lng,
       Station = station,
       Date = date, 
+      `Reference station` = bswqstation, 
+      `Normal range` = nrmrng,
       `In normal range?` = inrng,
       val 
     ) %>% 
@@ -1499,8 +1473,8 @@ column(12,
   )
 )
 column(12, 
-  column(3, 
-    renderUI(bswqtxt1())
+  column(3,
+    HTML('<br></br>')
   ), 
   column(9,
     fillRow(
@@ -1531,7 +1505,7 @@ Use the variable selection menu on the top to view results for a measured water 
 
 1. You can choose to show all samples or remove those that are on land near Piney Point (i.e., creeks or other discharge points where wastewater is leaving the holding ponds).  Removing sampling stations on land will typically shift the color and sizing on the map to a narrower range that provides a better representation of impacts in the bay. 
 1. You can choose to show all dates or filter by a particular date. If results are filtered by date, hit the "play" button below the date slider to view a time lapse of data. The data table will show only results for the selected day.
-1. You can choose to emphasize results that are out of the normal range of values for the March/April period in Tampa Bay.  Points within the normal range will no longer be outlined on the map, making those outside of range that are easier to view.  The same values that are out of range will be highlighted in the table.  The "normal range" is based on the long-term March/April average plus and minus 1 standard deviation of the mean for each parameter.  This range is displayed as text below the selection options. 
+1. You can choose to emphasize results that are out of the normal range of values for the March/April period in Tampa Bay.  Points within the normal range will no longer be outlined on the map, making those outside of range that are easier to view.  The same values that are out of range will be highlighted in the table.  The "normal range" is based on the long-term March/April average plus and minus 1 standard deviation of the mean for each parameter.  The long-term values that are compared to the current results are from baseline data at the station nearest to the current water quality station.  See the [REFERENCE STATIONS](https://shiny.tbep.org/piney-point/#section-reference-stations) map to view the current water quality stations relative to the reference stations used to establish the normal range.  The station used as reference for the normal range is shown in the table. __The normal ranges change by location.__
 
 How are the data interpreted? 
 
@@ -1570,6 +1544,12 @@ __TN (mg/L)__: Total nitrogen concentration is the sum of TKN (ammonia, organic,
 __TP (mg/L)__: Total phosphorus concentration is the sum of orthophosphate, condensed phosphate, and organic phosphate. Excess total phosphorus can stimulate algal production, although this is less of a concern than nitrogen in Tampa Bay.
 
 __TSS (mg/l)__: Total suspended solids is a general measure of water clarity that includes silt and clay particles, plankton, algae, fine organic matter, and other particulate matter. Higher values can indicate algal response or other matter from external sources. 
+
+### __REFERENCE STATIONS__
+
+```{r}
+wqrefmap@map
+```
 
 
 ALGAL SURVEYS {data-navmenu="CURRENT DATA"}
@@ -1613,9 +1593,6 @@ column(12,
       selectInput('varsel2', HTML('<b>Select water quality variable:</b>'), choices = tosel, selected = tosel[1])
 
     })
-  ),
-  column(4,
-    renderUI(bswqtxt2())
   )
 )
 column(12,

@@ -11,6 +11,8 @@ library(scales)
 library(googlesheets4)
 library(googledrive)
 
+prj <- 4326
+
 # deauth all so it can build with gh actions
 drive_deauth()
 gs4_deauth()
@@ -96,12 +98,22 @@ epcraw <- readxl::read_xlsx('data/raw/epcdat.xlsx', sheet="RWMDataSpreadsheet",
                                           "text", "text", "text"),
                             na = '')
 
+# significant digits for label rounding
+sigtab <- tibble(
+  var = c('bod', 'chla', 'color', 'do', 'dosat', 'nh34', 'no23', 'orthop', 
+          'ph', 'sal', 'secchi', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
+  sigdig = c(2, 2, 2, 2, 1, 4, 5, 4, 1, 1, 1, 1, 3, 3, 3, 2, 2)
+)
+
+# get normal ranges
 bswqrngs <- epcraw %>% 
   clean_names %>% 
-  filter(station_number %in% c(21, 22, 90)) %>% 
+  filter(station_number %in% stations$epchc_station) %>% # from tbeptools
   select(
     station = station_number,
     date = sample_time,
+    lat = latitude, 
+    lng = longitude, 
     color_pcu = color_345_c_pcu, 
     tn_mgl = total_nitrogen_mg_l, 
     nh34_mgl = ammonia_mg_l,
@@ -145,20 +157,22 @@ bswqrngs <- epcraw %>%
   ) %>% 
   ungroup() %>% 
   select(-matches('bottom|mid|top')) %>% 
-  gather('var', 'val', -station, -date, -yr, -mo) %>% 
+  gather('var', 'val', -station, -date, -lat, -lng, -yr, -mo) %>% 
   separate(var, c('var', 'uni'), sep = '_') %>% 
   mutate(
     val = as.numeric(val)
   ) %>% 
   filter(yr > 2005 & mo %in% c(3, 4)) %>% 
-  group_by(var, uni) %>% 
+  group_by(station, var, uni) %>% 
   summarise(
+    lat = mean(lat, na.rm = T), 
+    lng = mean(lng, na.rm = T),
     avev = mean(val, na.rm = T), 
     stdv = sd(val, na.rm = T), 
     .groups = 'drop'
-  ) %>% 
+  ) %>%
+  left_join(sigtab, by = 'var') %>% 
   mutate(
-    sigdig = c(2, 2, 2, 2, 1, 4, 5, 4, 1, 1, 1, 1, 3, 3, 3, 2, 2),
     avev = round(avev, sigdig), 
     stdv = round(stdv, sigdig), 
     minv = avev - stdv, 
@@ -169,7 +183,8 @@ bswqrngs <- epcraw %>%
   mutate(
     lbunis = gsub('^.*\\s(\\(.*\\))$', '\\1', lbs), 
     lbunis = gsub('pH', '', lbunis)
-    )
+    ) %>% 
+  rename(bswqstation = station)
 
 save(bswqrngs, file = 'data/bswqrngs.RData', version = 2)
 
@@ -898,6 +913,58 @@ rsstatloc <- rsstatloc %>%
 
 save(rsstatloc, file = 'data/rsstatloc.RData', version = 2)
 
+# map of coordinated response stations w/ nearest long-term ---------------
+
+data(rsstatloc)
+data(bswqrngs)
+
+bswqloc <- bswqrngs %>% 
+  select(bswqstation, lat, lng) %>% 
+  unique() %>% 
+  as.data.frame(stringsAsFactors = F) %>% 
+  st_as_sf(coords = c('lng', 'lat'), crs = prj)
+
+# nearest epc stations to rswq stations
+rswqnear <- rsstatloc %>% 
+  select(station) %>% 
+  mutate(
+    bswqstation = st_nearest_feature(rsstatloc, bswqloc), 
+    bswqstation = bswqloc$bswqstation[bswqstation]
+  ) %>% 
+  st_set_geometry(NULL) %>% 
+  unique
+
+rswqlns <- rsstatloc %>% 
+  select(station) %>% 
+  group_by(station) %>% 
+  nest() %>% 
+  mutate(
+    lns = purrr::map(data, function(x){
+      
+      out <- st_nearest_points(x, bswqloc) 
+      len <- st_length(out) %>% 
+        which.min
+      out <- out[len]
+      
+      return(out)
+      
+    })
+  ) %>% 
+  select(-data) %>%
+  unnest('lns') %>% 
+  st_as_sf() %>% 
+  st_geometry()
+
+bswqloc <- bswqloc %>%
+  filter(bswqstation %in% as.character(rswqnear$bswqstation)) %>% 
+  mutate(type = 'EPCHC ong-term')
+
+wqrefmap <- mapview(rswqlns, color = 'grey', homebutton = F, layer.name = 'Distance to closest') +
+  mapview(rsstatloc, col.regions = 'lightblue', alpha.regions = 1, lwd = 0.5, cex = 3, label = paste0('Current station ', rsstatloc$station), layer.name = 'Current stations', homebutton = F) +
+  mapview(bswqloc, col.regions = 'tomato1', alpha.regions = 1, lwd = 0.5, cex = 3, label = paste0('Long-term station ', bswqloc$bswqstation), layer.name = 'Long-term stations', homebutton = F)
+
+save(wqrefmap, file = 'data/wqrefmap.RData', version = 2)
+
 # coordinated response data -----------------------------------------------
 
 data(bswqrngs)
@@ -1595,20 +1662,44 @@ rswqdat <- rswqdat %>%
   bind_rows(tncalc) %>% 
   arrange(source, date, var)
 
-# add column if in/out of range
+## 
+# estimate in range/out of range from bswqrngs
+
+# sf object of bswq stations
+bswqloc <- bswqrngs %>% 
+  select(bswqstation, lat, lng) %>% 
+  unique() %>% 
+  as.data.frame(stringsAsFactors = F) %>% 
+  st_as_sf(coords = c('lng', 'lat'), crs = prj)
+
+# nearest epc stations to rswq stations
+rswqnear <- rsstatloc %>% 
+  select(station) %>% 
+  mutate(
+    bswqstation = st_nearest_feature(rsstatloc, bswqloc), 
+    bswqstation = bswqloc$bswqstation[bswqstation]
+  ) %>% 
+  st_set_geometry(NULL) %>% 
+  unique
+
+# add column if in/out of range based on closest epc station
 rswqdat <- rswqdat %>% 
-  left_join(bswqrngs, by = c('var', 'uni')) %>% 
+  left_join(rswqnear, by = 'station') %>% 
+  left_join(bswqrngs, by = c('bswqstation', 'var', 'uni')) %>% 
   rowwise() %>% 
   mutate(
     inrng = case_when(
       val < minv ~ 'below', 
       val > maxv ~ 'above', 
       T ~ 'in range'
-      ), 
-    val = round(val, sigdig)
+    ), 
+    val = round(val, sigdig), 
+    minv = round(minv, sigdig), 
+    maxv = round(maxv, sigdig)
   ) %>% 
+  unite(nrmrng, c('minv', 'maxv'), sep = '-') %>% 
   ungroup %>% 
-  select(-avev, -stdv, -sigdig, -minv, -maxv, -lbs)
+  select(-avev, -stdv, -sigdig, -lbs, -lat, -lng)
 
 save(rswqdat, file = 'data/rswqdat.RData', version = 2)
 
