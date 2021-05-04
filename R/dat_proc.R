@@ -10,6 +10,7 @@ library(stringr)
 library(scales)
 library(googlesheets4)
 library(googledrive)
+library(mapview)
 
 prj <- 4326
 
@@ -27,7 +28,6 @@ parms <- tibble(
 )
 
 save(parms, file = 'data/parms.RData', version = 2)
-
 
 # tb high res boundary ----------------------------------------------------
 
@@ -960,8 +960,8 @@ bswqloc <- bswqloc %>%
   mutate(type = 'EPCHC ong-term')
 
 wqrefmap <- mapview(rswqlns, color = 'grey', homebutton = F, layer.name = 'Distance to closest') +
-  mapview(rsstatloc, col.regions = 'lightblue', alpha.regions = 1, lwd = 0.5, cex = 3, label = paste0('Current station ', rsstatloc$station), layer.name = 'Current stations', homebutton = F) +
-  mapview(bswqloc, col.regions = 'tomato1', alpha.regions = 1, lwd = 0.5, cex = 3, label = paste0('Reference station ', bswqloc$bswqstation), layer.name = 'Reference stations', homebutton = F)
+  mapview(rsstatloc, col.regions = 'lightblue', alpha.regions = 1, lwd = 0.5, cex = 4, label = paste0('Current station ', rsstatloc$station), layer.name = 'Current stations', homebutton = F) +
+  mapview(bswqloc, col.regions = 'tomato1', alpha.regions = 1, lwd = 0.5, cex = 4, label = paste0('Reference station ', bswqloc$bswqstation), layer.name = 'Reference stations', homebutton = F)
 
 save(wqrefmap, file = 'data/wqrefmap.RData', version = 2)
 
@@ -981,7 +981,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ## fldep ------------------------------------------------------------------
 
-fl <- fls[which(fls$name == 'FLDEP_20210430'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210504'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 fldep1 <- flsht %>% 
   clean_names %>% 
@@ -1196,6 +1196,7 @@ for(id in ids) {
       ),
       station = gsub('^PC\\s', 'PC', station),
       station = gsub('^MC\\s', 'MC', station),
+      station = gsub('^Skyway\\s', 'Skyway', station),
       var = case_when(
         var == 'Ammonia' ~ 'nh34',
         var == 'Nitrate+Nitrite (N)' ~ 'no23',
@@ -1224,6 +1225,9 @@ for(id in ids) {
     filter(!station %in% c('MC- FB', 'PP-FB')) %>% # these are validation samples, no data
     filter(var %in% parms$var)
 
+  if(nrow(tmp) == 0)
+    next()
+  
   out1 <- bind_rows(out1, tmp)
 
 }
@@ -1293,7 +1297,8 @@ out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
       station == 'TBEP-MCBHO2' ~ 'TBEP-MCBH02',
       station %in% c('BH0', 'BH15', 'BH25') ~ paste0('TBEP-', station),
       T ~ station
-    ), 
+    ),
+    station = gsub('^Skyway\\s', 'Skyway', station),
     source = case_when(
       station %in% c("TBEP-BH0", "TBEP-BH15", "TBEP-BH25", "TBEP-MCBH02") ~ 'tbep', 
       T ~ source
@@ -1684,8 +1689,8 @@ rswqnear <- rsstatloc %>%
 
 # add column if in/out of range based on closest epc station
 rswqdat <- rswqdat %>% 
-  left_join(rswqnear, by = 'station') %>% 
-  left_join(bswqrngs, by = c('bswqstation', 'var', 'uni')) %>% 
+  left_join(., rswqnear, by = 'station') %>% 
+  left_join(., bswqrngs, by = c('bswqstation', 'var', 'uni')) %>% 
   rowwise() %>% 
   mutate(
     inrng = case_when(
