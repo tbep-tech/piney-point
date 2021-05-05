@@ -774,6 +774,13 @@ rsphydat <- bind_rows(rsphydatfldep, rsphydatfwri, rsphydatpinco, rsphydatepc) %
   
 save(rsphydat, file = 'data/rsphydat.RData', version = 2)
 
+# for log
+tms <- Sys.time()
+attr(tms, 'tzone') <- 'America/New_York'
+tms <- paste(as.character(tms), 'Eastern')
+
+writeLines(tms, 'logs/rsphylog.txt')
+
 ## locations --------------------------------------------------------------
 
 data(rsphydat)
@@ -808,13 +815,6 @@ rsphypts <- rsphypts %>%
   )
 
 save(rsphypts, file = 'data/rsphypts.RData', version = 2)
-
-# for log
-tms <- Sys.time()
-attr(tms, 'tzone') <- 'America/New_York'
-tms <- paste(as.character(tms), 'Eastern')
-
-writeLines(tms, 'logs/rsphylog.txt')
 
 # benthic sampling stations -----------------------------------------------
 
