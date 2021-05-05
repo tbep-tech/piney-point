@@ -981,7 +981,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ## fldep ------------------------------------------------------------------
 
-fl <- fls[which(fls$name == 'FLDEP_20210504'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210505'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 fldep1 <- flsht %>% 
   clean_names %>% 
@@ -1495,9 +1495,7 @@ for(id in ids){
       tss_mgl = Total_Suspended_Solids, 
       tss_qual = Total_Suspended_SolidsQ, 
       turb_ntu = Turbidity, 
-      turb_qual = TurbidityQ, 
-      sulf_mgl = `Sulfates(modified)`,
-      sulf_qual = `Sulfates(modified)Q`
+      turb_qual = TurbidityQ
     ) %>% 
     rowwise() %>% 
     mutate(
@@ -1568,8 +1566,7 @@ for(id in ids){
         var == 'Chlorophyll a' ~ 'chla_ugl', 
         var == 'Kjeldahl Nitrogen' ~ 'tkn_mgl', 
         var == 'Nitrates/Nitrites' ~ 'no23_mgl', 
-        var == 'pH' ~ 'ph_none', 
-        var == 'Sulfates(modified)' ~ 'sulf_mgl', 
+        var == 'pH' ~ 'ph_none',
         var == 'Total Nitrogen' ~ 'tn_mgl', 
         var == 'Total Phosphorus' ~ 'tp_mgl', 
         var == 'Turbidity' ~ 'turb_ntu'
