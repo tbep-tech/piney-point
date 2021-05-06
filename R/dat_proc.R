@@ -257,9 +257,15 @@ bswqrngsmpnrd <- mandat %>%
   rename(bswqstation = station) %>% 
   filter(!grepl('^BH', bswqstation)) # these are bishop harbor stations with incomplete data
 
-# combine both
+# combine both, removing missing, get ave lat/lng for changing locations over time
 bswqrngs <- bind_rows(bswqrngsepchc, bswqrngsmpnrd) %>% 
-  filter(!is.na(avev))
+  filter(!is.na(avev)) %>% 
+  group_by(bswqstation, source) %>% 
+  mutate(
+    lat = mean(lat, na.rm = T), 
+    lng = mean(lng, na.rm = T)
+  ) %>% 
+  ungroup()
 
 save(bswqrngs, file = 'data/bswqrngs.RData', version = 2)
 
@@ -1033,7 +1039,7 @@ rswqlns <- rsstatloc %>%
 
 bswqloc <- bswqloc %>%
   filter(bswqstation %in% as.character(rswqnear$bswqstation)) %>% 
-  mutate(type = 'EPCHC ong-term')
+  mutate(type = 'Long-term')
 
 wqrefmap <- mapview(rswqlns, color = 'grey', homebutton = F, layer.name = 'Distance to closest') +
   mapview(rsstatloc, col.regions = 'lightblue', alpha.regions = 1, lwd = 0.5, cex = 4, label = paste0('Current station ', rsstatloc$station), layer.name = 'Current stations', homebutton = F) +
@@ -1745,25 +1751,49 @@ rswqdat <- rswqdat %>%
 
 # sf object of bswq stations
 bswqloc <- bswqrngs %>% 
-  select(bswqstation, lat, lng) %>% 
+  select(bswqstation, var, lat, lng) %>% 
   unique() %>% 
   as.data.frame(stringsAsFactors = F) %>% 
   st_as_sf(coords = c('lng', 'lat'), crs = prj)
 
 # nearest epc stations to rswq stations
-rswqnear <- rsstatloc %>% 
-  select(station) %>% 
+rswqnear <- rswqdat %>% 
+  select(station, var) %>% 
+  unique %>% 
+  inner_join(rsstatloc, ., by = 'station') %>% 
+  select(station, var) %>% 
+  group_by(var) %>% 
+  nest() %>% 
   mutate(
-    bswqstation = st_nearest_feature(rsstatloc, bswqloc), 
-    bswqstation = bswqloc$bswqstation[bswqstation]
+    bswqstation = purrr::pmap(list(var, data), function(var, data){
+      
+      # subset ref stations by var
+      varsel <- var
+      bswqlocsub <- bswqloc %>% dplyr::filter(var %in% varsel)
+      
+      # find nearest
+      out <- data %>% 
+        mutate(
+          bswqstation = st_nearest_feature(data, bswqlocsub), 
+          bswqstation = bswqlocsub$bswqstation[bswqstation]
+        )
+      
+      return(out)
+      
+    })
   ) %>% 
-  st_set_geometry(NULL) %>% 
+  select(-data) %>% 
+  unnest('bswqstation') %>% 
+  select(-geometry) %>% 
+  ungroup %>% 
   unique
 
 # add column if in/out of range based on closest epc station
 rswqdat <- rswqdat %>% 
-  left_join(., rswqnear, by = 'station') %>% 
+  left_join(., rswqnear, by = c('station', 'var')) %>% 
   left_join(., bswqrngs, by = c('bswqstation', 'var', 'uni')) %>% 
+  rename(source = source.x) %>% 
+  select(-source.y) %>% 
   rowwise() %>% 
   mutate(
     inrng = case_when(
