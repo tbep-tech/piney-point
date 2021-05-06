@@ -1634,7 +1634,7 @@ for(id in ids){
       var = Parameter,
       val = Value, 
       qual = DEPQualifier
-    ) %>% 
+    ) %>%
     mutate(
       date = date(date), 
       source = 'epchc', 
@@ -1644,19 +1644,29 @@ for(id in ids){
         qual == 'NULL' ~ NA_character_, 
         T ~ qual
       ),
+      val = as.character(val),
+      val = case_when(
+        grepl('^NULL$', val) ~ NA_character_, 
+        grepl('999999', val) ~ NA_character_, 
+        T ~ val
+      ),
       var = case_when(
+        var == 'Ammonia' ~ 'nh34_ugl', 
+        var == 'Ortho Phosphates' ~ 'orthop_mgl',
         var == 'Chlorophyll a' ~ 'chla_ugl', 
         var == 'Kjeldahl Nitrogen' ~ 'tkn_mgl', 
         var == 'Nitrates/Nitrites' ~ 'no23_mgl', 
         var == 'pH' ~ 'ph_none',
         var == 'Total Nitrogen' ~ 'tn_mgl', 
         var == 'Total Phosphorus' ~ 'tp_mgl', 
-        var == 'Turbidity' ~ 'turb_ntu'
+        var == 'Turbidity' ~ 'turb_ntu', 
+        var == 'Color(345)F.45' ~ 'color_pcu'
       )
     ) %>% 
     filter(!is.na(var)) %>% 
     separate(var, c('var', 'uni'), remove = F) %>% 
     select(station, date, source, var, uni, val, qual) %>% 
+    mutate(val = as.numeric(val)) %>% 
     filter(!is.na(val))
 
   epcout3 <- bind_rows(epcout3, epctmp)
