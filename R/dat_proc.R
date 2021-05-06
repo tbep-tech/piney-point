@@ -22,9 +22,10 @@ gs4_deauth()
 
 # parameter names, units
 parms <- tibble(
-  var = c('bod', 'chla', 'color', 'do', 'dosat', 'nh34', 'no23', 'orthop', 'ph', 'sal', 'secchi', 'sulf', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
-  uni = c('mgl', 'ugl', 'pcu', 'mgl', 'per', 'mgl', 'mgl', 'mgl', 'none', 'ppt', 'm', 'mgl', 'c', 'mgl', 'mgl', 'mgl', 'mgl', 'ntu'), 
-  lbs = c('BOD (mg/L)', 'Chl-a (ug/L)', 'Color (PCU)', 'DO (mg/L)', 'DO (% sat.)', 'NH3, NH4+ (mg/L)', 'Nitrate/Nitrite (mg/L)', 'Ortho-P (mg/L)', 'pH', 'Sal (ppt)', 'Secchi (m)', 'Sulfate (mg/L)', 'Temp (C)', 'TKN (mg/L)', 'TN (mg/L)', 'TP (mg/L)', 'TSS (mg/l)', 'Turb (NTU)')
+  var = c('bod', 'chla', 'color', 'do', 'dosat', 'nh34', 'no23', 'orthop', 'ph', 'sal', 'secchi', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
+  uni = c('mgl', 'ugl', 'pcu', 'mgl', 'per', 'mgl', 'mgl', 'mgl', 'none', 'ppt', 'm', 'c', 'mgl', 'mgl', 'mgl', 'mgl', 'ntu'), 
+  lbs = c('BOD (mg/L)', 'Chl-a (ug/L)', 'Color (PCU)', 'DO (mg/L)', 'DO (% sat.)', 'NH3, NH4+ (mg/L)', 'Nitrate/Nitrite (mg/L)', 'Ortho-P (mg/L)', 'pH', 'Sal (ppt)', 'Secchi (m)', 'Temp (C)', 'TKN (mg/L)', 'TN (mg/L)', 'TP (mg/L)', 'TSS (mg/l)', 'Turb (NTU)'),
+  sigdig = c(2, 2, 2, 2, 1, 4, 5, 4, 1, 1, 1, 1, 3, 3, 3, 2, 2)
 )
 
 save(parms, file = 'data/parms.RData', version = 2)
@@ -98,15 +99,8 @@ epcraw <- readxl::read_xlsx('data/raw/epcdat.xlsx', sheet="RWMDataSpreadsheet",
                                           "text", "text", "text"),
                             na = '')
 
-# significant digits for label rounding
-sigtab <- tibble(
-  var = c('bod', 'chla', 'color', 'do', 'dosat', 'nh34', 'no23', 'orthop', 
-          'ph', 'sal', 'secchi', 'temp', 'tkn', 'tn', 'tp', 'tss', 'turb'),
-  sigdig = c(2, 2, 2, 2, 1, 4, 5, 4, 1, 1, 1, 1, 3, 3, 3, 2, 2)
-)
-
-# get normal ranges
-bswqrngs <- epcraw %>% 
+# get normal epc ranges
+bswqrngsepchc <- epcraw %>% 
   clean_names %>% 
   filter(station_number %in% stations$epchc_station) %>% # from tbeptools
   select(
@@ -171,20 +165,101 @@ bswqrngs <- epcraw %>%
     stdv = sd(val, na.rm = T), 
     .groups = 'drop'
   ) %>%
-  left_join(sigtab, by = 'var') %>% 
+  left_join(parms, by = c('var', 'uni')) %>% 
   mutate(
     avev = round(avev, sigdig), 
     stdv = round(stdv, sigdig), 
     minv = avev - stdv, 
     minv = pmax(0, minv),
-    maxv = avev + stdv
+    maxv = avev + stdv,
+    lbunis = gsub('^.*\\s(\\(.*\\))$', '\\1', lbs), 
+    lbunis = gsub('pH', '', lbunis), 
+    source = 'epchc'
   ) %>% 
+  rename(bswqstation = station)
+
+# manatee county
+# see baseline wq section for how this file was obtained
+mandat <- read.table('data/raw/DataDownload_2351804_row.txt', sep = '\t', header = T)
+
+# get normal manatee county ranges
+bswqrngsmpnrd <- mandat %>% 
+  clean_names %>% 
+  select(
+    station = station_id,
+    date = sample_date,
+    lat = actual_latitude, 
+    lng = actual_longitude,
+    var = parameter, 
+    val = result_value, 
+    uni = result_unit
+  ) %>% 
+  mutate(
+    var = case_when(
+      var == 'Color_apparent_pcu' ~ 'color_pcu', 
+      var == 'TN_ugl' ~ 'tn_ugl',
+      var == 'NH3_N_ugl' ~ 'nh34_ugl', 
+      var == 'NOx_ugl' ~ 'no23_ugl', 
+      var == 'TKN_ugl' ~ 'tkn_ugl', 
+      var == 'OP_mgl' ~ 'orthop_mgl', 
+      var == 'TP_ugl' ~ 'tp_ugl', 
+      var == 'BOD5_mgl' ~ 'bod_mgl', 
+      var == 'ChlaC_ugl' ~ 'chla_ugl',
+      var == 'TSS_mgl' ~ 'tss_mgl', 
+      var == 'Turb_ntu' ~ 'turb_ntu', 
+      var == 'Secchi_ft' ~ 'secchi_ft', 
+      var == 'pH' ~ 'ph_none', 
+      var == 'DO_mgl' ~ 'do_mgl', 
+      var == 'DO_percent' ~ 'dosat_per', 
+      var == 'Salinity_ppt' ~ 'sal_ppt', 
+      var == 'TempW_C' ~ 'temp_c'
+    )
+  ) %>% 
+  filter(!is.na(var)) %>% 
+  separate(var, c('var', 'uni'), sep = '_', remove = F) %>% 
+  mutate(
+    station = gsub('\\=', '', station), 
+    date = as.Date(mdy_hms(date)), 
+    yr = year(date), 
+    mo = month(date), 
+    station = as.character(station),
+    val = case_when(
+      var %in% c('tn', 'tp', 'nh34', 'no23', 'tkn') ~ val / 1000, # ug/l to mg/L
+      var %in% 'secchi' ~ val * 0.3048, # ft to m 
+      T ~ val
+    ), 
+    uni = case_when(
+      var %in% c('tn', 'tp', 'nh34', 'no23', 'tkn') ~ 'mgl', 
+      var %in% 'secchi' ~ 'm',
+      T ~ uni
+    )
+  ) %>%  
+  filter(yr > 2005 & mo %in% c(3, 4)) %>% 
+  group_by(station, var, uni) %>% 
+  summarise(
+    lat = mean(lat, na.rm = T), 
+    lng = mean(lng, na.rm = T),
+    avev = mean(val, na.rm = T), 
+    stdv = sd(val, na.rm = T), 
+    .groups = 'drop'
+  ) %>%
   left_join(parms, by = c('var', 'uni')) %>% 
   mutate(
+    avev = round(avev, sigdig), 
+    stdv = round(stdv, sigdig), 
+    minv = avev - stdv, 
+    minv = pmax(0, minv),
+    maxv = avev + stdv,
     lbunis = gsub('^.*\\s(\\(.*\\))$', '\\1', lbs), 
-    lbunis = gsub('pH', '', lbunis)
-    ) %>% 
-  rename(bswqstation = station)
+    lbunis = gsub('pH', '', lbunis), 
+    source = 'mpnrd'
+  ) %>% 
+  rename(bswqstation = station) %>% 
+  filter(!grepl('^BH', bswqstation)) # these are bishop harbor stations with incomplete data
+
+# combine both
+bswqrngs <- bind_rows(bswqrngsepchc, bswqrngsmpnrd) %>% 
+  filter(!is.na(avev))
 
 save(bswqrngs, file = 'data/bswqrngs.RData', version = 2)
 
