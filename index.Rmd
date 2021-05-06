@@ -442,7 +442,8 @@ observe({
       fillColor = 'red',
       weight = 1,
       fillOpacity = 1,
-      radius= 6
+      radius= 6, 
+      label = ~paste0('Station: ', station)
     )
   
   return(mout)
