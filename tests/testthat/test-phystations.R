@@ -1,9 +1,14 @@
 test_that("Checking if phytoplankton stations are in rsphypts", {
   
-  stas <- rsphydat$station %>% 
+  stasdat <- rsphydat$station %>% 
     unique 
   
-  chk <- any(!stas %in% rsphypts$station)
+  staspts <- rsphypts$station %>% 
+    unique
+  
+  chk <- setdiff(stasdat, staspts) %>% 
+    length %>% 
+    `>`(0)
   
   expect_false(chk)
   

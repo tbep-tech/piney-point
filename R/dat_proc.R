@@ -637,7 +637,6 @@ tms <- paste(as.character(tms), 'Eastern')
 
 writeLines(tms, 'logs/rscntlog.txt')
 
-
 # phytoplankton -----------------------------------------------------------
 
 ## data ------------------------------------------------------------------
@@ -796,7 +795,7 @@ rsphypts <- read_sheet('1ju1vJpCxR58Iayr8DhBxGVqloZDTI4TDoQUohS0h-6c') %>%
   mutate_if(is.list, as.character) %>% 
   left_join(typs, by = 'station') %>% 
   mutate(col = case_when(
-    typ == 'Quantitative' ~ col2hcl('burlywood1'), 
+    typ == 'Quantitative' ~ col2hcl('plum1'), 
     typ == 'Qualitative' ~ col2hcl('cyan3')
     )
   )
