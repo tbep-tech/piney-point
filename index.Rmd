@@ -98,7 +98,7 @@ mapcenter <- c(-82.57862105363802, 27.624588580411267)
 st_crs(trnpts) <- 4326
 
 # baseline wq stations
-bsstas <- c('21', '22', '90', '336', '357', '361', '362')
+bsstas <- unique(bsstatloc$station) %>% sort
 
 # non-bay stations
 nonbay <- c('BH01', 'P Port 2', 'P Port 3', 'PM Out', '20120409-01', 'PPC41', 'P Port 4', 'PMB01')
@@ -180,15 +180,16 @@ bswqmap <- mapview(tomap, homebutton = F, layer.name = 'Data source', map.types 
     fillColor = tomap$col,
     weight = 1,
     fillOpacity = 1,
-    radius= 6
+    radius= 6, 
+    label = ~paste0('Station: ', station)
   ) %>% 
-  addStaticLabels(
-    data = tomap,
-    label = tomap$station,
-    direction = 'top',
-    textsize = "20px", 
-    offset = c(0, 1)
-  ) %>% 
+  # addStaticLabels(
+  #   data = tomap,
+  #   label = tomap$station,
+  #   direction = 'top',
+  #   textsize = "20px", 
+  #   offset = c(0, 1)
+  # ) %>% 
   addCircleMarkers(
       data = tomap[tomap$station %in% bsstas[1], ],
       layerId = 'selsta',
@@ -198,7 +199,8 @@ bswqmap <- mapview(tomap, homebutton = F, layer.name = 'Data source', map.types 
       fillColor = 'red',
       weight = 1,
       fillOpacity = 1,
-      radius= 6
+      radius= 6, 
+      label = ~paste0('Station: ', station)
     ) %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point') %>% 
   addLegend("topright", title = 'Data source', opacity = 1, labels = tomapcols$source, colors = tomapcols$col) 
@@ -1848,7 +1850,7 @@ Column {.tabset .tabset-fade data-width=650}
 <br>
 ```{r}
 column(12, 
-  selectInput('stasel1', HTML('<b>Select station:</b>'), choices = bsstas, selected = bsstas[1])
+  selectInput('stasel1', HTML('<b>Select station (hover on map for names):</b>'), choices = bsstas, selected = bsstas[1])
 )
 ```
 
@@ -1868,7 +1870,7 @@ plotlyOutput('baseplo2')
 
 ### __INFORMATION__
 
-This tab shows approximately 25 years of data at long-term water quality monitoring stations near Piney Point.  __The ranges of values for each of these parameters provide a baseline of comparison for the [current results](https://shiny.tbep.org/piney-point/#section-water-quality-results).__  Data are shown from Hillsborough County Environmental Protection Commission (olive points on map) and Manatee County Parks and Natural Resources Department (green points on map).  Original data can be downloaded from the [USF Water Atlas](https://tampabay.wateratlas.usf.edu/datadownload/disclaimer.aspx).
+This tab shows approximately 25 years of data at long-term water quality monitoring stations near Piney Point.  __The ranges of values for each of these parameters provide a baseline of comparison for the [current results](https://shiny.tbep.org/piney-point/#section-water-quality-results).__  Data are shown from Hillsborough County Environmental Protection Commission (orange points on map) and Manatee County Parks and Natural Resources Department (yellow points on map).  Original data can be downloaded from the [USF Water Atlas](https://tampabay.wateratlas.usf.edu/datadownload/disclaimer.aspx).
 
 Data for an individual station can be viewed using the selection menu on the top. 
 

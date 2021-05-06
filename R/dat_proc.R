@@ -225,15 +225,15 @@ epcraw <- readxl::read_xlsx('data/raw/epcdat.xlsx', sheet="RWMDataSpreadsheet",
                             na = '')
 
 # manatee co
-# raw data from https://tampabay.wateratlas.usf.edu/datadownload/Default.aspx
-# search by surface water quality, by site Info (data source/provider), then STORET_21FLMANA (legacy) and WIN_21FLMANATEE (new)
-# then select stations 336, 357, 361, 362
+# raw data from https://manatee.wateratlas.usf.edu/datadownload/Default.aspx
+# search by surface water quality, by site Info (data source/provider, water body type), then STORET_21FLMANA (legacy) and WIN_21FLMANATEE (new) and bay (for Manatee Co., select Terra Ceia Bay, Palma Sola Bay, Manatee River Estuary, Sarasota Bay)
+# then select all manatee county stations, there will be duplicates for each based on legacy, current data provider
 # selected stations close to Piney Point from map (have to select 'hydrology and samples' and then 'sampling location' form hamburger layer selection)
-mandat <- read.table('data/raw/DataDownload_2339909_row.txt', sep = '\t', header = T)
+mandat <- read.table('data/raw/DataDownload_2351804_row.txt', sep = '\t', header = T)
 
 epcraw <- epcraw %>% 
   clean_names %>% 
-  filter(station_number %in% c(21, 22, 90)) %>% 
+  filter(station_number %in% c(14, 16, 19, 21, 22, 23, 24, 25, 28, 81, 82, 84, 9, 90, 91, 92, 93, 95)) %>% 
   select(
     station = station_number,
     date = sample_time,
@@ -318,7 +318,8 @@ manraw <- mandat %>%
     ), 
     uni = tolower(uni)
   ) %>% 
-  tibble
+  tibble %>% 
+  filter(!grepl('^BH', station)) # these are bishop harbor stations with incomplete data
 
 bswqdat <- bind_rows(epcraw, manraw) %>% 
   arrange(station, date) %>% 
@@ -348,6 +349,7 @@ bswqdatsub <- bswqdatsub %>%
 
 bsstatloc <- bind_rows(epcraw, manraw) %>% 
   select(station, source, latitude, longitude) %>% 
+  unique %>% 
   group_by(station, source) %>% 
   summarise(
     latitude = mean(latitude), 
