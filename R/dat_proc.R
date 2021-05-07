@@ -981,7 +981,7 @@ rsstatloc <- bind_rows(epchcsta1, fldepsta1, mpnrdsta1, pincosta1, ncfsta1, usfs
       source == 'mpnrd' ~ 'Manatee Co.', 
       source == 'ncf' ~ 'New College Fl.', 
       source == 'tbep' ~ 'TBEP', 
-      source == 'usf-rains' ~ 'USF', 
+      source == 'usf' ~ 'USF', 
       source == 'esa' ~ 'ESA'
     )
   ) %>% 
@@ -1651,7 +1651,7 @@ for(id in ids){
         T ~ val
       ),
       var = case_when(
-        var == 'Ammonia' ~ 'nh34_ugl', 
+        var == 'Ammonia' ~ 'nh34_mgl', 
         var == 'Ortho Phosphates' ~ 'orthop_mgl',
         var == 'Chlorophyll a' ~ 'chla_ugl', 
         var == 'Kjeldahl Nitrogen' ~ 'tkn_mgl', 
@@ -1716,9 +1716,51 @@ for(id in ids){
 
 esa1 <- out1
 
+## usf ---------------------------------------------------------------------
+
+ids <- fls[grep('USF\\_labresults', fls$name), 'id'] %>% pull(id)
+out1 <- NULL
+for(id in ids){
+  
+  Sys.sleep(wait)
+  flsht <- read_sheet(id)
+  out <- flsht %>% 
+    clean_names %>% 
+    select(
+      station, 
+      date,
+      var = variable, 
+      val = value, 
+      uni = unit,
+      qual = qualifier
+    ) %>% 
+    mutate(
+      date = date(date), 
+      val = as.character(val), 
+      val = case_when(
+        grepl('LOD', val) ~ as.character(gsub('^LOD=', '', qual)),
+        grepl('nda', val) ~ NA_character_,
+        T ~ as.character(val)
+      ),
+      val = as.numeric(val),
+      # var = ifelse(var == 'tdn', 'tn', var), 
+      source = 'usf'
+    ) %>% 
+    filter(var %in% parms$var) %>% 
+    group_by(source, station, date, var, uni, qual) %>% 
+    summarise(val = mean(val, na.rm = T), .groups = 'drop') %>% 
+    select(station, date, source, var, uni, val, qual) %>% 
+    filter(!is.na(val))
+  
+  out1 <- bind_rows(out1, out)
+  
+}
+
+usf1 <- out1
+
 ## combine all ------------------------------------------------------------
 
-rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1) %>%
+rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1, usf1) %>%
   ungroup %>% 
   unique %>%
   filter(!is.na(val)) %>%
