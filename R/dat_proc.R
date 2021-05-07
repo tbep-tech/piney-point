@@ -259,7 +259,7 @@ bswqrngsmpnrd <- mandat %>%
 
 # combine both, removing missing, get ave lat/lng for changing locations over time
 bswqrngs <- bind_rows(bswqrngsepchc, bswqrngsmpnrd) %>% 
-  filter(!is.na(avev)) %>% 
+  filter(!is.na(stdv)) %>% 
   group_by(bswqstation, source) %>% 
   mutate(
     lat = mean(lat, na.rm = T), 
