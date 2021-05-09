@@ -754,7 +754,7 @@ rsphydatfldep <- flphy1 %>%
     typ = 'Qualitative'
   )
 
-# fwri - usf-rains
+# fwri - usf
 flphy2 <- read_sheet(id, sheet = 'Other Agencies')
 rsphydatfwri <- flphy2 %>% 
   select(
@@ -766,7 +766,7 @@ rsphydatfwri <- flphy2 %>%
   ) %>% 
   mutate(
     date = as.Date(date), 
-    source = 'usf-rains', 
+    source = 'usf', 
     typ = 'Qualitative'
   )
 
