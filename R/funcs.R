@@ -89,12 +89,14 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   savxlms <- rstrndatsav %>%
     filter(station %in% !!station) %>%  
     pull(location) %>% 
-    range(na.rm = T)
+    unique %>% 
+    sort
   
   mcrxlms <- rstrndatmcr %>%
     filter(station %in% !!station) %>%  
     pull(location) %>% 
-    range(na.rm = T)
+    unique %>% 
+    sort
   
   xlms <- range(savxlms, mcrxlms)
   
@@ -123,7 +125,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     dplyr::filter(pa == 1) %>%
     dplyr::mutate(sav_bb = round(sav_bb, 1)) %>% 
     dplyr::arrange(date, location)
-  browser()
+
   # find overplots
   dups1 <- duplicated(toplo1a[, c('date', 'location')])
   dups2 <- duplicated(toplo1a[, c('date', 'location')], fromLast = T)
@@ -155,7 +157,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     ggplot2::scale_fill_manual(values = savcol) +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng) +
     ggplot2::theme_minimal(base_size = base_size) +
-    ggplot2::scale_x_continuous(breaks = seq(xlms[1], xlms[2], by = 10)) +
+    ggplot2::scale_x_continuous(breaks = savxlms) +
     ggplot2::coord_cartesian(xlim = xlms) +
     ggplot2::theme(
       panel.grid.major.y = ggplot2::element_blank(),
@@ -230,7 +232,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     ggplot2::scale_colour_manual(values = 'black') +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng, guide = F) +
     ggplot2::theme_minimal(base_size = base_size) +
-    ggplot2::scale_x_continuous(breaks = seq(xlms[1], xlms[2], by = 10)) +
+    ggplot2::scale_x_continuous(breaks = mcrxlms) +
     ggplot2::coord_cartesian(xlim = xlms) +
     ggplot2::theme(
       panel.grid.major.y = ggplot2::element_blank(),

@@ -1270,7 +1270,7 @@ rsphytab1 <- reactive({
   typ <- phydat %>% 
     pull(typ) %>% 
     unique
-  
+  browser()
   out <- NULL
   if(typ == 'Qualitative') 
     out <- phydat %>% 
