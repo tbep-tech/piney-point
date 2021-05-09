@@ -674,9 +674,9 @@ data(rscntthr)
 # file.remove(tmpfl)
 
 # from gdrive
-# https://docs.google.com/spreadsheets/d/1CzyJEPAmvUntUFAbTOgjnyOglHHrS03iV1tDk_NbXBE/edit#gid=749260864
+# https://docs.google.com/spreadsheets/d/19FWq7gjRfLj_aFIdFkQGXfZZNn-mlEDPvm5HUleGgb8/edit#gid=1628126622
 
-rawdat <- read_sheet('1CzyJEPAmvUntUFAbTOgjnyOglHHrS03iV1tDk_NbXBE')
+rawdat <- read_sheet('19FWq7gjRfLj_aFIdFkQGXfZZNn-mlEDPvm5HUleGgb8')
 
 # duplicate wq data are removed with rswqdat
 rscntdat <- rawdat %>% 
