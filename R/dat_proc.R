@@ -1274,8 +1274,10 @@ for(id in ids) {
         station == 'E7-2B' ~ 'E7-B',
         station == 'E7-2C' ~ 'E7-C',
         station == 'E7-2D' ~ 'E7-D',
+        grepl('\\sS$', station) ~ paste0('MC', station),
         T ~ station
       ),
+      station = gsub('\\sS$', '', station),
       station = gsub('^PC\\s', 'PC', station),
       station = gsub('^MC\\s', 'MC', station),
       station = gsub('^Skyway\\s', 'Skyway', station),
@@ -1372,6 +1374,8 @@ out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
   mutate(
     source = 'pinco',
     date = ymd(date),
+    station = ifelse(grepl('\\sS$', station), paste0('MC', station), station),
+    station = gsub('\\sS$', '', station),
     station = gsub('\\s+', '', station),
     station = gsub('\\-21\\-PP$', '', station),
     station = case_when(
