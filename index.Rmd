@@ -5,15 +5,14 @@ output:
     logo: www/tarponlogo.png
     social: menu
     source_code: "https://github.com/tbep-tech/piney-point"
+    includes: 
+      in_header: google-analytics.html
 runtime: shiny
 css: styles.css
 ---
   
 ```{r setup, include=F}
 knitr::opts_chunk$set(echo = F, message = F, warning = F)
-
-tags$head(includeHTML(("google-analytics.html")))
-tags$head(includeScript("google-analytics.js"))
 
 # libraries
 library(shiny)
