@@ -13,6 +13,7 @@ css: styles.css
 knitr::opts_chunk$set(echo = F, message = F, warning = F)
 
 tags$head(includeHTML(("google-analytics.html")))
+tags$head(includeScript("google-analytics.js"))
 
 # libraries
 library(shiny)
