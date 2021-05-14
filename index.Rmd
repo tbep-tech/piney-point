@@ -103,7 +103,7 @@ st_crs(trnpts) <- 4326
 bsstas <- unique(bsstatloc$station) %>% sort
 
 # non-bay stations
-nonbay <- c('BH01', 'P Port 2', 'P Port 3', 'PM Out', '20120409-01', 'PPC41', 'P Port 4', 'PMB01')
+nonbay <- c('BH01', 'P Port 2', 'P Port 3', 'PM Out', '20120409-01', 'PPC41', 'P Port 4', 'PMB01', 'NGS-S Pond')
 
 # seagrass species
 spp <- c("Halodule", "Syringodium", "Thalassia", "Halophila", "Ruppia", "Caulerpa")
