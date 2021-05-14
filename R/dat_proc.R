@@ -513,6 +513,7 @@ save(rstrnlns, file = 'data/rstrnlns.RData', version = 2)
 
 savlevs <- c('Thalassia testudinum', 'Halodule wrightii', 'Syringodium filiforme', 'Ruppia maritima', 'Halophila engelmannii', 'Halophila decipiens')
 mcrlevs <- c('Gracilaria', 'Hypnea', 'Acanthophora', 'Caulerpa', 'Eucheuma', 'Halymenia', 'Ulva', 'Enteromorpha', 'Cladophora', 'Chaetomorpha', 'Codium', 'Unknown', 'Mixed Drift Reds')
+grplevs <- c('Red', 'Green', 'Brown', 'Cyanobacteria')
 epilevs <- c('Clean', 'Light', 'Moderate', 'Heavy')
 abulevs <- c('<1%', '1-5%', '6-25%', '26-50%', '51-75%', '76-100%')
 
@@ -520,6 +521,7 @@ rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>%
   mutate(
     date = as.Date(date)
   ) %>% 
+  filter(date < as.Date('2021-05-01')) %>%  # REMOVE ME!!!!!
   select(
     date, 
     station, 
@@ -532,6 +534,10 @@ rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>%
     macroalgae_abundance
   ) %>% 
   mutate(
+    macroalgae_group = case_when(
+      macroalgae_group == 'Geen' ~ 'Green', 
+      T ~ macroalgae_group
+    ),
     macroalgae_abundance = case_when(
       macroalgae_abundance %in% c('Solitary', '<1%') ~ '<1%', 
       T ~ macroalgae_abundance
@@ -589,15 +595,15 @@ maxcols <- rstrndat$macroalgae_species %>%
 
 # you will get a warning with separate, this is normal
 rstrndatmcr <- rstrndat %>% 
-  select(date, station, location, macroalgae_species, macroalgae_abundance, macroalgae_bb) %>% 
-  separate(macroalgae_species, maxcols, sep = ', ') %>% 
-  gather('var', 'macroalgae_species', !!maxcols) %>% 
+  select(date, station, location, macroalgae_group, macroalgae_abundance, macroalgae_bb) %>% 
+  separate(macroalgae_group, maxcols, sep = ', ') %>% 
+  gather('var', 'macroalgae_group', !!maxcols) %>% 
   mutate(
-    macroalgae_species = factor(macroalgae_species, levels = mcrlevs)
+    macroalgae_group = factor(macroalgae_group, levels = grplevs)
   ) %>% 
   group_by(station, date, location) %>% 
   tidyr::complete(
-    macroalgae_species,
+    macroalgae_group,
     fill = list(macroalgae_bb = 0)
   ) %>%
   ungroup() %>% 
@@ -605,8 +611,8 @@ rstrndatmcr <- rstrndat %>%
     station = as.character(station), 
     location = as.numeric(as.character(location))
   ) %>% 
-  filter(!is.na(macroalgae_species)) %>%
-  select(date, station, location, macroalgae_species, macroalgae_abundance, macroalgae_bb) 
+  filter(!is.na(macroalgae_group)) %>%
+  select(date, station, location, macroalgae_group, macroalgae_abundance, macroalgae_bb) 
 
 save(rstrndatsav, file = 'data/rstrndatsav.RData', version = 2)
 save(rstrndatmcr, file = 'data/rstrndatmcr.RData', version = 2)

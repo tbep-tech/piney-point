@@ -1084,7 +1084,7 @@ rstrnmcrsel <- reactive({
   out <- rstrndatmcr %>% 
     filter(station %in% !!trnsel2) %>% 
     filter(macroalgae_bb > 0) %>% 
-    pull(macroalgae_species) %>% 
+    pull(macroalgae_group) %>% 
     unique %>% 
     as.character
   
@@ -1687,7 +1687,7 @@ fillCol(flex = c(0.1, 0.8),
       selectInput(inputId = 'savsel', label = HTML('<b>Select SAV species:</b>'), choices = rstrnsavsel(), selected = rstrnsavsel(), multiple = T, selectize = T)
     ),
     renderUI(
-      selectInput(inputId = 'mcrsel', label = HTML('<b>Select macroalgae species:</b>'), choices = rstrnmcrsel(), selected = rstrnmcrsel(), multiple = T, selectize = T)
+      selectInput(inputId = 'mcrsel', label = HTML('<b>Select macroalgae group:</b>'), choices = rstrnmcrsel(), selected = rstrnmcrsel(), multiple = T, selectize = T)
     )
   ),
   renderPlot(rstrnplo1())
@@ -1716,7 +1716,7 @@ The seagrass species shown in the plots include the five dominant species found 
 * *Halophila engalmanii*: star grass
 * *Ruppia maritima*: widgeon grass
 
-Major macroalgae taxa (genera) include *Acanthophora*, *Caulerpa*, *Chaetomorpha*, *Cladophora*, *Codium*, *Enteromorpha*, *Eucheuma*, *Gracilaria*, *Halymenia*, *Hypnea*, *Mixed Drift Reds*, *Ulva*, and *Unknown*.  Macroalgae may respond more rapidly to nutrient inputs than SAV and may serve as early warning indicators for biological response to changing water quality.
+Macroalgae taxa are categorized by major groups that include *Red*, *Green*, *Brown*, and *Cyanobacteria*.  Macroalgae may respond more rapidly to nutrient inputs than SAV and may serve as early warning indicators for biological response to changing water quality.
 
 CONTAMINANT RESULTS {data-navmenu="CURRENT DATA"}
 =======================================================================

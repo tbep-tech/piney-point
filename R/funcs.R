@@ -77,7 +77,7 @@ plo_fun <- function(wqdat, station, cols, parms){
 show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, base_size = 12){
 
   savlevs <- c('Thalassia testudinum', 'Halodule wrightii', 'Syringodium filiforme', 'Ruppia maritima', 'Halophila engelmannii', 'Halophila decipiens')
-  mcrlevs <- c('Gracilaria', 'Hypnea', 'Acanthophora', 'Caulerpa', 'Eucheuma', 'Halymenia', 'Ulva', 'Enteromorpha', 'Cladophora', 'Chaetomorpha', 'Codium', 'Unknown', 'Mixed Drift Reds')
+  grplevs <- c('Red', 'Green', 'Brown', 'Cyanobacteria')
   abulabs <- c('<1%', '1-5%', '6-25%', '26-50%', '51-75%', '76-100%')
   abubrks <- c(0, 1, 2, 3, 4, 5)
   
@@ -186,8 +186,8 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     ) 
   
   # sort color palette so its the same regardless of species selected
-  mcrcol <- colpal(length(mcrlevs))
-  names(mcrcol) <- mcrlevs
+  mcrcol <- c('tomato1', 'lightgreen', 'burlywood3', 'lightblue')
+  names(mcrcol) <- grplevs
   mcrcol <- mcrcol[mcrsel]
   
   # legend labels
@@ -195,7 +195,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   
   # data with species
   toplo1b <- mcrdat %>%
-    dplyr::filter(macroalgae_species %in% mcrsel) %>% 
+    dplyr::filter(macroalgae_group %in% mcrsel) %>% 
     dplyr::filter(pa == 1) %>%
     dplyr::mutate(macroalgae_bb = round(macroalgae_bb, 1))
   
@@ -227,7 +227,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   pb <- ggplot2::ggplot(toplo1b, ggplot2::aes(y = date, x = location)) +
     ggplot2::geom_point(data = toplo2b, colour = 'black', alpha = 1, size = 2) +
     ggplot2::geom_point(inherit.aes = F, aes(colour = 'Empty sample'), x = NA, y = NA) +
-    ggplot2::geom_point(aes(size = macroalgae_bb, fill = macroalgae_species), alpha = 0.8, pch = 21) +
+    ggplot2::geom_point(aes(size = macroalgae_bb, fill = macroalgae_group), alpha = 0.8, pch = 21) +
     ggplot2::scale_fill_manual(values = mcrcol) +
     ggplot2::scale_colour_manual(values = 'black') +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng, guide = F) +
