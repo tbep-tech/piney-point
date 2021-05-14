@@ -804,7 +804,7 @@ rscntdat1 <- reactive({
   
 })
 
-# response contamint variable threshold\
+# response contamint variable threshold
 rscnttxt1 <- reactive({
   
   # input
@@ -965,14 +965,16 @@ rscntmap1 <- reactive({
 })
 
 # seagrass map selection, bssgmap1
-observe({
-  
-  # input
-  trnsel1 <- input$trnsel1
-  
+bssgmap1 <- leafletProxy('bssgmap1')
+makeReactiveBinding('trnsel1')
+observeEvent(input$bssgmap1_marker_click, {
+  trnsel1 <<- input$bssgmap1_marker_click$id
+})
+observeEvent(input$bssgmap1_marker_click, {
+
   toadd <- trnpts %>% 
     filter(station %in% trnsel1)
-  mout <- leafletProxy('bssgmap1') %>% 
+  bssgmap1 <- bssgmap1 %>% 
     removeMarker('seltrn') %>% 
     addCircleMarkers(
       data = toadd,
@@ -987,15 +989,13 @@ observe({
       label = ~paste0('Transect ', station)
     ) 
   
-  return(mout)
-  
 })
 
 # seagrass transect plot over time
 bssgtrnplo1 <- reactive({
   
-  # input
-  trnsel1 <- input$trnsel1
+  if(is.null(trnsel1))
+    trnsel1 <- trns[1]
   
   p <- show_transect(bstransect, site = trnsel1, species = spp, varplo = 'Abundance', plotly = T, base_size = 11, yrrng = c(1998, 2021)) %>% 
     layout(
@@ -1011,8 +1011,8 @@ bssgtrnplo1 <- reactive({
 # seagrass summary plot over time
 bssgsumplo1 <- reactive({
   
-  # input
-  trnsel1 <- input$trnsel1
+  if(is.null(trnsel1))
+    trnsel1 <- trns[1]
   
   p <- show_transectsum(bstransectocc, site = trnsel1, species = spp, yrrng = c(1998, 2021)) %>% 
     layout(
@@ -1904,9 +1904,9 @@ Column {data-width=650 .tabset .tabset-fade}
 ### __TRANSECT DATA__
 
 ```{r}
-fillCol(flex = c(0.1, 1),
+fillCol(flex = c(0.03, 1),
   column(12, 
-    selectInput(inputId = 'trnsel1', label = HTML('<b>Select transect:</b>'), choices = trns, selected = trns[1])
+    'Select a station by clicking a marker on the map.'
   ),
   fillCol(flex = c(1, 1),
     renderPlotly(bssgtrnplo1()),
@@ -1919,13 +1919,7 @@ fillCol(flex = c(0.1, 1),
 
 This tab shows results for individual transects near Piney Point.  The plots show detailed information for all dates, species, and sites (quadrats) for the selected transect. 
 
-The locations and names of the transects are shown in the map (transect locations tab on the left). The selected transect is shown as a red dot on the map and is chosen from the dropdown menu at the top left on the right panel.
-
-<br>
-```{r, fig.align = 'center', out.width = '30%'}
-knitr::include_graphics('www/transectsel.PNG')
-```
-<br>
+The locations and names of the transects are shown in the map (transect locations tab on the left). Select a transect by clicking the marker on the map.  The selected transect is shown as a red dot.
 
 The seagrass species shown in the plots include the five dominant species found in Tampa Bay: 
 
