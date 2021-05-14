@@ -1573,7 +1573,7 @@ Column {data-width=650 .tabset .tabset-fade}
 <br>
 ```{r}
 column(12, 
-  column(6, HTML('<b>Select a station by clicking a marker on the map</b>')), 
+  column(6, HTML('<b>Select a station by clicking a marker on the map</b>)), 
   column(6,
     renderUI({
 
@@ -1595,11 +1595,11 @@ column(12,
     })
   )
 )
-column(12,
-  column(6, 
-    renderUI(rsphytxt1())
-  )
-)
+# column(12,
+#   column(6, 
+#     renderUI(rsphytxt1())
+#   )
+# )
 ```
 
 ### __SUMMARY__
@@ -1671,7 +1671,7 @@ Column {data-width=650 .tabset .tabset-fade}
 ### __TRANSECT RESULTS__
 
 ```{r}
-fillCol(flex = c(0.1, 0.8),
+fillCol(flex = c(0.1, 0.9),
   fillRow(
     HTML('<b>Select a transect by clicking a marker on the map</b>'),
     renderUI(
