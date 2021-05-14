@@ -185,13 +185,6 @@ bswqmap <- mapview(tomap, homebutton = F, layer.name = 'Data source', map.types 
     radius= 6, 
     label = ~paste0('Station: ', station)
   ) %>% 
-  # addStaticLabels(
-  #   data = tomap,
-  #   label = tomap$station,
-  #   direction = 'top',
-  #   textsize = "20px", 
-  #   offset = c(0, 1)
-  # ) %>% 
   addCircleMarkers(
       data = tomap[tomap$station %in% bsstas[1], ],
       layerId = 'selsta',
@@ -424,16 +417,18 @@ rsphymap <- mapview(rsphypts, homebutton = F, legend = F) %>%
 ```
 
 ```{r reactives}
-# water quality map, baseline data, bswqmap1
-observe({
-  
-  # inputs
-  stasel1 <- input$stasel1
+# water quality map, baseline data, bswqmap
+bswqmap1 <- leafletProxy('bswqmap1')
+makeReactiveBinding('stasel1')
+observeEvent(input$bswqmap1_marker_click, {
+  stasel1 <<- input$bswqmap1_marker_click$id
+})
+observeEvent(input$bswqmap1_marker_click, {
 
   toadd <- bsstatloc %>% 
     filter(station %in% stasel1)
 
-  mout <- leafletProxy('bswqmap1') %>%
+  bswqmap1 <- bswqmap1 %>%
     removeMarker('selsta') %>% 
     addCircleMarkers(
       data = toadd,
@@ -448,14 +443,13 @@ observe({
       label = ~paste0('Station: ', station)
     )
   
-  return(mout)
 })
 
 # complete time series, baseline data
 baseplo1 <- reactive({
-  
-  # inputs
-  stasel1 <- input$stasel1
+
+  if(is.null(stasel1))
+    stasel1 <- bsstas[1]
   
   out <- plo_fun(bswqdat, stasel1, cols, parms)
   
@@ -466,8 +460,8 @@ baseplo1 <- reactive({
 # march/april time series, baseline data
 baseplo2 <- reactive({
   
-  # inputs
-  stasel1 <- input$stasel1
+  if(is.null(stasel1))
+    stasel1 <- bsstas[1]
   
   out <- plo_fun(bswqdatsub, stasel1, cols, parms)
   
@@ -1854,11 +1848,8 @@ leafletOutput('bswqmap1')
 Column {.tabset .tabset-fade data-width=650}
 -----------------------------------------------------------------------
 
-<br>
 ```{r}
-column(12, 
-  selectInput('stasel1', HTML('<b>Select station (hover on map for names):</b>'), choices = bsstas, selected = bsstas[1])
-)
+column(12, 'Select a station by clicking a marker on the map.')
 ```
 
 ### __COMPLETE TIME SERIES__
@@ -1879,15 +1870,7 @@ plotlyOutput('baseplo2')
 
 This tab shows approximately 25 years of data at long-term water quality monitoring stations near Piney Point.  __The ranges of values for each of these parameters provide a baseline of comparison for the [current results](https://shiny.tbep.org/piney-point/#section-water-quality-results).__  Data are shown from Hillsborough County Environmental Protection Commission (orange points on map) and Manatee County Parks and Natural Resources Department (yellow points on map).  Original data can be downloaded from the [USF Water Atlas](https://tampabay.wateratlas.usf.edu/datadownload/disclaimer.aspx).
 
-Data for an individual station can be viewed using the selection menu on the top. 
-
-<br>
-```{r, fig.align = 'center', out.width = '30%'}
-knitr::include_graphics('www/bsstasel.PNG')
-```
-<br>
-
-Each station shows data for the complete record available and for March, April months only.  The latter is provided as a baseline of comparison during the same months when discharge occurred at Piney Point to reduce seasonal variation.  Hillsborough County data have been collected monthly, whereas the Manatee County are collected quarterly. 
+Data for an individual station can be viewed by clicking a marker on the map. Each station shows data for the complete record available and for March, April months only.  The latter is provided as a baseline of comparison during the same months when discharge occurred at Piney Point to reduce seasonal variation.  Hillsborough County data have been collected monthly, whereas the Manatee County are collected quarterly. 
 
 When available, each dataset shows results for the following: 
 
