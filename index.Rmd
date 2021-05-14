@@ -1573,7 +1573,7 @@ Column {data-width=650 .tabset .tabset-fade}
 <br>
 ```{r}
 column(12, 
-  column(6, HTML('<b>Select a station by clicking a marker on the map</b>)), 
+  column(6, HTML('<b>Select a station by clicking a marker on the map</b>')), 
   column(6,
     renderUI({
 
