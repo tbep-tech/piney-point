@@ -1103,14 +1103,16 @@ rstrnplo1 <- reactive({
 })
 
 # rapid response benthic map selection, rsbntmap1
-observe({
-  
-  # input
-  stasel2 <- input$stasel2
-  
+rsbntmap1 <- leafletProxy('rsbntmap1')
+makeReactiveBinding('stasel2')
+observeEvent(input$rsbntmap1_marker_click, {
+  stasel2 <<- input$rsbntmap1_marker_click$id
+})
+observeEvent(input$rsbntmap1_marker_click, {
+
   toadd <- rsbntpts %>% 
     filter(station %in% stasel2)
-  mout <- leafletProxy('rsbntmap1') %>% 
+  rsbntmap1 <- rsbntmap1 %>% 
     removeMarker('selpt') %>% 
     addCircleMarkers(
       data = toadd,
@@ -1124,8 +1126,6 @@ observe({
       radius= 6,
       label = ~paste0('Station: ', station)
     ) 
-  
-  return(mout)
   
 })
 
@@ -1265,7 +1265,7 @@ rsphytab1 <- reactive({
   typ <- phydat %>% 
     pull(typ) %>% 
     unique
-  browser()
+
   out <- NULL
   if(typ == 'Qualitative') 
     out <- phydat %>% 
@@ -1815,9 +1815,9 @@ Column {data-width=650}
 ### __STATION RESULTS__
 
 ```{r}
-fillCol(flex = c(0.1, 0.8),
+fillCol(flex = c(0.03, 1),
   fillRow(
-    selectInput(inputId = 'stasel2', label = HTML('<b>Select station:</b>'), choices = rsbnts, selected = rsbnts[1])
+     HTML('<b>Select a station by clicking a marker on the map</b>') 
   ),
   HTML('<h5>Baseline samples (biology, sediment chemistry) near Piney Point were collected 2021-04-12. Data will be made available after analysis is finalized (expected no earlier than December 2021 due to sample processing times).<br></br>Additional information regarding the Tampa Bay Benthic Monitoring Program is available at <a href="https://tbep.org/tampa-bay-benthic-index/">https://tbep.org/tampa-bay-benthic-index/</a>.</h5>')
 )
