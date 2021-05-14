@@ -289,6 +289,10 @@ bssgmap <- bssgmap %>%
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
 
 # rapid response transect base map
+rstrnpts <- rstrnpts %>% 
+  filter(station %in% rstrns)
+rstrnlns <- rstrnlns %>% 
+  filter(station %in% rstrns)
 rstrnmap <- mapview(rstrnpts, homebutton = F, legend = F) %>% 
   .@map %>% 
   clearMarkers()
@@ -1019,14 +1023,16 @@ bssgsumplo1 <- reactive({
 })
 
 # rapid response transect map selection, rstrnmap1
-observe({
-  
-  # input
-  trnsel2 <- input$trnsel2
-  
+rstrnmap1 <- leafletProxy('rstrnmap1')
+makeReactiveBinding('trnsel2')
+observeEvent(input$rstrnmap1_marker_click, {
+  trnsel2 <<- input$rstrnmap1_marker_click$id
+})
+observeEvent(input$rstrnmap1_marker_click, {
+
   toadd <- rstrnpts %>% 
     filter(station %in% trnsel2)
-  mout <- leafletProxy('rstrnmap1') %>% 
+  rstrnmap1 <- rstrnmap1 %>% 
     removeMarker('seltrn') %>% 
     addCircleMarkers(
       data = toadd,
@@ -1041,15 +1047,13 @@ observe({
       label = ~paste0('Transect ', station, ' (', toupper(source), ')')
     ) 
   
-  return(mout)
-  
 })
 
 # rapid response sav selection
 rstrnsavsel <- reactive({
-  
-  # input
-  trnsel2 <- input$trnsel2
+ 
+  if(is.null(trnsel2))
+    trnsel2 <- rstrns[1]
 
   out <- rstrndatsav %>% 
     filter(station %in% !!trnsel2) %>% 
@@ -1065,8 +1069,8 @@ rstrnsavsel <- reactive({
 # rapid response mcr selection
 rstrnmcrsel <- reactive({
   
-  # input
-  trnsel2 <- input$trnsel2
+  if(is.null(trnsel2))
+    trnsel2 <- rstrns[1]
   
   out <- rstrndatmcr %>% 
     filter(station %in% !!trnsel2) %>% 
@@ -1083,11 +1087,13 @@ rstrnmcrsel <- reactive({
 rstrnplo1 <- reactive({
   
   # input
-  trnsel2 <- input$trnsel2
   savsel <- input$savsel
   mcrsel <- input$mcrsel
   rstrnsavsel <- rstrnsavsel()
 
+  if(is.null(trnsel2))
+    trnsel2 <- rstrns[1]
+  
   req(!is.null(mcrsel) | !is.null(savsel))
   
   p <- show_rstransect(rstrndatsav, rstrndatmcr, station = trnsel2, savsel = savsel, mcrsel = mcrsel, base_size = 18) 
@@ -1631,7 +1637,7 @@ fillCol(flex = c(NA, 1, NA, 0.5),
 
 This tab shows results of phytoplankton (algae) surveys provided from different sources.  The data are either qualitative (e.g., description of taxa observed at a site) or quantitative (counts of taxa observed at a site) depending on the data source.  Phytoplankton are also collected at many, but not all, of the same stations where water quality samples are collected, which allows a comparison of both to determine potential associations between water quality (e.g., nutrient concentrations) and changes in the algal community.  
 
-Select the station to view from the menu on the top.  The station map on the left shows which stations provide qualitative or quantitative data.  If a qualitative station is selected, a tabular summary of species observed by date will be shown.  If a quantitative station is selected, a plot of algal cell counts (a measure of abundance) by date will be shown.  The cell counts are categorized into relative amounts (Very low, Low, etc.) following breakpoints used by FWC-FWRI for *Karenia brevis* ([https://myfwc.com/research/redtide/statewide/](https://myfwc.com/research/redtide/statewide/)).  Note that these breakpoints may not have ecological relevance for algal taxa in Lower Tampa Bay and are only provided as guidelines to assess relative differences.  Results for nanoplankton have been removed because of typically high concentrations that cannot be enumerated in the lab.  
+Select the station to view by clicking a marker on the map.  The station map on the left shows which stations provide qualitative or quantitative data.  If a qualitative station is selected, a tabular summary of species observed by date will be shown.  If a quantitative station is selected, a plot of algal cell counts (a measure of abundance) by date will be shown.  The cell counts are categorized into relative amounts (Very low, Low, etc.) following breakpoints used by FWC-FWRI for *Karenia brevis* ([https://myfwc.com/research/redtide/statewide/](https://myfwc.com/research/redtide/statewide/)).  Note that these breakpoints may not have ecological relevance for algal taxa in Lower Tampa Bay and are only provided as guidelines to assess relative differences.  Results for nanoplankton have been removed because of typically high concentrations that cannot be enumerated in the lab.  
 
 For all stations, water quality data collected at the station will also be shown in a table below the algal results, if available.  You can choose which water quality variable is shown from the selection menu at the top. 
 
@@ -1667,7 +1673,7 @@ Column {data-width=650 .tabset .tabset-fade}
 ```{r}
 fillCol(flex = c(0.1, 0.8),
   fillRow(
-    selectInput(inputId = 'trnsel2', label = HTML('<b>Select transect:</b>'), choices = rstrns, selected = rstrns[1]), 
+    HTML('<b>Select a transect by clicking a marker on the map</b>'),
     renderUI(
       selectInput(inputId = 'savsel', label = HTML('<b>Select SAV species:</b>'), choices = rstrnsavsel(), selected = rstrnsavsel(), multiple = T, selectize = T)
     ),
@@ -1683,13 +1689,7 @@ fillCol(flex = c(0.1, 0.8),
 
 This tab shows results for the rapid response submerged aquatic vegetation (SAV) and macroalgae surveys.  These surveys are similar to the seagrass surveys shown on the [baseline seagrass](https://shiny.tbep.org/piney-point/#section-seagrasses)  page, with some modifications to the survey design for rapid assessment of biological response to changing conditions at Piney Point.  Each survey includes abundance of SAV and macroalgae species along a 50m transect at each location.  Species are sampled every 10m along the transect.
 
-The locations and names of the transects are shown in the map (transect locations tab on the left). The selected transect is shown as a red dot on the map and is chosen from the dropdown menu at the top left on the right panel.
-
-<br>
-```{r, fig.align = 'center', out.width = '30%'}
-knitr::include_graphics('www/transectsel.PNG')
-```
-<br>
+The locations and names of the transects are shown in the map (transect locations tab on the left). Select a transect by clicking the marker on the map.  The selected transect is shown as a red dot.
 
 Results for the selected transect are shown in the plot, with SAV abundance in the top plot and macroalgae abundance on the bottom plot. The points in each plot show species abundances for each date and at each location along the selected transect (in meters). The plot provides a detailed assessment of where species were located on a transect and how those locations may have changed over time. The species are color-coded as shown in the legends. Each point is sized by the recorded abundance for a species (as a percentage of cover in the sample quadrat at each location). Points that were sampled but had no seagrass are shown as small black points.
 
