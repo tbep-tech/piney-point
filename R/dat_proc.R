@@ -521,7 +521,6 @@ rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>%
   mutate(
     date = as.Date(date)
   ) %>% 
-  filter(date < as.Date('2021-05-01')) %>%  # REMOVE ME!!!!!
   select(
     date, 
     station, 
