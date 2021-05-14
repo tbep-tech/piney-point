@@ -393,13 +393,6 @@ rsphymap <- mapview(rsphypts, homebutton = F, legend = F) %>%
     radius= 4,
     label = ~paste0('Station: ', station)
   ) %>% 
-  # addStaticLabels(
-  #   data = rsphypts,
-  #   label = rsphypts$station, 
-  #   direction = 'top', 
-  #   textsize = '15px',
-  #   offset = c(0, 1)
-  # ) %>% 
   addCircleMarkers(
     data = rsphypts[rsphypts$station %in% rsphys[1], ],
     layerId = 'selpt',
@@ -1131,14 +1124,16 @@ observe({
 })
 
 # rapid response phyto map selection, rsphymap1
-observe({
-  
-  # input
-  stasel3 <- input$stasel3
+rsphymap1 <- leafletProxy('rsphymap1')
+makeReactiveBinding('stasel3')
+observeEvent(input$rsphymap1_marker_click, {
+  stasel3 <<- input$rsphymap1_marker_click$id
+})
+observeEvent(input$rsphymap1_marker_click, {
   
   toadd <- rsphypts %>% 
     filter(station %in% stasel3)
-  mout <- leafletProxy('rsphymap1') %>%
+  rsphymap1 <- rsphymap1 %>%
     removeMarker('selpt') %>% 
     addCircleMarkers(
       data = toadd,
@@ -1153,16 +1148,14 @@ observe({
       label = ~paste0('Station: ', station)
     ) 
   
-  return(mout)
-  
 })
 
 # rapid response phyto data
 rsphydat1 <- reactive({
   
-  # input
-  stasel3 <- input$stasel3
-
+  if(is.null(stasel3))
+    stasel3 <- rsphys[1]
+  
   phyout <- rsphydat %>% 
     filter(station %in% stasel3) %>% 
     left_join(srcs, by = 'source')
@@ -1574,10 +1567,8 @@ Column {data-width=650 .tabset .tabset-fade}
 <br>
 ```{r}
 column(12, 
-  column(4, 
-    selectInput(inputId = 'stasel3', label = HTML('<b>Select station (hover on map for names):</b>'), choices = rsphys, selected = rsphys[1])
-    ), 
-  column(4,
+  column(6, HTML('<b>Select a station by clicking a marker on the map</b>')), 
+  column(6,
     renderUI({
 
       # inputs
@@ -1599,7 +1590,7 @@ column(12,
   )
 )
 column(12,
-  column(4, 
+  column(6, 
     renderUI(rsphytxt1())
   )
 )
@@ -1849,7 +1840,7 @@ Column {.tabset .tabset-fade data-width=650}
 -----------------------------------------------------------------------
 
 ```{r}
-column(12, 'Select a station by clicking a marker on the map.')
+column(12, HTML('<b>Select a station by clicking a marker on the map</b>'))
 ```
 
 ### __COMPLETE TIME SERIES__
@@ -1906,7 +1897,7 @@ Column {data-width=650 .tabset .tabset-fade}
 ```{r}
 fillCol(flex = c(0.03, 1),
   column(12, 
-    'Select a station by clicking a marker on the map.'
+    HTML('<b>Select a station by clicking a marker on the map</b>')
   ),
   fillCol(flex = c(1, 1),
     renderPlotly(bssgtrnplo1()),
