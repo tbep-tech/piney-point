@@ -416,12 +416,11 @@ rsphymap <- mapview(rsphypts, homebutton = F, legend = F) %>%
 ```{r reactives}
 # water quality map, baseline data, bswqmap
 bswqmap1 <- leafletProxy('bswqmap1')
-makeReactiveBinding('stasel1')
-observeEvent(input$bswqmap1_marker_click, {
-  stasel1 <<- input$bswqmap1_marker_click$id
-})
 observeEvent(input$bswqmap1_marker_click, {
 
+  # input
+  stasel1 <- input$bswqmap1_marker_click$id
+  
   toadd <- bsstatloc %>% 
     filter(station %in% stasel1)
 
@@ -445,6 +444,9 @@ observeEvent(input$bswqmap1_marker_click, {
 # complete time series, baseline data
 baseplo1 <- reactive({
 
+  # input
+  stasel1 <- input$bswqmap1_marker_click$id
+  
   if(is.null(stasel1))
     stasel1 <- bsstas[1]
   
@@ -456,6 +458,9 @@ baseplo1 <- reactive({
 
 # march/april time series, baseline data
 baseplo2 <- reactive({
+  
+  # input
+  stasel1 <- input$bswqmap1_marker_click$id
   
   if(is.null(stasel1))
     stasel1 <- bsstas[1]
@@ -963,12 +968,11 @@ rscntmap1 <- reactive({
 
 # seagrass map selection, bssgmap1
 bssgmap1 <- leafletProxy('bssgmap1')
-makeReactiveBinding('trnsel1')
-observeEvent(input$bssgmap1_marker_click, {
-  trnsel1 <<- input$bssgmap1_marker_click$id
-})
 observeEvent(input$bssgmap1_marker_click, {
 
+  # input
+  trnsel1 <- input$bssgmap1_marker_click$id
+  
   toadd <- trnpts %>% 
     filter(station %in% trnsel1)
   bssgmap1 <- bssgmap1 %>% 
@@ -991,6 +995,9 @@ observeEvent(input$bssgmap1_marker_click, {
 # seagrass transect plot over time
 bssgtrnplo1 <- reactive({
   
+  # input
+  trnsel1 <- input$bssgmap1_marker_click$id
+  
   if(is.null(trnsel1))
     trnsel1 <- trns[1]
   
@@ -1008,6 +1015,9 @@ bssgtrnplo1 <- reactive({
 # seagrass summary plot over time
 bssgsumplo1 <- reactive({
   
+  # input
+  trnsel1 <- input$bssgmap1_marker_click$id
+  
   if(is.null(trnsel1))
     trnsel1 <- trns[1]
   
@@ -1024,12 +1034,11 @@ bssgsumplo1 <- reactive({
 
 # rapid response transect map selection, rstrnmap1
 rstrnmap1 <- leafletProxy('rstrnmap1')
-makeReactiveBinding('trnsel2')
-observeEvent(input$rstrnmap1_marker_click, {
-  trnsel2 <<- input$rstrnmap1_marker_click$id
-})
 observeEvent(input$rstrnmap1_marker_click, {
 
+  # input
+  trnsel2 <- input$rstrnmap1_marker_click$id
+  
   toadd <- rstrnpts %>% 
     filter(station %in% trnsel2)
   rstrnmap1 <- rstrnmap1 %>% 
@@ -1052,6 +1061,9 @@ observeEvent(input$rstrnmap1_marker_click, {
 # rapid response sav selection
 rstrnsavsel <- reactive({
  
+  # input
+  trnsel2 <- input$rstrnmap1_marker_click$id
+  
   if(is.null(trnsel2))
     trnsel2 <- rstrns[1]
 
@@ -1068,6 +1080,9 @@ rstrnsavsel <- reactive({
 
 # rapid response mcr selection
 rstrnmcrsel <- reactive({
+  
+  # input
+  trnsel2 <- input$rstrnmap1_marker_click$id
   
   if(is.null(trnsel2))
     trnsel2 <- rstrns[1]
@@ -1090,7 +1105,8 @@ rstrnplo1 <- reactive({
   savsel <- input$savsel
   mcrsel <- input$mcrsel
   rstrnsavsel <- rstrnsavsel()
-
+  trnsel2 <- input$rstrnmap1_marker_click$id
+  
   if(is.null(trnsel2))
     trnsel2 <- rstrns[1]
   
@@ -1104,12 +1120,11 @@ rstrnplo1 <- reactive({
 
 # rapid response benthic map selection, rsbntmap1
 rsbntmap1 <- leafletProxy('rsbntmap1')
-makeReactiveBinding('stasel2')
-observeEvent(input$rsbntmap1_marker_click, {
-  stasel2 <<- input$rsbntmap1_marker_click$id
-})
 observeEvent(input$rsbntmap1_marker_click, {
 
+  # input
+  stasel2 <- input$rsbntmap1_marker_click$id
+  
   toadd <- rsbntpts %>% 
     filter(station %in% stasel2)
   rsbntmap1 <- rsbntmap1 %>% 
@@ -1131,11 +1146,10 @@ observeEvent(input$rsbntmap1_marker_click, {
 
 # rapid response phyto map selection, rsphymap1
 rsphymap1 <- leafletProxy('rsphymap1')
-makeReactiveBinding('stasel3')
 observeEvent(input$rsphymap1_marker_click, {
-  stasel3 <<- input$rsphymap1_marker_click$id
-})
-observeEvent(input$rsphymap1_marker_click, {
+  
+  # input
+  stasel3 <- input$rsphymap1_marker_click$id
   
   toadd <- rsphypts %>% 
     filter(station %in% stasel3)
@@ -1158,6 +1172,9 @@ observeEvent(input$rsphymap1_marker_click, {
 
 # rapid response phyto data
 rsphydat1 <- reactive({
+  
+  # input
+  stasel3 <- input$rsphymap1_marker_click$id
   
   if(is.null(stasel3))
     stasel3 <- rsphys[1]
@@ -1552,7 +1569,6 @@ __TSS (mg/l)__: Total suspended solids is a general measure of water clarity tha
 ```{r}
 wqrefmap@map
 ```
-
 
 ALGAL SURVEYS {data-navmenu="CURRENT DATA"}
 =======================================================================
