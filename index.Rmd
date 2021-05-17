@@ -29,7 +29,6 @@ library(reactable)
 library(tbeptools)
 library(patchwork)
 library(shinyWidgets)
-library(shinyBS)
 
 source('R/funcs.R')
 
