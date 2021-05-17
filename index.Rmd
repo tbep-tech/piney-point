@@ -29,6 +29,7 @@ library(reactable)
 library(tbeptools)
 library(patchwork)
 library(shinyWidgets)
+library(shinyBS)
 
 source('R/funcs.R')
 
@@ -652,6 +653,30 @@ rstab1 <- reactive({
   
 })
 
+# create plot on rsmap1 click
+observeEvent(input$rsmap1_marker_click, {
+
+  showModal(modalDialog(
+      plotOutput('rswqpopup'), 
+      easyClose = T, 
+      fade = F, 
+      footer = NULL
+    ))
+
+})
+
+# create plot on rsmap1 click
+rswqpopup <- eventReactive(input$rsmap1_marker_click, {
+  
+  station <- unique(input$rsmap1_marker_click$id)
+  rsdat1 <- rsdat1()
+
+  out <- rswqpopup_plo(station, rsdat1)
+  
+  return(out)
+  
+})
+
 # response wq data map
 rsmap1 <- reactive({
   
@@ -673,17 +698,17 @@ rsmap1 <- reactive({
     inner_join(rsstatloc, ., by = c('source', 'station'))
 
   leglab <- vrlb
-
+ 
   if(nrow(tomap) == 0)
     m <- mapview()
   
   # show all equally 
   if(nrow(tomap) != 0 & !rngemph){
-    
+  
     # hover pt labels
     labs <- paste0('Station: ', tomap$station, ', Date: ', tomap$date, ', ', vrlb, ': ', round(tomap$val, 2))
   
-    m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, map.types = mptyps)
+    m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, map.types = mptyps, layerId = tomap$station, popup = NULL)
     
   }
   
@@ -700,14 +725,14 @@ rsmap1 <- reactive({
     labs2 <- paste0('Station: ', tomap2$station, ', Date: ', tomap2$date, ', ', vrlb, ': ', round(tomap2$val, 2))
 
     if(nrow(tomap1) == 0)
-      m <- mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F, map.types = mptyps)
+      m <- mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F, map.types = mptyps, layerId = tomap2$station, popup = NULL)
   
     if(nrow(tomap2) == 0)
-      m <- mapview(tomap1, cex = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0)
+      m <- mapview(tomap1, cexbs = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0, layerId = tomap1$station, popup = NULL)
     
     if(nrow(tomap1) > 0 & nrow(tomap2) > 0)
-      m <- mapview(tomap1, cex = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0) +
-        mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F, map.types = mptyps)
+      m <- mapview(tomap1, cex = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0, layerId = tomap1$station, popup = NULL) +
+        mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F, map.types = mptyps, layerId = tomap2$station, popup = NULL)
     
   }
   
@@ -715,7 +740,7 @@ rsmap1 <- reactive({
   out <- m@map %>% 
     addLegend("bottomright", pal = colfun, title = leglab, opacity = 1, values = varrng1) %>% 
     setView(mapcenter[1], mapcenter[2], zoom = 11) %>% 
-    addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
+    addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE))
   
   return(out)
   
@@ -1445,6 +1470,7 @@ Column {data-width=400}
 ### __STATION LOCATIONS - PINEY POINT AT MARKER__
 
 ```{r}
+output$rswqpopup <- renderPlot(rswqpopup())
 output$rsmap1 <- renderLeaflet(rsmap1())
 leafletOutput('rsmap1')
 ```
@@ -1519,7 +1545,7 @@ reactableOutput('rstab1')
 Use the variable selection menu on the top to view results for a measured water quality parameter of interest.  The map on the left will show results at locations that have been sampled for the parameter, with the same results shown in the table.  All points on the map are sized and colored by the range of values in the data for the selected parameter and based on the selected viewing options.  There are a few options for how the results are shown in the map and table: 
 
 1. You can choose to show all samples or remove those that are on land near Piney Point (i.e., creeks or other discharge points where wastewater is leaving the holding ponds).  Removing sampling stations on land will typically shift the color and sizing on the map to a narrower range that provides a better representation of impacts in the bay. 
-1. You can choose to show all dates or filter by a particular date. If results are filtered by date, hit the "play" button below the date slider to view a time lapse of data. The data table will show only results for the selected day.
+1. You can choose to show all dates or filter by a particular date. If results are filtered by date, hit the "play" button below the date slider to view a time lapse of data. The data table will show only results for the selected day.  __You can also click on a station to view the complete time series for a parameter of interest.__
 1. You can choose to emphasize results that are out of the normal range of values for the March/April period in Tampa Bay.  Points within the normal range will no longer be outlined on the map, making those outside of range easier to view.  The same values that are out of range will be highlighted in the table.  
 
 What is the normal range for a parameter?
@@ -1611,6 +1637,7 @@ column(12,
     })
   )
 )
+column(12, NULL)
 # column(12,
 #   column(6, 
 #     renderUI(rsphytxt1())

@@ -257,3 +257,40 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   return(p)
   
 }
+
+# function for creating popup plot with mapview click
+rswqpopup_plo <- function(station, datin){
+  
+  toplo <- datin %>% 
+    filter(station == !!station) %>% 
+    separate(nrmrng, c('minrng', 'maxrng'), sep = '-') %>% 
+    mutate(
+      minrng = as.numeric(minrng), 
+      maxrng = as.numeric(maxrng)
+    )
+  
+  ylb <- unique(toplo$lbs)
+  minrng <- unique(toplo$minrng)
+  maxrng <- unique(toplo$maxrng)
+  ylm <- range(c(minrng, maxrng, toplo$val), na.rm = TRUE)
+
+  out <- ggplot() + 
+    geom_line(data = toplo, aes(x = date, y = val)) + 
+    geom_point(data = toplo, aes(x = date, y = val), size = 2) + 
+    geom_rect(aes(xmin = min(toplo$date) - 5, xmax = max(toplo$date) + 5, ymin = minrng, ymax = maxrng, fill = 'Normal range'), alpha = 0.2) +
+    coord_cartesian(ylim = ylm, xlim = range(toplo$date)) + 
+    scale_fill_manual(values = 'blue') +
+    theme_minimal(base_size = 18) + 
+    theme(
+      legend.title = element_blank(),
+      axis.title.x = element_blank(), 
+      legend.position = 'top'
+    ) +
+    labs(
+      y = ylb, 
+      subtitle = paste('Station', station)
+    )
+  
+  return(out)
+  
+}

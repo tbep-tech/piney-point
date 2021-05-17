@@ -1868,7 +1868,7 @@ rswqdat <- rswqdat %>%
   ) %>% 
   unite(nrmrng, c('minv', 'maxv'), sep = '-') %>% 
   ungroup %>% 
-  select(-avev, -stdv, -sigdig, -lbs, -lat, -lng)
+  select(-avev, -stdv, -sigdig, -lat, -lng)
 
 save(rswqdat, file = 'data/rswqdat.RData', version = 2)
 
