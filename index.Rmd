@@ -1480,7 +1480,7 @@ Column {.tabset .tabset-fade}
 <br>
 ```{r}
 column(12,
-  column(3, HTML('<b>ALL DATA ARE PROVISIONAL</b><br></br>')),
+  column(3, HTML('<b>ALL DATA ARE PROVISIONAL, click on a station to graph results</b><br></br>')),
   column(9,
     materialSwitch(inputId = 'rmvsta1', label = 'Remove stations on land near Piney Point (these can skew in-bay results)?', width = '100%')
   )
