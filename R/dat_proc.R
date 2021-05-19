@@ -866,6 +866,29 @@ rsphydat <- bind_rows(rsphydatfldep, rsphydatfwri, rsphydatpinco, rsphydatepc) %
     valqual = factor(valqual, levels = c('Very low', 'Low', 'Medium', 'High'))
   ) 
   
+# clean up species list
+rsphydat <- rsphydat %>% 
+  mutate(
+    species = gsub('BACILLARIOPHYTA', 'Bacillariophyta', species),
+    species = gsub('CILIOPHORA', 'Ciliophora', species), 
+    species = gsub('^.*taxa:\\s', '', species), 
+    species = gsub('Centic', 'Centric', species),
+    species = gsub('\\ssp\\.$', ' sp', species),
+    species = gsub('^Nitzschia$', 'Nitzschia sp', species),
+    species = gsub('^Nitzchia', 'Nitzschia', species),
+    species = gsub('nitzchioides$', 'nitzschiodes', species),
+    species = gsub('^Guinardia$', 'Guinardia sp', species),
+    species = gsub('^Pseudo\\-nitzschia$|^Pseudo\\-nitzschia sp$|^Pseudo\\-nitzschia spp\\.$', 'Pseudo-nitzschia sp', species), 
+    species = gsub('^Chaetoceros$', 'Chaetoceros sp', species),
+    species = gsub('^Skeletonema$', 'Skeletonema spp', species),
+    species = gsub('^Thalassiosira$', 'Thalassiosira sp', species),
+    species = gsub('; no dominant species in sample', '', species),
+    species = gsub('\\.$', '', species), 
+    species = gsub('sp$', 'sp.', species), 
+    species = gsub('spp$', 'spp.', species),
+    kareniapa = grepl('karenia', species, ignore.case = T)
+  )
+
 save(rsphydat, file = 'data/rsphydat.RData', version = 2)
 
 # for log
