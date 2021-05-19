@@ -549,6 +549,11 @@ rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>%
       macroalgae_abundance %in% '51-75%' ~ 4,
       macroalgae_abundance %in% '76-100%' ~ 5
     ), 
+    sav_species = case_when(
+      sav_species == 'Halodule wrighttii' ~ 'Halodule wrightii',
+      sav_species == 'None' ~ 'NA',
+      T ~ sav_species
+    ),
     sav_abundance = case_when(
       sav_abundance %in% c('Solitary', '<1%') ~ '<1%', 
       T ~ sav_abundance
@@ -563,8 +568,6 @@ rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>%
     ), 
     sav_abundance = factor(sav_abundance, levels = abulevs),
     macroalgae_abundance = factor(macroalgae_abundance, levels = abulevs),
-    sav_species = factor(sav_species, levels = savlevs),
-    macroalgae_species= ifelse(macroalgae_species == 'NA', NA, macroalgae_species),
     epibiota_density = factor(epibiota_density, levels = epilevs), 
     station = factor(station), 
     location = factor(location)
@@ -573,6 +576,8 @@ rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>%
 rstrndatsav <- rstrndat %>% 
   select(date, station, location, sav_species, sav_abundance, sav_bb, epibiota_density) %>% 
   group_by(date, station, location) %>% 
+  filter(sav_species != 'NA') %>% 
+  mutate(sav_species = factor(sav_species, levels = savlevs)) %>% 
   tidyr::complete(
     sav_species,  
     fill = list(sav_bb = 0)
@@ -595,8 +600,10 @@ maxcols <- rstrndat$macroalgae_species %>%
 # you will get a warning with separate, this is normal
 rstrndatmcr <- rstrndat %>% 
   select(date, station, location, macroalgae_group, macroalgae_abundance, macroalgae_bb) %>% 
+  filter(macroalgae_group != 'NA') %>% 
   separate(macroalgae_group, maxcols, sep = ', ') %>% 
   gather('var', 'macroalgae_group', !!maxcols) %>% 
+  filter(!is.na(macroalgae_group)) %>% 
   mutate(
     macroalgae_group = factor(macroalgae_group, levels = grplevs)
   ) %>% 
@@ -610,7 +617,6 @@ rstrndatmcr <- rstrndat %>%
     station = as.character(station), 
     location = as.numeric(as.character(location))
   ) %>% 
-  filter(!is.na(macroalgae_group)) %>%
   select(date, station, location, macroalgae_group, macroalgae_abundance, macroalgae_bb) 
 
 save(rstrndatsav, file = 'data/rstrndatsav.RData', version = 2)
