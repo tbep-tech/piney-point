@@ -338,7 +338,7 @@ rstrnmap <- rstrnmap %>%
       label = ~paste0('Transect ', station, ' (', toupper(source), ')')
     ) %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE)) %>% 
-  setView(mapcenter[1], mapcenter[2], zoom = 12)
+  setView(mapcenter[1], mapcenter[2], zoom = 11)
 
 # response benthic sampling base map
 rsbntmap <- mapview(rsbntpts, homebutton = F, legend = F) %>% 
