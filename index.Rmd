@@ -197,7 +197,7 @@ bswqmap <- mapview(tomap, homebutton = F, layer.name = 'Data source', map.types 
       radius= 6, 
       label = ~paste0('Station: ', station)
     ) %>% 
-  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point') %>% 
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE)) %>% 
   addLegend("topright", title = 'Data source', opacity = 1, labels = tomapcols$source, colors = tomapcols$col) 
 
 # current base map
@@ -211,7 +211,7 @@ rswqmap <- rsstatloc %>%
   filter(station %in% rswqdat$station) %>% 
   mapview(zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = rscolsin, map.types = mptyps, alpha.regions = 0.9) %>% 
   .@map %>% 
-  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE))
 
 # summary of agencies reporting for value boxes
 agns <- rswqdat %>% 
@@ -286,7 +286,7 @@ bssgmap <- bssgmap %>%
     radius= 6,
     label = ~paste0('Transect ', station)
   ) %>% 
-  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE))
 
 # rapid response transect base map
 rstrnpts <- rstrnpts %>% 
@@ -337,7 +337,7 @@ rstrnmap <- rstrnmap %>%
       radius= 6,
       label = ~paste0('Transect ', station, ' (', toupper(source), ')')
     ) %>% 
-  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point') %>% 
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE)) %>% 
   setView(mapcenter[1], mapcenter[2], zoom = 12)
 
 # response benthic sampling base map
@@ -375,7 +375,7 @@ rsbntmap <- mapview(rsbntpts, homebutton = F, legend = F) %>%
       radius= 6,
       label = ~paste0('Station: ', station)
     ) %>% 
-  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE))
 
 # response phytoplankton sampling base map
 phyleg <- rsphypts %>% 
@@ -409,7 +409,7 @@ rsphymap <- mapview(rsphypts, homebutton = F, legend = F) %>%
     radius= 6,
     label = ~paste0('Station: ', station)
   ) %>%  
-  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point') %>% 
+  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE)) %>% 
   addLegend("topright", title = 'Data type', opacity = 1, labels = phyleg$typ, colors = phyleg$col) 
 ```
 
@@ -937,7 +937,7 @@ rscntmap1 <- reactive({
     # hover pt labels
     labs <- paste0('Station: ', tomap$station, ', Date: ', tomap$date, ', ', cntsel1, ': ', round(tomap$val, 2))
   
-    m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, map.types = mptyps)
+    m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, map.types = mptyps, popup = NULL)
     
   }
     
@@ -953,7 +953,7 @@ rscntmap1 <- reactive({
       # hover pt labels
       labs <- paste0('Station: ', tomap$station, ', Date: ', tomap$date, ', ', cntsel1, ': ', round(tomap$val, 2))
       
-      m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, map.types = mptyps)
+      m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, map.types = mptyps, popup = NULL)
           
     }
 
@@ -967,14 +967,14 @@ rscntmap1 <- reactive({
       labs2 <- paste0('Station: ', tomap2$station, ', Date: ', tomap2$date, ', ', vrlb, ': ', round(tomap2$val, 2))
   
       if(nrow(tomap1) == 0)
-        m <- mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F, map.types = mptyps)
+        m <- mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F, map.types = mptyps, popup = NULL)
     
       if(nrow(tomap2) == 0)
-        m <- mapview(tomap1, cex = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0)
+        m <- mapview(tomap1, cex = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0, popup = NULL)
       
       if(nrow(tomap1) > 0 & nrow(tomap2) > 0)
-        m <- mapview(tomap1, cex = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0) +
-          mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F, map.types = mptyps)
+        m <- mapview(tomap1, cex = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0, popup = NULL) +
+          mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F, map.types = mptyps, popup = NULL)
       
     }    
     
@@ -984,7 +984,7 @@ rscntmap1 <- reactive({
   out <- m@map %>% 
     addLegend("bottomright", pal = cntcolfun, title = leglab, opacity = 1, values = cntrng1) %>% 
     setView(mapcenter[1], mapcenter[2], zoom = 11) %>% 
-    addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point')
+    addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE))
   
   return(out)
   
