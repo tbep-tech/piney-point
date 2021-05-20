@@ -885,6 +885,7 @@ rsphydat <- rsphydat %>%
     species = gsub('\\.$', '', species), 
     species = gsub('sp$', 'sp.', species), 
     species = gsub('spp$', 'spp.', species),
+    species = gsub('Karnia', 'Karenia', species),
     kareniapa = grepl('karenia', species, ignore.case = T)
   )
 
