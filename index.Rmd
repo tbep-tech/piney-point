@@ -318,13 +318,6 @@ rstrnmap <- rstrnmap %>%
     radius= 4,
     label = ~paste0('Transect ', station, ' (', toupper(source), ')')
   ) %>% 
-  addStaticLabels(
-    data = rstrnpts,
-    label = rstrnpts$station, 
-    direction = 'top', 
-    textsize = '15px',
-    offset = c(0, 1)
-  ) %>% 
   addCircleMarkers(
       data = rstrnpts[rstrnpts$station %in% rstrns[1], ],
       layerId = 'seltrn',

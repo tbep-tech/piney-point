@@ -571,8 +571,7 @@ rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>%
     epibiota_density = factor(epibiota_density, levels = epilevs), 
     station = factor(station), 
     location = factor(location)
-  ) %>% 
-  filter(date <= lubridate::date('2021-05-07')) # remove me
+  )
 
 rstrndatsav <- rstrndat %>% 
   select(date, station, location, sav_species, sav_abundance, sav_bb, epibiota_density) %>% 
