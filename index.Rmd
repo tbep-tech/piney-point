@@ -120,6 +120,12 @@ rsbnts <- sort(unique(rsbntpts$station))
 # phyto sites
 rsphys <- sort(unique(rsphypts$station))
 
+# phyto taxa
+rsphysel <- sort(unique(rsphydat$species))
+
+# options for phyto ui selection
+rsphytyp <- c('By clicking a station on the map', 'By selecting taxa from a menu')
+              
 # sources lookup
 srcs <- rsstatloc %>% 
   st_set_geometry(NULL) %>% 
@@ -1187,7 +1193,55 @@ observeEvent(input$rsphymap1_marker_click, {
   
 })
 
-# rapid response phyto data
+# rapid response phyto map selection, rsphymap2
+rsphymap2 <- reactive({
+  
+  # input
+  rsphydat2 <- rsphydat2()
+  physel1 <- input$physel1
+  
+  col <- "#76EE00"
+  
+  tomap <- rsphypts %>% 
+    select(station) %>% 
+    mutate(
+      label = case_when(
+        station %in% rsphydat2$station ~ paste(physel1, 'present'), 
+        T ~ paste(physel1, 'absent')
+      ), 
+      col = case_when(
+        grepl('present', label) ~ col, 
+        T ~ "#000000B2"
+      ), 
+      cex =  case_when(
+        grepl('present', label) ~ 6, 
+        T ~ 2
+      )
+    )
+  
+  out <- rsphymap %>%
+    clearMarkers() %>% 
+    clearControls() %>% 
+    addCircleMarkers(
+      data = tomap,
+      layerId = ~station,
+      stroke = TRUE,
+      color = 'black',
+      fill = TRUE,
+      fillColor = tomap$col,
+      weight = 1,
+      fillOpacity = 1,
+      radius= tomap$cex,
+      label = ~paste0('Station: ', station)
+    ) %>% 
+    addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE)) %>%
+    addLegend("topright", title = NULL, opacity = 1, labels = paste(physel1, 'present'), colors = col) 
+    
+  return(out)
+  
+})
+
+# rapid response phyto data 1
 rsphydat1 <- reactive({
   
   # input
@@ -1213,20 +1267,27 @@ rsphydat1 <- reactive({
   
 })
 
-# rapid response phyto text
-rsphytxt1 <- reactive({
+# rapid response phyto data 2
+rsphydat2 <- reactive({
   
-  # inputs
-  rsphydat1 <- rsphydat1()
-
-  typ <- unique(rsphydat1$phy$typ)
+  # input
+  physel1 <- input$physel1
   
-  out <- paste0(typ, ' algae samples')
-  
-  if(nrow(rsphydat1$wq) == 0)
-    out <- paste0(out, ', no water quality data')
-  
-  out <- HTML(paste0('<b>', out, '</b><br></br>'))
+  out <- rsphydat %>% 
+    filter(species %in% physel1) %>% 
+    left_join(srcs, by = 'source') %>% 
+    mutate(
+      source_lng = case_when(
+        source_lng %in% c('Florida DEP', 'USF') ~ 'FWC-FWRI', 
+        T ~ source_lng
+      )
+    ) %>% 
+    select(
+      source_lng,
+      station,
+      date, 
+      species
+      ) 
   
   return(out)
   
@@ -1288,7 +1349,7 @@ rsphyplo1 <- reactive({
   
 })
 
-# rapid response phyto table
+# rapid response phyto table 1
 rsphytab1 <- reactive({
   
   # inputs
@@ -1318,6 +1379,27 @@ rsphytab1 <- reactive({
       unique %>%
       arrange(desc(Date)) %>% 
       reactable()
+  
+  return(out)
+  
+})
+
+# rapid response phyto table 2
+rsphytab2 <- reactive({
+  
+  # input
+  rsphydat2 <- rsphydat2()
+  
+  out <- rsphydat2 %>% 
+    select(
+      Source = source_lng,
+      Station = station,
+      Date = date, 
+      `Taxa observed` = species
+      ) %>% 
+    unique %>%
+    arrange(desc(Date)) %>% 
+    reactable()
   
   return(out)
   
@@ -1598,7 +1680,22 @@ Column {data-width=400}
 
 ```{r}
 output$rsphymap1 <- renderLeaflet(rsphymap)
-leafletOutput('rsphymap1')
+output$rsphymap2 <- renderLeaflet(rsphymap2())
+output$phytouimap <- renderUI({
+  
+  # input
+  phytyp <- input$phytyp
+
+  if(phytyp == rsphytyp[1])
+    out <- leafletOutput('rsphymap1')  
+  
+  if(phytyp == rsphytyp[2])
+    out <- leafletOutput('rsphymap2')
+  
+  return(out)
+  
+})
+uiOutput('phytouimap')
 ```
 
 Column {data-width=650 .tabset .tabset-fade}
@@ -1606,16 +1703,20 @@ Column {data-width=650 .tabset .tabset-fade}
 
 <br>
 ```{r}
-column(12, 
-  column(6, HTML('<b>Select a station by clicking a marker on the map</b>')), 
-  column(6,
-    renderUI({
+output$phytoui1 <- renderUI({
+  
+  # inputs
+  phytyp <- input$phytyp
+
+  if(phytyp == rsphytyp[1]){
+    
+    out <- renderUI({
 
       # inputs
       rsphydat1 <- rsphydat1()
 
       req(nrow(rsphydat1$wq) > 0)
-      
+    
       tosel <- rsphydat1$wq %>%
         select(var) %>%
         left_join(parms, by = 'var') %>%
@@ -1624,17 +1725,29 @@ column(12,
         deframe %>%
         as.list
 
-      selectInput('varsel2', HTML('<b>Select water quality variable:</b>'), choices = tosel, selected = tosel[1])
+      selectInput('varsel2', HTML('Select water quality variable:'), choices = tosel, selected = tosel[1])
 
     })
+  
+  }
+  
+  if(phytyp == rsphytyp[2])
+    out <- selectInput('physel1', HTML('Select taxa:'), choices = rsphysel, selected = rsphysel[1])
+    
+  out <- div(out)
+  
+  return(out)
+  
+})
+
+column(12, 
+  column(6, 
+    selectInput('phytyp', HTML('<b>How do you want to view results?</b>'), choices = rsphytyp)
+  ),
+  column(6, 
+    uiOutput('phytoui1')
   )
 )
-column(12, NULL)
-# column(12,
-#   column(6, 
-#     renderUI(rsphytxt1())
-#   )
-# )
 ```
 
 ### __SUMMARY__
@@ -1642,6 +1755,7 @@ column(12, NULL)
 ```{r}
 output$rsphyplo1 <- renderPlot(rsphyplo1())
 output$rsphytab1 <- renderReactable(rsphytab1())
+output$rsphytab2 <- renderReactable(rsphytab2())
 output$rstab2 <- renderReactable(rstab2())
 output$physum1 <- renderUI({
   
@@ -1660,17 +1774,40 @@ output$physum1 <- renderUI({
   }
   
 })
-fillCol(flex = c(NA, 1, NA, 0.5),
-  HTML('<b>Algal results</b>'),
-  uiOutput('physum1'), 
-  HTML('<b>Paired water quaility results</b>'),
-  reactableOutput('rstab2')
-)
+
+output$phytoui2 <- renderUI({
+  
+  # inputs
+  phytyp <- input$phytyp
+  
+  if(phytyp == rsphytyp[1])
+    out <- fillCol(flex = c(NA, 1, NA, 0.5),
+      HTML('<b>Algal results</b>'),
+      uiOutput('physum1'), 
+      HTML('<b>Paired water quaility results</b>'),
+      reactableOutput('rstab2')
+    )
+    
+  if(phytyp == rsphytyp[2])
+    out <- reactableOutput('rsphytab2')
+                
+  return(out)
+  
+})
+uiOutput('phytoui2')
 ```
 
 ### __INFORMATION__
 
-This tab shows results of phytoplankton (algae) surveys provided from different sources.  The data are either qualitative (e.g., description of taxa observed at a site) or quantitative (counts of taxa observed at a site) depending on the data source.  Phytoplankton are also collected at many, but not all, of the same stations where water quality samples are collected, which allows a comparison of both to determine potential associations between water quality (e.g., nutrient concentrations) and changes in the algal community.  
+This tab shows phytoplankton (algae) data from recent surveys near Piney Point. __The maps and tables combine data from different processing labs.  Taxa specificity and enumeration methods vary.__  
+
+There are two ways to view the data.
+
+#### Clicking a station on the map
+
+Select this option to view results by selecting a station from the map.  This will show all taxa at a station and available water quality data.  
+
+The phytoplankton data are either qualitative (e.g., description of taxa observed at a site) or quantitative (counts of taxa observed at a site) depending on the data source.  Phytoplankton are also collected at many, but not all, of the same stations where water quality samples are collected, which allows a comparison of both to determine potential associations between water quality (e.g., nutrient concentrations) and changes in the algal community.  
 
 Select the station to view by clicking a marker on the map.  The station map on the left shows which stations provide qualitative or quantitative data.  If a qualitative station is selected, a tabular summary of species observed by date will be shown.  If a quantitative station is selected, a plot of algal cell counts (a measure of abundance) by date will be shown.  The cell counts are categorized into relative amounts (Very low, Low, etc.) following breakpoints used by FWC-FWRI for *Karenia brevis* ([https://myfwc.com/research/redtide/statewide/](https://myfwc.com/research/redtide/statewide/)).  Note that these breakpoints may not have ecological relevance for algal taxa in Lower Tampa Bay and are only provided as guidelines to assess relative differences.  Results for nanoplankton have been removed because of typically high concentrations that cannot be enumerated in the lab.  
 
@@ -1686,6 +1823,10 @@ Stations on the map that have different names but occur at the same location are
 * Piney 19 - 16
 * Piney 20 - 84
 * Piney 7 - 21
+
+#### Selecting taxa from a menu
+
+Select this option to view a map of where selected taxa (species, genus, or higher level) have been sampled.  Using this option will change the menu on the top right to provide an option for selecting which taxa to view.  Large green points on the map will show where the taxa was observed.  The smaller black points are other locations that were sampled but where the selected taxa was not observed.  All dates are shown on the map. The table shows the results for the same data. 
 
 RAPID RESPONSE SEAGRASS/MACROALGAE SURVEYS {data-navmenu="CURRENT DATA"}
 =======================================================================
