@@ -886,9 +886,31 @@ rsphydat <- rsphydat %>%
     species = gsub('sp$', 'sp.', species), 
     species = gsub('spp$', 'spp.', species),
     species = gsub('Karnia', 'Karenia', species),
-    kareniapa = grepl('karenia', species, ignore.case = T)
+    species = gsub('\\spresent', '', species)
   )
 
+# break out karenia samples in separate rows
+tmp <- rsphydat %>% 
+  mutate(
+    species = case_when(
+      !grepl(';', species)  ~ paste0(species, '; nothing'), 
+      T ~ species
+    )
+  ) %>% 
+  separate(species, into = c('species1', 'species2'), sep = '; ')
+  
+tmp1 <- tmp %>% 
+  select(-species2) %>% 
+  rename(species = species1)
+
+tmp2 <- tmp %>% 
+  filter(species2 != 'nothing') %>% 
+  select(-species1) %>%
+  rename(species = species2)
+
+rsphydat <- bind_rows(tmp1, tmp2) %>% 
+  arrange(date, station, species)
+  
 save(rsphydat, file = 'data/rsphydat.RData', version = 2)
 
 # for log
