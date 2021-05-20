@@ -1726,7 +1726,7 @@ This tab shows results for the rapid response submerged aquatic vegetation (SAV)
 
 The locations and names of the transects are shown in the map (transect locations tab on the left). Select a transect by clicking the marker on the map.  The selected transect is shown as a red dot.
 
-Results for the selected transect are shown in the plot, with SAV abundance in the top plot and macroalgae abundance on the bottom plot. The points in each plot show species abundances for each date and at each location along the selected transect (in meters). The plot provides a detailed assessment of where species were located on a transect and how those locations may have changed over time. The species are color-coded as shown in the legends. Each point is sized by the recorded abundance for a species (as a percentage of cover in the sample quadrat at each location). Points that were sampled but had no seagrass are shown as small black points.
+Results for the selected transect are shown in the plot, with SAV abundance in the top plot and macroalgae abundance on the bottom plot. The points in each plot show species abundances for each date and at each location along the selected transect (in meters). The plot provides a detailed assessment of where species were located on a transect and how those locations may have changed over time. The species are color-coded as shown in the legends. Each point is sized by the recorded abundance for a species (as a percentage of cover in the sample quadrat at each location). Points that were sampled but had no seagrass are shown as small black points. Test stage
 
 The seagrass species shown in the plots include the five dominant species found in Tampa Bay: 
 
