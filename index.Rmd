@@ -1219,7 +1219,8 @@ rsphymap2 <- reactive({
       )
     )
   
-  out <- rsphymap %>%
+  out <- mapview(rsphypts, homebutton = F, legend = F) %>% 
+    .@map %>%
     clearMarkers() %>% 
     clearControls() %>% 
     addCircleMarkers(
@@ -1679,18 +1680,20 @@ Column {data-width=400}
 ### __STATION LOCATIONS - PINEY POINT AT MARKER__, last update `r rsphylog`
 
 ```{r}
-output$rsphymap1 <- renderLeaflet(rsphymap)
-output$rsphymap2 <- renderLeaflet(rsphymap2())
 output$phytouimap <- renderUI({
   
   # input
   phytyp <- input$phytyp
 
-  if(phytyp == rsphytyp[1])
+  if(phytyp == rsphytyp[1]){
+    output$rsphymap1 <- renderLeaflet(rsphymap)
     out <- leafletOutput('rsphymap1')  
+  }
   
-  if(phytyp == rsphytyp[2])
+  if(phytyp == rsphytyp[2]){
+    output$rsphymap2 <- renderLeaflet(rsphymap2())
     out <- leafletOutput('rsphymap2')
+  }
   
   return(out)
   
