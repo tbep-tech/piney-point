@@ -120,6 +120,9 @@ rsbnts <- sort(unique(rsbntpts$station))
 # phyto sites
 rsphys <- sort(unique(rsphypts$station))
 
+# phyto days
+rsphydys <- sort(unique(rsphydat$date))
+
 # phyto taxa
 rsphysel <- sort(unique(rsphydat$species))
 
@@ -1193,6 +1196,51 @@ observeEvent(input$rsphymap1_marker_click, {
   
 })
 
+# change phyto map selection if dates used
+observeEvent(input$dyssel3, {
+  
+  # input
+  dyssel3 <- input$dyssel3
+  
+  # filter by dates
+  tomap <- rsphydat %>% 
+      select(date, station) %>% 
+      unique %>% 
+      filter(date >= dyssel3[1] & date <= dyssel3[2]) %>% 
+      pull(station)
+  tomap <- filter(rsphypts, station %in% tomap)
+  
+  toadd <- tomap[1, ]
+  rsphymap1 <- rsphymap1 %>%
+    clearMarkers() %>%
+    addCircleMarkers(
+      data = tomap,
+      layerId = ~station,
+      stroke = TRUE,
+      color = 'black',
+      fill = TRUE,
+      fillColor = rsphypts$col,
+      weight = 1,
+      fillOpacity = 1,
+      radius= 4,
+      label = ~paste0('Station: ', station)
+    ) %>% 
+    addCircleMarkers(
+      data = toadd,
+      layerId = 'selpt',
+      stroke = TRUE,
+      color = 'black',
+      fill = TRUE,
+      fillColor = 'red',
+      weight = 1,
+      fillOpacity = 1,
+      radius= 6,
+      label = ~paste0('Station: ', station)
+    ) %>% 
+    addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE))
+  
+})
+
 # rapid response phyto map selection, rsphymap2
 rsphymap2 <- reactive({
   
@@ -1247,9 +1295,20 @@ rsphydat1 <- reactive({
   
   # input
   stasel3 <- input$rsphymap1_marker_click$id
+  dyssel3 <- input$dyssel3
   
-  if(is.null(stasel3))
-    stasel3 <- rsphys[1]
+  if(is.null(stasel3)){
+    
+    # filter by dates
+    tomap <- rsphydat %>% 
+        select(date, station) %>% 
+        unique %>% 
+        filter(date >= dyssel3[1] & date <= dyssel3[2]) %>% 
+        pull(station)
+    tomap <- filter(rsphypts, station %in% tomap)
+    stasel3 <- tomap[1, 'station']
+    
+  }
   
   phyout <- rsphydat %>% 
     filter(station %in% stasel3) %>% 
@@ -1750,6 +1809,11 @@ column(12,
   column(6, 
     uiOutput('phytoui1')
   )
+)
+column(12, 
+  column(9,
+    sliderInput('dyssel3', 'Select date:', min = min(rsphydys), max = max(rsphydys), value = range(rsphydys), animate = T, timeFormat="%m-%d", width = '100%')
+  )   
 )
 ```
 
