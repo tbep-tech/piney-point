@@ -117,9 +117,6 @@ rstrns <- sort(unique(rstrndatsav$station))
 # benthic sites
 rsbnts <- sort(unique(rsbntpts$station))
 
-# phyto sites
-rsphys <- sort(unique(rsphypts$station))
-
 # phyto days
 rsphydys <- sort(unique(rsphydat$date))
 
@@ -378,41 +375,6 @@ rsbntmap <- mapview(rsbntpts, homebutton = F, legend = F) %>%
       label = ~paste0('Station: ', station)
     ) %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE))
-
-# response phytoplankton sampling base map
-phyleg <- rsphypts %>% 
-  st_set_geometry(NULL) %>% 
-  select(typ, col) %>% 
-  unique
-rsphymap <- mapview(rsphypts, homebutton = F, legend = F) %>% 
-  .@map %>% 
-  clearMarkers() %>%
-  addCircleMarkers(
-    data = rsphypts,
-    layerId = ~station,
-    stroke = TRUE,
-    color = 'black',
-    fill = TRUE,
-    fillColor = rsphypts$col,
-    weight = 1,
-    fillOpacity = 1,
-    radius= 4,
-    label = ~paste0('Station: ', station)
-  ) %>% 
-  addCircleMarkers(
-    data = rsphypts[rsphypts$station %in% rsphys[1], ],
-    layerId = 'selpt',
-    stroke = TRUE,
-    color = 'black',
-    fill = TRUE,
-    fillColor = 'red',
-    weight = 1,
-    fillOpacity = 1,
-    radius= 6,
-    label = ~paste0('Station: ', station)
-  ) %>%  
-  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE)) %>% 
-  addLegend("topright", title = 'Data type', opacity = 1, labels = phyleg$typ, colors = phyleg$col) 
 ```
 
 ```{r reactives}
@@ -1170,15 +1132,84 @@ observeEvent(input$rsbntmap1_marker_click, {
   
 })
 
+# binding for marker select and year
+makeReactiveBinding('stasel3')
+
+# phyto station selection map click
+observeEvent(input$rsphymap1_marker_click, {
+  stasel3 <<- input$rsphymap1_marker_click$id
+})
+
+# base phyto map
+rsphymap <- reactive({
+  
+  # input
+  dyssel3 <- input$dyssel3
+  
+  # response phytoplankton sampling base map
+  phyleg <- rsphypts %>% 
+    st_set_geometry(NULL) %>% 
+    select(typ, col) %>% 
+    unique
+  
+  # filter by dates
+  tomap <- rsphydat %>% 
+      select(date, station) %>% 
+      unique %>% 
+      filter(date >= dyssel3[1] & date <= dyssel3[2]) %>% 
+      pull(station)
+  tomap <- filter(rsphypts, station %in% tomap)
+  
+  req(nrow(tomap) > 0)
+  
+  # default selection
+  toadd <- tomap[1, ]
+  
+  # update stasel3 with default 
+  stasel3 <<- toadd$station
+  
+  out <- mapview(tomap, homebutton = F, legend = F) %>% 
+    .@map %>% 
+    clearMarkers() %>%
+    addCircleMarkers(
+      data = tomap,
+      layerId = ~station,
+      stroke = TRUE,
+      color = 'black',
+      fill = TRUE,
+      fillColor = tomap$col,
+      weight = 1,
+      fillOpacity = 1,
+      radius= 4,
+      label = ~paste0('Station: ', station)
+    ) %>% 
+    addCircleMarkers(
+      data = toadd,
+      layerId = 'selpt',
+      stroke = TRUE,
+      color = 'black',
+      fill = TRUE,
+      fillColor = 'red',
+      weight = 1,
+      fillOpacity = 1,
+      radius= 6,
+      label = ~paste0('Station: ', station)
+    ) %>%  
+    addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE)) %>% 
+    addLegend("topright", title = 'Data type', opacity = 1, labels = phyleg$typ, colors = phyleg$col)  %>% 
+  setView(mapcenter[1], mapcenter[2], zoom = 11)
+  
+  return(out)
+  
+})
+
 # rapid response phyto map selection, rsphymap1
 rsphymap1 <- leafletProxy('rsphymap1')
 observeEvent(input$rsphymap1_marker_click, {
   
-  # input
-  stasel3 <- input$rsphymap1_marker_click$id
-  
   toadd <- rsphypts %>% 
     filter(station %in% stasel3)
+  
   rsphymap1 <- rsphymap1 %>%
     removeMarker('selpt') %>% 
     addCircleMarkers(
@@ -1210,7 +1241,14 @@ observeEvent(input$dyssel3, {
       pull(station)
   tomap <- filter(rsphypts, station %in% tomap)
   
+  req(nrow(tomap) > 0)
+  
+  # default selection
   toadd <- tomap[1, ]
+  
+  # update stasel3 with default 
+  stasel3 <<- toadd$station
+  
   rsphymap1 <- rsphymap1 %>%
     clearMarkers() %>%
     addCircleMarkers(
@@ -1219,7 +1257,7 @@ observeEvent(input$dyssel3, {
       stroke = TRUE,
       color = 'black',
       fill = TRUE,
-      fillColor = rsphypts$col,
+      fillColor = tomap$col,
       weight = 1,
       fillOpacity = 1,
       radius= 4,
@@ -1247,11 +1285,18 @@ rsphymap2 <- reactive({
   # input
   rsphydat2 <- rsphydat2()
   physel1 <- input$physel1
+  dyssel3 <- input$dyssel3
   
   col <- "#76EE00"
   
+  stas <- rsphydat %>% 
+    filter(date >= dyssel3[1] & date <= dyssel3[2]) %>% 
+    pull(station) %>% 
+    unique
+  
   tomap <- rsphypts %>% 
     select(station) %>% 
+    filter(station %in% stas) %>% 
     mutate(
       label = case_when(
         station %in% rsphydat2$station ~ paste(physel1, 'present'), 
@@ -1294,7 +1339,6 @@ rsphymap2 <- reactive({
 rsphydat1 <- reactive({
   
   # input
-  stasel3 <- input$rsphymap1_marker_click$id
   dyssel3 <- input$dyssel3
   
   if(is.null(stasel3)){
@@ -1312,10 +1356,12 @@ rsphydat1 <- reactive({
   
   phyout <- rsphydat %>% 
     filter(station %in% stasel3) %>% 
+    filter(date >= dyssel3[1] & date <= dyssel3[2]) %>% 
     left_join(srcs, by = 'source')
   
   wqout <- rswqdat %>% 
-    filter(station %in% stasel3) %>% 
+    filter(station %in% stasel3) %>%
+    filter(date >= dyssel3[1] & date <= dyssel3[2]) %>% 
     left_join(srcs, by = 'source')
   
   out <- list(
@@ -1332,9 +1378,11 @@ rsphydat2 <- reactive({
   
   # input
   physel1 <- input$physel1
+  dyssel3 <- input$dyssel3
   
   out <- rsphydat %>% 
     filter(species %in% physel1) %>% 
+    filter(date >= dyssel3[1] & date <= dyssel3[2]) %>% 
     left_join(srcs, by = 'source') %>% 
     mutate(
       source_lng = case_when(
@@ -1745,7 +1793,7 @@ output$phytouimap <- renderUI({
   phytyp <- input$phytyp
 
   if(phytyp == rsphytyp[1]){
-    output$rsphymap1 <- renderLeaflet(rsphymap)
+    output$rsphymap1 <- renderLeaflet(rsphymap())
     out <- leafletOutput('rsphymap1')  
   }
   
@@ -1812,7 +1860,7 @@ column(12,
 )
 column(12, 
   column(9,
-    sliderInput('dyssel3', 'Select date:', min = min(rsphydys), max = max(rsphydys), value = range(rsphydys), animate = T, timeFormat="%m-%d", width = '100%')
+    sliderInput('dyssel3', 'Select date range:', min = min(rsphydys), max = max(rsphydys), value = range(rsphydys), animate = T, timeFormat="%m-%d", width = '100%')
   )   
 )
 ```
