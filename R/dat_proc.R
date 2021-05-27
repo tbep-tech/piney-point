@@ -875,7 +875,7 @@ rsphydat <- rsphydat %>%
     species = gsub('\\ssp\\.$', ' sp', species),
     species = gsub('^Nitzschia$', 'Nitzschia sp', species),
     species = gsub('^Nitzchia', 'Nitzschia', species),
-    species = gsub('nitzchioides$', 'nitzschiodes', species),
+    species = gsub('nitzchioides$|nitzschioides$', 'nitzschiodes', species),
     species = gsub('^Guinardia$', 'Guinardia sp', species),
     species = gsub('^Pseudo\\-nitzschia$|^Pseudo\\-nitzschia sp$|^Pseudo\\-nitzschia spp\\.$', 'Pseudo-nitzschia sp', species), 
     species = gsub('^Chaetoceros$', 'Chaetoceros sp', species),
