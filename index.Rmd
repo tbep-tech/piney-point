@@ -757,11 +757,11 @@ rscntdat1 <- reactive({
   # input
   cntsel1 <- input$cntsel1
   dyssel2 <- input$dyssel2
-  mapsel2 <- input$mapsel2
   rmvsta2 <- input$rmvsta2
   cntcolfun <- cntcolfun()
   
   req(cntcolfun)
+  req(dyssel2)
   
   out <- rscntdat %>% 
     filter(var %in% cntsel1) 
@@ -778,14 +778,10 @@ rscntdat1 <- reactive({
   # sizes
   out$cexs <- scales::rescale(out$val, to = c(4, 17))
   
-  # filter by day if provided
-  if(mapsel2){
-
-    out <- out %>% 
-      filter(date %in% dyssel2)
+  # filter by dates
+  out <- out %>% 
+    filter(date >= dyssel2[1] & date <= dyssel2[2])
     
-  }
-  
   return(out)
   
 })
@@ -1716,7 +1712,7 @@ reactableOutput('rstab1')
 Use the variable selection menu on the top to view results for a measured water quality parameter of interest.  The map on the left will show results at locations that have been sampled for the parameter, with the same results shown in the table.  All points on the map are sized and colored by the range of values in the data for the selected parameter and based on the selected viewing options.  There are a few options for how the results are shown in the map and table: 
 
 1. You can choose to show all samples or remove those that are on land near Piney Point (i.e., creeks or other discharge points where wastewater is leaving the holding ponds).  Removing sampling stations on land will typically shift the color and sizing on the map to a narrower range that provides a better representation of impacts in the bay. 
-1. You can choose to show all dates or filter by a particular date. If results are filtered by date, hit the "play" button below the date slider to view a time lapse of data. The data table will show only results for the selected day.  __You can also click on a station to view the complete time series for a parameter of interest.__
+1. You can choose to show all dates or filter by a particular date range. If results are filtered by date, hit the "play" button below the date slider to view a time lapse of data. The data table will show only results for the selected range.  __You can also click on a station to view the complete time series for a parameter of interest.__
 1. You can choose to emphasize results that are out of the normal range of values for the March/April period in Tampa Bay.  Points within the normal range will no longer be outlined on the map, making those outside of range easier to view.  The same values that are out of range will be highlighted in the table.  
 
 What is the normal range for a parameter?
@@ -2018,25 +2014,18 @@ column(12,
   column(3,
     selectInput('cntsel1', HTML('<b>Select variable:</b>'), choices = cntvrs)
   ),
-  column(3,
-    materialSwitch(inputId = 'mapsel2', label = 'Map results by date?', width = '100%')
-    ),
-  column(6,
+  column(9,
     renderUI({
 
       # inputs
       cntsel1 <- input$cntsel1
-      mapsel2 <- input$mapsel2
-
-      if(!mapsel2)
-        return(NULL)
 
       dys <- rscntdat %>%
         filter(var %in% cntsel1) %>%
         pull(date) %>%
         unique
 
-      sliderInput('dyssel2', 'Select date:', min = min(dys), max = max(dys), value = max(dys), animate = T, timeFormat="%m-%d", width = '100%')
+      sliderInput('dyssel2', 'Select date:', min = min(dys), max = max(dys), value = range(dys), animate = T, timeFormat="%m-%d", width = '100%')
 
     })
   )
@@ -2078,7 +2067,7 @@ This tab shows results for contaminants collected by Florida DEP at the same loc
 Use the variable selection menu on the top to view results for a contaminant of interest. The map on the left will show results at locations that have been sampled for the contaminant, with the same results shown in the table. All points on the map are sized and colored by the range of values in the data for the selected contaminant and based on the selected viewing options. There are a few options for how the results are shown in the map and table:
 
 1. You can choose to show all samples or remove those that are on land near Piney Point (i.e., creeks or other discharge points where wastewater is leaving the holding ponds). Removing sampling stations on land will typically shift the color and sizing on the map to a narrower range that provides a better representation of impacts in the bay.
-1. You can choose to show all dates or filter by a particular date. If results are filtered by date, hit the “play” button below the date slider to view a time lapse of data. The data table will show only results for the selected day.
+1. You can choose to show all dates or filter by a particular date range. If results are filtered by date, hit the “play” button below the date slider to view a time lapse of data. The data table will show only results for the selected range.
 1. You can choose to emphasize results that are above a threshold for the contaminant (see the information below).  Points below the threshold will no longer be outlined on the map, making those above the threshold easier to view. The same values that are above the threshold will be highlighted in the table. The threshold that applies to each contaminant is displayed as text below the selection options.  Some contaminants do not have a threshold.  If this is the case, the switch to emphasize values will do nothing.
 
 __All results shown relative to a threshold are provided as reference only and do not indicate regulatory non-compliance.__ The thresholds apply to surface water quality standards from Florida DEP for Class II (shellfish propagation and harvest) or Class III marine waters (fish consumption, recreation, propagation and maintenance of a healthy, well-balanced population of fish and wildlife).  Standards are not available for all contaminants on the dashboard.  The lower standard was used in instances when two different standards for Class II or III waters applied to a parameter.  Some standards are also based on annual averages and not from a single observation.  
