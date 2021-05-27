@@ -487,11 +487,11 @@ rsdat1 <- reactive({
   # input
   varsel1 <- input$varsel1
   dyssel1 <- input$dyssel1
-  mapsel1 <- input$mapsel1
   rmvsta1 <- input$rmvsta1
   colfun <- colfun()
   
   req(colfun)
+  req(dyssel1)
   
   out <- rswqdat %>% 
     filter(var %in% varsel1) 
@@ -509,14 +509,10 @@ rsdat1 <- reactive({
   # sizes
   out$cexs <- scales::rescale(out$val, to = c(4, 17))
   
-  # filter by day if provided
-  if(mapsel1){
-    
-    out <- out %>% 
-      filter(date %in% dyssel1)
-    
-  }
-  
+  # filter by dates
+  out <- out %>% 
+    filter(date >= dyssel1[1] & date <= dyssel1[2])
+
   return(out)
   
 })
@@ -1672,25 +1668,18 @@ column(12,
   column(3, 
     selectInput('varsel1', HTML('<b>Select variable:</b>'), choices = vrs, selected = 'nh34')       
   ), 
-  column(3, 
-    materialSwitch(inputId = 'mapsel1', label = 'Map results by date?', width = '100%')
-    ),
-  column(6, 
+  column(9, 
     renderUI({
       
       # inputs
       varsel1 <- input$varsel1
-      mapsel1 <- input$mapsel1
  
-      if(!mapsel1)
-        return(NULL)
-      
       dys <- rswqdat %>% 
         filter(var %in% varsel1) %>% 
         pull(date) %>% 
         unique
       
-      sliderInput('dyssel1', 'Select date:', min = min(dys), max = max(dys), value = max(dys), animate = T, timeFormat="%m-%d", width = '100%')
+      sliderInput('dyssel1', 'Select date range:', min = min(dys), max = max(dys), value = range(dys), animate = T, timeFormat="%m-%d", width = '100%')
   
     })     
   )
