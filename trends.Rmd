@@ -1,0 +1,213 @@
+---
+output: 
+  html_document:
+    code_folding: hide
+---
+
+# Trends {.tabset}
+
+```{r setup, echo = TRUE, message = F, warning = F, results = 'hide'}
+
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+library(lubridate)
+library(sf)
+library(ggmap)
+library(ggspatial)
+library(patchwork)
+
+data(rswqdat)
+data(bswqdat)
+data(bsstatloc)
+data(rsstatloc)
+data(ppseg)
+data(parms)
+data(rspydat)
+
+# combine 3 and 4 in ppseg
+ppseg <- ppseg %>% 
+  rename(area = Name) %>% 
+  mutate(
+    area = case_when(
+      area == 'Area 4' ~ 'Area 3', 
+      T ~ area
+    )
+  ) %>% 
+  group_by(area) %>% 
+  summarise() %>% 
+  st_buffer(dist = 0.000001) %>% 
+  st_buffer(dist = -0.000001) %>% 
+  mutate(
+    area = factor(area)
+  )
+
+cols <- c("#E16A86", "#50A315", "#009ADE")
+names(cols) <- levels(ppseg$area)
+
+##
+# map
+
+buffdist <- 0.01
+northloc <- 'tr' 
+scaleloc <- 'bl'
+
+# layer extent as bbox plus buffer
+dat_ext <- ppseg %>% 
+  st_bbox %>% 
+  st_as_sfc %>% 
+  st_buffer(dist = buffdist) %>%
+  st_bbox %>% 
+  unname
+
+# reference data for ggsn, MUST have geometry named column
+ggsnref <- ppseg %>% 
+  st_bbox %>% 
+  st_as_sfc %>%
+  st_buffer(dist = buffdist / 2) %>% 
+  st_as_sf %>%
+  st_cast('POINT') %>% 
+  rename(geometry = x)
+
+# stamen base map
+bsmap1 <- get_stamenmap(bbox = dat_ext, maptype = 'toner-background', zoom = 10)
+
+# change opacity of basemap
+mapatt <- attributes(bsmap1)
+bsmap1_transparent <- matrix(adjustcolor(bsmap1, 
+                                         alpha.f = 0.2), 
+                             nrow = nrow(bsmap1))
+attributes(bsmap1_transparent) <- mapatt
+
+# plot
+mapin <- ggmap(bsmap1_transparent) +
+  geom_sf(data = ppseg, aes(fill = area), color = 'black', inherit.aes = F, alpha = 0.8) +
+  geom_sf_text(data = ppseg, aes(label = area), color = 'black', inherit.aes = F, alpha = 0.8, size = 6) +
+  scale_fill_manual(values = cols, drop = F) +
+  theme(
+    legend.title = element_blank(), 
+    panel.grid = element_blank(), 
+    axis.title = element_blank(), 
+    legend.justification = 'top',
+    axis.text.y = element_text(size = 7), 
+    axis.text.x = element_text(size = 7, angle = 30, hjust = 1),
+    panel.background = element_rect(fill = 'white'),
+    axis.ticks = element_line(colour = 'grey'),
+    panel.border = element_rect(colour = 'grey', fill = NA), 
+    legend.position = 'none'
+  ) +
+  annotation_scale(location = scaleloc) +
+  annotation_north_arrow(location = northloc, which_north = "true", height = grid::unit(0.75, "cm"), 
+                         width = grid::unit(0.75, "cm"))
+
+wqplo_fun <- function(rswqdat, bswqdat, ppseg, vr, mapin, cols, logtr = TRUE){
+
+  nonbay <- c('BH01', 'P Port 2', 'P Port 3', 'PM Out', '20120409-01', 'PPC41', 'P Port 4', 'PMB01', 'NGS-S Pond')
+
+  ##
+  # wq data
+  
+  # monitoring data
+  rswqtmp <- rswqdat %>% 
+    filter(var == vr) %>% 
+    filter(!station %in% nonbay) %>% 
+    inner_join(rsstatloc, ., by = c('station', 'source')) %>% 
+    st_intersection(ppseg) %>% 
+    st_set_geometry(NULL) %>% 
+    select(-qual, -bswqstation, -nrmrng, -source, -source_lng, -uni, -lbunis, -comment) %>% 
+    mutate(
+      date = floor_date(date, unit = 'week'), 
+      mo = month(date), 
+      fillcl = factor(area, levels = levels(area), labels = cols), 
+      fillcl = as.character(fillcl)
+      ) 
+    
+  # baseline data
+  bswqtmp <- bswqdat %>% 
+    select(-source, -uni) %>% 
+    filter(var == vr) %>% 
+    filter(yr > 2005 & mo %in% c(3, 4, 5)) %>% 
+    inner_join(bsstatloc, ., by = 'station') %>% 
+    st_intersection(ppseg) %>% 
+    st_set_geometry(NULL) %>% 
+    group_by(mo, var, area) %>% 
+    summarise(   
+      avev = mean(val, na.rm = T), 
+      stdv = sd(val, na.rm = T), 
+      .groups = 'drop'
+    ) %>%
+    left_join(parms, by = 'var') %>% 
+    mutate(
+      avev = round(avev, sigdig), 
+      stdv = round(stdv, sigdig), 
+      minv = avev - stdv, 
+      minv = pmax(0, minv),
+      maxv = avev + stdv,
+      lbunis = gsub('^.*\\s(\\(.*\\))$', '\\1', lbs), 
+      lbunis = gsub('pH', '', lbunis), 
+      datestr= paste0('2021-', mo, '-01'), 
+      datestr = ymd(datestr), 
+      dateend = ceiling_date(datestr, unit = 'month')
+    )
+  
+  # boxplot colors
+  bxcls <- rswqtmp %>% 
+    select(area, date, fillcl) %>% 
+    unique
+  
+  ylab <- unique(rswqtmp$lbs)
+  
+  p1 <- ggplot() + 
+    geom_rect(data = bswqtmp, aes(xmin = datestr, xmax = dateend, ymin = minv, ymax = maxv, group = mo, fill = 'Monthly baseline (mean +/- 1 sd'), alpha = 0.2) +
+    geom_boxplot(data = rswqtmp, aes(x = date, y = val, group = date), fill= bxcls$fillcl, outlier.colour = NA, lwd = 0.75, alpha = 0.8, show.legend = F) + 
+    geom_jitter(data = rswqtmp, aes(x = date, y = val, group = date), alpha = 0.4, size = 0.75) + 
+    scale_fill_manual(NULL, values = 'blue') +
+    facet_wrap(~area, ncol = 1, scales = 'free_y') + 
+    scale_x_date(breaks = unique(rswqtmp$date), date_labels = '%b %d', expand = c(0.1, 0.1)) +
+    labs(
+      y = ylab, 
+      x = 'Week'
+      ) + 
+    coord_cartesian(xlim = range(rswqtmp$date)) +
+    theme_minimal(base_size = 14) + 
+    theme(
+      legend.position = 'top', 
+      strip.background = element_blank(), 
+      strip.text = element_text(size = 14)
+    )
+  
+  if(logtr)
+    p1 <- p1 + 
+      scale_y_log10(paste0('log-', ylab))
+  
+ out <- p1 + mapin + plot_layout(ncol = 2, widths = c(1, 0.5))
+  
+ return(out)
+ 
+}
+
+```
+
+## TN
+
+```{r, fig.height = 7, fig.width = 12}
+wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'tn', mapin, cols, logtr = TRUE)
+```
+
+## NH3
+
+```{r, fig.height = 7, fig.width = 12}
+wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'nh34', mapin, cols, logtr = TRUE)
+```
+
+## TP
+
+```{r, fig.height = 7, fig.width = 12}
+wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'tp', mapin, cols, logtr = TRUE)
+```
+
+## Chl
+
+```{r, fig.height = 7, fig.width = 12}
+wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'chla', mapin, cols, logtr = TRUE)
+```
