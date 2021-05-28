@@ -59,6 +59,13 @@ file.remove(list.files(tmp2, full.names = T))
 
 save(segmask, file = 'data/segmask.RData', version = 2)
 
+# PP segments for trend analysis ------------------------------------------
+
+ppseg <- st_read('T:/05_GIS/PineyPoint/PP_segs.shp') %>% 
+  st_transform(crs = 4326)
+
+save(ppseg, file = 'data/ppseg.RData', version = 2)
+
 # normal ranges -----------------------------------------------------------
 
 # get March, April ranges from 2006 to present
