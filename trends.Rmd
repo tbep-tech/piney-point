@@ -8,7 +8,7 @@ output:
 
 ```{r setup, echo = TRUE, message = F, warning = F, results = 'hide'}
 
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.height = 7, fig.width = 12)
 
 library(tidyverse)
 library(lubridate)
@@ -190,24 +190,24 @@ wqplo_fun <- function(rswqdat, bswqdat, ppseg, vr, mapin, cols, logtr = TRUE){
 
 ## TN
 
-```{r, fig.height = 7, fig.width = 12}
+```{r}
 wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'tn', mapin, cols, logtr = TRUE)
 ```
 
 ## NH3
 
-```{r, fig.height = 7, fig.width = 12}
+```{r}
 wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'nh34', mapin, cols, logtr = TRUE)
 ```
 
 ## TP
 
-```{r, fig.height = 7, fig.width = 12}
+```{r}
 wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'tp', mapin, cols, logtr = TRUE)
 ```
 
 ## Chl
 
-```{r, fig.height = 7, fig.width = 12}
+```{r}
 wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'chla', mapin, cols, logtr = TRUE)
 ```
