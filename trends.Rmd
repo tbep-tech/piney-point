@@ -161,7 +161,9 @@ wqplo_fun <- function(rswqdat, bswqdat, ppseg, vr, mapin, cols, logtr = TRUE){
     geom_rect(data = bswqtmp, aes(xmin = datestr, xmax = dateend, ymin = minv, ymax = maxv, group = mo, fill = 'Monthly baseline (mean +/- 1 sd'), alpha = 0.2) +
     geom_boxplot(data = rswqtmp, aes(x = date, y = val, group = date), fill= bxcls$fillcl, outlier.colour = NA, lwd = 0.75, alpha = 0.8, show.legend = F) + 
     geom_jitter(data = rswqtmp, aes(x = date, y = val, group = date), alpha = 0.4, size = 0.75) + 
+    geom_vline(xintercept = as.numeric(as.Date('2021-04-10')), aes(linetype = 'Discharge ended')) +
     scale_fill_manual(NULL, values = 'blue') +
+    scale_linetype_manual(values = 'dashed') + 
     facet_wrap(~area, ncol = 1, scales = 'free_y') + 
     scale_x_date(breaks = unique(rswqtmp$date), date_labels = '%b %d', expand = c(0.1, 0.1)) +
     labs(
@@ -210,4 +212,10 @@ wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'tp', mapin, cols, logtr = TRUE)
 
 ```{r}
 wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'chla', mapin, cols, logtr = TRUE)
+```
+
+## DO Sat.
+
+```{r}
+wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'dosat', mapin, cols, logtr = FALSE)
 ```
