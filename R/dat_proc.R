@@ -326,32 +326,52 @@ epcraw <- epcraw %>%
     station = station_number,
     date = sample_time,
     latitude, 
-    longitude,
-    tn = total_nitrogen_mg_l, 
-    nh34 = ammonia_mg_l,
-    tp = total_phosphorus_mg_l, 
-    chla = chlorophyll_a_uncorr_ug_l, 
+    longitude, 
+    color_pcu = color_345_c_pcu, 
+    tn_mgl = total_nitrogen_mg_l, 
+    nh34_mgl = ammonia_mg_l,
+    no23_mgl = nitrates_nitrites_mg_l,
+    tkn_mgl = kjeldahl_nitrogen_mg_l,
+    orthop_mgl = ortho_phosphates_mg_l,
+    tp_mgl = total_phosphorus_mg_l, 
+    bod_mgl = bod_mg_l,
+    chla_ugl = chlorophyll_a_uncorr_ug_l, 
+    tss_mgl = total_suspended_solids_mg_l, 
+    turb_ntu = turbidity_jtu_ntu,
+    secchi_m = secchi_depth_m,
     p_h_bottom, 
     p_h_mid, 
-    p_h_top, 
-    sal_bottom_ppth, 
-    sal_mid_ppth, 
-    sal_top_ppth
+    p_h_top,
+    do_bottom_mg_l, 
+    do_mid_mg_l,
+    do_top_mg_l, 
+    do_sat_bottom_percent, 
+    do_sat_mid_percent, 
+    do_sat_top_percent, 
+    sal_bottom_ppth,
+    sal_mid_ppth,
+    sal_top_ppth, 
+    temp_water_bottom_deg_c,
+    temp_water_mid_deg_c,
+    temp_water_top_deg_c
   ) %>% 
   mutate(
     date = as.Date(date), 
     yr = year(date), 
-    mo = month(date), 
-    source = 'epchc'
+    mo = month(date)
   ) %>% 
   rowwise() %>% 
   mutate(
-    sal = mean(c(sal_top_ppth, sal_mid_ppth, sal_bottom_ppth), na.rm = T), 
-    ph = mean(c(p_h_top, p_h_mid, p_h_bottom), na.rm = T)
+    do_mgl = mean(c(do_bottom_mg_l, do_mid_mg_l, do_top_mg_l), na.rm = T), 
+    dosat_per = mean(c(do_sat_bottom_percent, do_sat_mid_percent, do_sat_top_percent), na.rm = T),
+    ph_none = mean(c(p_h_top, p_h_mid, p_h_bottom), na.rm = T),
+    temp_c = mean(c(temp_water_bottom_deg_c, temp_water_mid_deg_c, temp_water_top_deg_c), na.rm = T),
+    sal_ppt = mean(c(sal_bottom_ppth, sal_mid_ppth, sal_top_ppth), na.rm = T)
   ) %>% 
   ungroup() %>% 
-  select(-sal_top_ppth, -sal_mid_ppth, -sal_bottom_ppth, -p_h_top, -p_h_mid, -p_h_bottom) %>% 
-  gather('var', 'val', -source, -station, -date, -yr, -mo, -latitude, -longitude) %>% 
+  select(-matches('bottom|mid|top')) %>% 
+  gather('var', 'val', -station, -date, -yr, -mo, -latitude, -longitude) %>% 
+  separate(var, c('var', 'uni'), sep = '_') %>% 
   mutate(
     val = as.numeric(val), 
     uni = case_when(
@@ -359,8 +379,9 @@ epcraw <- epcraw %>%
       var == 'ph' ~ 'none', 
       var %in% c('tp', 'tn', 'nh34') ~ 'mg/l', 
       var %in% 'chla' ~ 'ug/l'
-    )
-  )
+    ), 
+    source = 'epchc'
+  ) 
 
 # chloropyll includes chla and chlac for pheophytin
 manraw <- mandat %>% 
@@ -376,37 +397,45 @@ manraw <- mandat %>%
   ) %>% 
   mutate(
     var = case_when(
-      var == 'ChlaC_ugl' ~ 'Chla_ugl', 
-      T ~ var
+      var == 'Color_apparent_pcu' ~ 'color_pcu', 
+      var == 'TN_ugl' ~ 'tn_ugl',
+      var == 'NH3_N_ugl' ~ 'nh34_ugl', 
+      var == 'NOx_ugl' ~ 'no23_ugl', 
+      var == 'TKN_ugl' ~ 'tkn_ugl', 
+      var == 'OP_mgl' ~ 'orthop_mgl', 
+      var == 'TP_ugl' ~ 'tp_ugl', 
+      var == 'BOD5_mgl' ~ 'bod_mgl', 
+      var == 'ChlaC_ugl' ~ 'chla_ugl',
+      var == 'TSS_mgl' ~ 'tss_mgl', 
+      var == 'Turb_ntu' ~ 'turb_ntu', 
+      var == 'Secchi_ft' ~ 'secchi_ft', 
+      var == 'pH' ~ 'ph_none', 
+      var == 'DO_mgl' ~ 'do_mgl', 
+      var == 'DO_percent' ~ 'dosat_per', 
+      var == 'Salinity_ppt' ~ 'sal_ppt', 
+      var == 'TempW_C' ~ 'temp_c'
     )
   ) %>% 
-  filter(var %in% c('Chla_ugl', 'TN_ugl', 'NH3_N_ugl', 'TP_ugl', 'pH', 'Salinity_ppt')) %>% 
+  filter(!is.na(var)) %>% 
+  separate(var, c('var', 'uni'), sep = '_', remove = F) %>% 
   mutate(
     station = gsub('\\=', '', station), 
+    source = 'manco',
     date = as.Date(mdy_hms(date)), 
     yr = year(date), 
     mo = month(date), 
     station = as.character(station),
-    source = 'manco', 
-    var = case_when(
-      var == 'Chla_ugl' ~ 'chla', 
-      var == 'TN_ugl' ~ 'tn', 
-      var == 'NH3_N_ugl' ~ 'nh34',
-      var == 'TP_ugl' ~ 'tp', 
-      var == 'pH' ~ 'ph', 
-      var == 'Salinity_ppt' ~ 'sal'
-    ), 
     val = case_when(
-      var %in% c('tn', 'tp', 'nh34') ~ val / 1000, 
+      var %in% c('tn', 'tp', 'nh34', 'no23', 'tkn') ~ val / 1000, # ug/l to mg/L
+      var %in% 'secchi' ~ val * 0.3048, # ft to m 
       T ~ val
     ), 
     uni = case_when(
-      var %in% c('tn', 'tp') ~ 'mg/l', 
+      var %in% c('tn', 'tp', 'nh34', 'no23', 'tkn') ~ 'mgl', 
+      var %in% 'secchi' ~ 'm',
       T ~ uni
-    ), 
-    uni = tolower(uni)
+    )
   ) %>% 
-  tibble %>% 
   filter(!grepl('^BH', station)) # these are bishop harbor stations with incomplete data
 
 bswqdat <- bind_rows(epcraw, manraw) %>% 

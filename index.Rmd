@@ -74,7 +74,7 @@ prj <- 4326
 fml <- 'Lato Light'
 
 # line colors on baseline
-cols <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = 'Set1'))(length(unique(bswqdat$var)))
+cols <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = 'Set1'))(6)
 
 # station colors on maps
 stacols <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = 'Accent'))(length(unique(rsstatloc$source_lng)))
