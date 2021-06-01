@@ -1944,7 +1944,7 @@ rswqnear <- rswqdat %>%
   unique
 
 # add column if in/out of range based on closest epc station
-tmp <- rswqdat %>% 
+rswqdat <- rswqdat %>% 
   left_join(., rswqnear, by = c('station', 'var')) %>% 
   left_join(., bswqrngs, by = c('bswqstation', 'var', 'uni')) %>% 
   rename(source = source.x) %>% 
