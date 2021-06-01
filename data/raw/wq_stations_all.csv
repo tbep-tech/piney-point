@@ -94,20 +94,50 @@
 "Manatee Co.","mpnrd","357",27.649478,-82.578453,NA
 "Manatee Co.","mpnrd","361",27.628517,-82.591933,NA
 "Manatee Co.","mpnrd","362",27.612975,-82.577642,NA
+"Manatee Co.","mpnrd","365",27.61119972,-82.60334731,NA
 "Manatee Co.","mpnrd","386",27.605986,-82.617833,NA
+"Manatee Co.","mpnrd","395",27.567553,-82.573072,NA
+"Manatee Co.","mpnrd","396",27.591058,-82.621756,NA
 "Manatee Co.","mpnrd","400",27.572583,-82.629644,NA
+"Manatee Co.","mpnrd","405",27.552667,-82.587333,NA
 "Manatee Co.","mpnrd","408",27.547833,-82.599167,NA
+"Manatee Co.","mpnrd","421",27.576508,-82.652494,NA
+"Manatee Co.","mpnrd","422",27.557483,-82.633217,NA
 "Manatee Co.","mpnrd","425",27.548272,-82.660733,NA
+"Manatee Co.","mpnrd","428",27.552008,-82.6717,NA
+"Manatee Co.","mpnrd","430",27.527331,-82.609581,NA
+"Manatee Co.","mpnrd","431",27.511197,-82.597939,NA
+"Manatee Co.","mpnrd","432",27.5431,-82.644553,NA
 "Manatee Co.","mpnrd","433",27.520964,-82.632681,NA
+"Manatee Co.","mpnrd","434",27.517333,-82.618833,NA
+"Manatee Co.","mpnrd","435",27.533,-82.666833,NA
+"Manatee Co.","mpnrd","449",27.545808,-82.70095,NA
+"Manatee Co.","mpnrd","452",27.541128,-82.717056,NA
 "Manatee Co.","mpnrd","455",27.535,-82.731333,NA
+"Manatee Co.","mpnrd","456",27.53114983,-82.6841982,NA
 "Manatee Co.","mpnrd","458",27.497,-82.656833,NA
+"Manatee Co.","mpnrd","459",27.528828,-82.703611,NA
 "Manatee Co.","mpnrd","460",27.516708,-82.685317,NA
+"Manatee Co.","mpnrd","460",27.516708,-82.685317,NA
+"Manatee Co.","mpnrd","464",27.49299941,-82.69269937,NA
+"Manatee Co.","mpnrd","532",27.50284947,-82.54099843,NA
 "Manatee Co.","mpnrd","535",27.503333,-82.5675,NA
+"Manatee Co.","mpnrd","587",27.473189,-82.648742,NA
 "Manatee Co.","mpnrd","589",27.481503,-82.683075,NA
+"Manatee Co.","mpnrd","590",27.46900004,-82.66368327,NA
+"Manatee Co.","mpnrd","597",27.41264954,-82.59234624,NA
+"Manatee Co.","mpnrd","598",27.43279982,-82.63489699,NA
 "Manatee Co.","mpnrd","600",27.418747,-82.605933,NA
 "Manatee Co.","mpnrd","604",27.402419,-82.580642,NA
+"Manatee Co.","mpnrd","607",27.399042,-82.600517,NA
 "Manatee Co.","mpnrd","608",27.380203,-82.592244,NA
+"Manatee Co.","mpnrd","658",27.481117,-82.699286,NA
+"Manatee Co.","mpnrd","659",27.46324914,-82.68374834,NA
+"Manatee Co.","mpnrd","660",27.453319,-82.675222,NA
 "Manatee Co.","mpnrd","667",27.437144,-82.660781,NA
+"Manatee Co.","mpnrd","668",27.421519,-82.646856,NA
+"Manatee Co.","mpnrd","669",27.411167,-82.643167,NA
+"Manatee Co.","mpnrd","676",27.39384945,-82.62344951,NA
 "Manatee Co.","mpnrd","BH01",27.60949,-82.54345,NA
 "Manatee Co.","mpnrd","BH02",27.60739,-82.56236,NA
 "Manatee Co.","mpnrd","PM Out",27.631487,-82.543727,NA
@@ -165,9 +195,23 @@
 "Pinellas Co.","pinco","MC1",27.612443,-82.629256,"visited 20210404"
 "Pinellas Co.","pinco","MC2",27.601053,-82.613389,"visited 20210404"
 "Pinellas Co.","pinco","MC3",27.587669,-82.652122,"visited 20210404"
+"Pinellas Co.","pinco","MC395",27.567553,-82.573072,NA
+"Pinellas Co.","pinco","MC396",27.591058,-82.621756,NA
 "Pinellas Co.","pinco","MC4",27.573267,-82.63588,"visited 20210404"
+"Pinellas Co.","pinco","MC422",27.557483,-82.633217,NA
+"Pinellas Co.","pinco","MC430",27.527331,-82.609581,NA
+"Pinellas Co.","pinco","MC431",27.511197,-82.597939,NA
+"Pinellas Co.","pinco","MC432",27.5431,-82.644553,NA
+"Pinellas Co.","pinco","MC452",27.541128,-82.717056,NA
+"Pinellas Co.","pinco","MC459",27.528828,-82.703611,NA
 "Pinellas Co.","pinco","MC5",27.560375,-82.643627,"visited 20210404"
+"Pinellas Co.","pinco","MC587",27.473189,-82.648742,NA
 "Pinellas Co.","pinco","MC6",27.545639,-82.656094,"visited 20210404"
+"Pinellas Co.","pinco","MC607",27.399042,-82.600517,NA
+"Pinellas Co.","pinco","MC658",27.481117,-82.699286,NA
+"Pinellas Co.","pinco","MC660",27.453319,-82.675222,NA
+"Pinellas Co.","pinco","MC668",27.421519,-82.646856,NA
+"Pinellas Co.","pinco","MC669",27.411167,-82.643167,NA
 "Pinellas Co.","pinco","PC1",27.642252,-82.660052,"visited 20210404"
 "Pinellas Co.","pinco","PC2",27.633041,-82.651548,"visited 20210404"
 "Pinellas Co.","pinco","PM Out",27.631487,-82.543727,NA
@@ -181,6 +225,9 @@
 "Pinellas Co.","pinco","SkywayE-3",27.673814,-82.656761,NA
 "Pinellas Co.","pinco","SkywayW-1",27.689037,-82.692304,NA
 "Pinellas Co.","pinco","SkywayW-2",27.676516,-82.687936,NA
+"Pinellas Co.","pinco","TB017",27.666,-82.544,NA
+"Pinellas Co.","pinco","TB019",27.607,-82.567,NA
+"Pinellas Co.","pinco","TB024",27.593,-82.592,NA
 "Pinellas Co.","pinco","W7 A 21 03",27.71442779,-82.72712875,NA
 "Pinellas Co.","pinco","W7 B 21 03",27.71469137,-82.73582841,NA
 "Pinellas Co.","pinco","W7 C 21 03",27.73410924,-82.6930255,NA

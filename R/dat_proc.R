@@ -1274,7 +1274,7 @@ out2 <- NULL
 for(id in ids) {
 
   # sleep to not bonk api limit
-  Sys.sleep(20)   
+  Sys.sleep(15)   
   
   cat('mpnrd', which(id == ids), 'of', length(ids), '\n')
   
