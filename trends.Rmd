@@ -28,16 +28,10 @@ data(rspydat)
 # combine 3 and 4 in ppseg
 ppseg <- ppseg %>% 
   rename(area = Name) %>% 
-  mutate(
-    area = case_when(
-      area == 'Area 4' ~ 'Area 3', 
-      T ~ area
-    )
-  ) %>% 
   group_by(area) %>% 
   summarise() %>% 
-  st_buffer(dist = 0.000001) %>% 
-  st_buffer(dist = -0.000001) %>% 
+  st_buffer(dist = 0.0001) %>% 
+  st_buffer(dist = -0.0001) %>% 
   mutate(
     area = factor(area)
   )
@@ -181,7 +175,7 @@ wqplo_fun <- function(rswqdat, bswqdat, ppseg, vr, mapin, cols, logtr = TRUE){
     p1 <- p1 + 
       scale_y_log10(paste0('log-', ylab))
   
- out <- p1 + mapin + plot_layout(ncol = 2, widths = c(1, 0.5))
+ out <- p1 + mapin + plot_layout(ncol = 2, widths = c(1, 0.7))
   
  return(out)
  
