@@ -80,7 +80,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   grplevs <- c('Red', 'Green', 'Brown', 'Cyanobacteria')
   abulabs <- c('<1%', '1-5%', '6-25%', '26-50%', '51-75%', '76-100%')
   abubrks <- c(0, 1, 2, 3, 4, 5)
-  
+
   colpal <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = 'Dark2'))
   
   szrng <- c(2, 16)
@@ -123,7 +123,10 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   toplo1a <- savdat %>%
     dplyr::filter(sav_species %in% !!savsel) %>% 
     dplyr::filter(pa == 1) %>%
-    dplyr::mutate(sav_bb = round(sav_bb, 1)) %>% 
+    dplyr::mutate(
+      sav_bb = round(sav_bb, 1),
+      tltp = paste0(sav_species, ', ', sav_abundance)
+      ) %>% 
     dplyr::arrange(date, location)
 
   # find overplots
@@ -153,7 +156,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   
   pa <- ggplot2::ggplot(toplo1a, ggplot2::aes(y = date, x = location)) +
     ggplot2::geom_point(data = toplo2a, alpha = 1, colour = 'black', size = 2) +
-    ggplot2::geom_point(aes(size = sav_bb, fill = sav_species), alpha = 0.8, pch = 21) +
+    ggiraph::geom_point_interactive(aes(size = sav_bb, fill = sav_species, tooltip = tltp), alpha = 0.8, pch = 21) +
     ggplot2::scale_fill_manual(values = savcol) +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng) +
     ggplot2::theme_minimal(base_size = base_size) +
@@ -169,6 +172,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
       axis.title.x = element_blank()
     ) +
     ggplot2::labs(
+      
       x = 'Transect distance (m)',
       title = 'Submerged aquatic vegetation'
     ) + 
@@ -197,7 +201,10 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   toplo1b <- mcrdat %>%
     dplyr::filter(macroalgae_group %in% mcrsel) %>% 
     dplyr::filter(pa == 1) %>%
-    dplyr::mutate(macroalgae_bb = round(macroalgae_bb, 1))
+    dplyr::mutate(
+      macroalgae_bb = round(macroalgae_bb, 1),
+      tltp = paste0(macroalgae_group, ', ',  macroalgae_abundance)
+      )
   
   # jitter duplicates
   dups1 <- duplicated(toplo1b[, c('date', 'location')])
@@ -227,7 +234,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   pb <- ggplot2::ggplot(toplo1b, ggplot2::aes(y = date, x = location)) +
     ggplot2::geom_point(data = toplo2b, colour = 'black', alpha = 1, size = 2) +
     ggplot2::geom_point(inherit.aes = F, aes(colour = 'Empty sample'), x = NA, y = NA) +
-    ggplot2::geom_point(aes(size = macroalgae_bb, fill = macroalgae_group), alpha = 0.8, pch = 21) +
+    ggiraph::geom_point_interactive(aes(size = macroalgae_bb, fill = macroalgae_group, tooltip = tltp), alpha = 0.8, pch = 21) +
     ggplot2::scale_fill_manual(values = mcrcol) +
     ggplot2::scale_colour_manual(values = 'black') +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng, guide = F) +
@@ -253,6 +260,8 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   
   # out
   p <- pa + pb + plot_layout(ncol = 1, heights = c(0.9, 1), guides = 'collect')
+  p <- ggiraph::girafe(ggobj = p, width_svg = 14, height_svg = 8.5) %>% 
+    ggiraph::girafe_options(opts_tooltip(use_fill = TRUE, use_stroke = TRUE))
   
   return(p)
   

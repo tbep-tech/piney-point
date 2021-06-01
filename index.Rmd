@@ -29,6 +29,7 @@ library(reactable)
 library(tbeptools)
 library(patchwork)
 library(shinyWidgets)
+library(ggiraph)
 
 source('R/funcs.R')
 
@@ -1944,21 +1945,30 @@ leafletOutput('rstrnmap1')
 Column {data-width=650 .tabset .tabset-fade}
 -----------------------------------------------------------------------
 
+<br>
+```{r}
+column(12,
+  column(4,
+    HTML('<b>Select a transect by clicking a marker on the map</b>'),
+  ), 
+  column(4,
+    renderUI(
+      selectInput(inputId = 'savsel', label = HTML('<b>Select SAV species:</b>'), choices = rstrnsavsel(), selected = rstrnsavsel(), multiple = T, selectize = T, width = '100%')
+    )
+  ),
+  column(4,
+    renderUI(
+      selectInput(inputId = 'mcrsel', label = HTML('<b>Select macroalgae group:</b>'), choices = rstrnmcrsel(), selected = rstrnmcrsel(), multiple = T, selectize = T, width = '100%')
+    )
+  )
+)
+```
+
 ### __TRANSECT RESULTS__
 
 ```{r}
-fillCol(flex = c(0.1, 0.9),
-  fillRow(
-    HTML('<b>Select a transect by clicking a marker on the map</b>'),
-    renderUI(
-      selectInput(inputId = 'savsel', label = HTML('<b>Select SAV species:</b>'), choices = rstrnsavsel(), selected = rstrnsavsel(), multiple = T, selectize = T)
-    ),
-    renderUI(
-      selectInput(inputId = 'mcrsel', label = HTML('<b>Select macroalgae group:</b>'), choices = rstrnmcrsel(), selected = rstrnmcrsel(), multiple = T, selectize = T)
-    )
-  ),
-  renderPlot(rstrnplo1())
-)
+output$rstrnplo1 <- renderGirafe(rstrnplo1())
+girafeOutput('rstrnplo1', height = '100%', width = '100%')
 ```
 
 ### __INFORMATION__
