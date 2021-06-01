@@ -29,7 +29,6 @@ library(reactable)
 library(tbeptools)
 library(patchwork)
 library(shinyWidgets)
-library(ggiraph)
 
 source('R/funcs.R')
 
@@ -1967,8 +1966,8 @@ column(12,
 ### __TRANSECT RESULTS__
 
 ```{r}
-output$rstrnplo1 <- renderGirafe(rstrnplo1())
-girafeOutput('rstrnplo1', height = '100%', width = '100%')
+output$rstrnplo1 <- renderPlot(rstrnplo1())
+plotOutput('rstrnplo1', height = '100%', width = '100%')
 ```
 
 ### __INFORMATION__

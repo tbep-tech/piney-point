@@ -156,10 +156,10 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   
   pa <- ggplot2::ggplot(toplo1a, ggplot2::aes(y = date, x = location)) +
     ggplot2::geom_point(data = toplo2a, alpha = 1, colour = 'black', size = 2) +
-    ggiraph::geom_point_interactive(aes(size = sav_bb, fill = sav_species, tooltip = tltp), alpha = 0.8, pch = 21) +
+    ggplot2::geom_point(aes(size = sav_bb, fill = sav_species), alpha = 0.8, pch = 21) +
     ggplot2::scale_fill_manual(values = savcol) +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng) +
-    ggplot2::theme_minimal(base_size = base_size) +
+    ggplot2::theme_minimal(base_size = base_size, base_family = 'Roboto') +
     ggplot2::scale_x_continuous(breaks = savxlms) +
     ggplot2::coord_cartesian(xlim = xlms) +
     ggplot2::theme(
@@ -234,11 +234,11 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   pb <- ggplot2::ggplot(toplo1b, ggplot2::aes(y = date, x = location)) +
     ggplot2::geom_point(data = toplo2b, colour = 'black', alpha = 1, size = 2) +
     ggplot2::geom_point(inherit.aes = F, aes(colour = 'Empty sample'), x = NA, y = NA) +
-    ggiraph::geom_point_interactive(aes(size = macroalgae_bb, fill = macroalgae_group, tooltip = tltp), alpha = 0.8, pch = 21) +
+    ggplot2::geom_point(aes(size = macroalgae_bb, fill = macroalgae_group), alpha = 0.8, pch = 21) +
     ggplot2::scale_fill_manual(values = mcrcol) +
     ggplot2::scale_colour_manual(values = 'black') +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng, guide = F) +
-    ggplot2::theme_minimal(base_size = base_size) +
+    ggplot2::theme_minimal(base_size = base_size, base_family = 'Roboto') +
     ggplot2::scale_x_continuous(breaks = mcrxlms) +
     ggplot2::coord_cartesian(xlim = xlms) +
     ggplot2::theme(
@@ -260,8 +260,6 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   
   # out
   p <- pa + pb + plot_layout(ncol = 1, heights = c(0.9, 1), guides = 'collect')
-  p <- ggiraph::girafe(ggobj = p, width_svg = 14, height_svg = 8.5) %>% 
-    ggiraph::girafe_options(opts_tooltip(use_fill = TRUE, use_stroke = TRUE))
   
   return(p)
   
