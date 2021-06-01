@@ -1329,7 +1329,13 @@ out2all <- out2 %>%
   filter(!type %in% 'EQB') %>% # remove field blanks (other are duplicates FD)
   select(station, date, source, var, uni, val, qual)
 
-mpnrd1 <- bind_rows(out1all, out2all)
+mpnrd1 <- bind_rows(out1all, out2all) %>% 
+  mutate(
+    uni = case_when(
+      var == 'chla' & uni == 'mgl' ~ 'ugl', 
+      T ~ uni
+    )
+  )
 
 ## pinco ------------------------------------------------------------------
 
@@ -1938,7 +1944,7 @@ rswqnear <- rswqdat %>%
   unique
 
 # add column if in/out of range based on closest epc station
-rswqdat <- rswqdat %>% 
+tmp <- rswqdat %>% 
   left_join(., rswqnear, by = c('station', 'var')) %>% 
   left_join(., bswqrngs, by = c('bswqstation', 'var', 'uni')) %>% 
   rename(source = source.x) %>% 
