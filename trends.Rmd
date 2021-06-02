@@ -16,7 +16,6 @@ library(sf)
 library(ggmap)
 library(ggspatial)
 library(patchwork)
-library(bookdown)
 
 data(rswqdat)
 data(bswqdat)
@@ -26,9 +25,10 @@ data(ppseg)
 data(parms)
 data(rsphydat)
 data(rsphypts)
-
-cols <- c("#E16A86", "#50A315", "#009ADE")
-names(cols) <- levels(ppseg$area)
+data(trnpts)
+data(savtmp)
+data(mcrtmp)
+data(rstrnpts)
 
 # segments
 ppseg <- ppseg %>% 
@@ -306,3 +306,327 @@ phyplo_fun(rsphydat, rsphypts, ppseg, vr = 'Pseudo-nitzschia sp.', cols)
 ```{r}
 phyplo_fun(rsphydat, rsphypts, ppseg, vr = 'Rhizosolenia setigera', cols)
 ```
+
+## Seagrass {.tabset .tabset-pills}
+
+### Overall
+
+```{r}
+colpal <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = 'Dark2'))
+savlevs <- c('Thalassia testudinum', 'Halodule wrightii', 'Syringodium filiforme', 'Ruppia maritima', 'Halophila engelmannii', 'Halophila decipiens')
+
+savsel <- c('Thalassia testudinum', 'Halodule wrightii', 'Syringodium filiforme')
+
+# sort color palette so its the same regardless of species selected
+savcol <- colpal(length(savlevs))
+names(savcol) <- savlevs
+savcol <- savcol[savsel]
+
+# add area
+savsum <- savtmp %>% 
+  inner_join(rstrnpts, ., by = 'station') %>% 
+  st_intersection(ppseg) %>% 
+  st_set_geometry(NULL) %>% 
+  mutate(
+    date = floor_date(date, unit = 'week')
+  ) %>% 
+  dplyr::group_by(area, date, station, sav_species) %>%
+  dplyr::summarise(
+    nsites = length(unique(location)),
+    bbest = sum(sav_bb, na.rm = T) / nsites
+  ) %>% 
+  dplyr::group_by(sav_species, date, area) %>%
+  dplyr::summarise(
+    bbest = mean(bbest, na.rm = T),
+    .groups = 'drop'
+  ) %>% 
+  filter(sav_species %in% savsel)
+
+p1 <- ggplot(savsum, aes(x = date, y = bbest, fill = sav_species)) + 
+  geom_area(alpha = 0.8) + 
+  facet_grid(~ area, scales = 'free_y') + 
+  scale_fill_manual(values = savcol) +
+  scale_x_date(expand = c(0, 0)) + 
+  theme_minimal(base_size = 14) + 
+  labs(
+    y = 'Mean abundance (bb)', 
+    x = 'Week'
+  ) + 
+  theme(
+    legend.position = 'top', 
+    legend.title = element_blank(),
+    strip.background = element_blank(), 
+    strip.text = element_text(size = 14)
+  )
+
+grplevs <- c('Red', 'Green', 'Brown', 'Cyanobacteria')
+mcrsel <- grplevs
+
+# sort color palette so its the same regardless of species selected
+mcrcol <- c('tomato1', 'lightgreen', 'burlywood3', 'lightblue')
+names(mcrcol) <- grplevs
+mcrcol <- mcrcol[mcrsel]
+
+mcrsum <- mcrtmp %>% 
+  inner_join(rstrnpts, ., by = 'station') %>% 
+  st_intersection(ppseg) %>% 
+  st_set_geometry(NULL) %>% 
+  mutate(
+    date = floor_date(date, unit = 'week')
+  ) %>% 
+  dplyr::group_by(area, date, station, macroalgae_group) %>%
+  dplyr::summarise(
+    nsites = length(unique(location)),
+    bbest = sum(macroalgae_bb, na.rm = T) / nsites
+  ) %>% 
+  dplyr::group_by(macroalgae_group, date, area) %>%
+  dplyr::summarise(
+    bbest = mean(bbest, na.rm = T),
+    .groups = 'drop'
+  ) %>% 
+  filter(macroalgae_group %in% mcrsel)
+
+p2 <- ggplot(mcrsum, aes(x = date, y = bbest, fill = macroalgae_group)) + 
+  geom_area(alpha = 0.8) + 
+  facet_grid(~ area, scales = 'free_y') + 
+  scale_fill_manual(values = mcrcol) +
+  scale_x_date(expand = c(0, 0)) + 
+  theme_minimal(base_size = 14) + 
+  labs(
+    y = 'Mean abundance (bb)', 
+    x = 'Week', 
+    caption = 'Results averaged across transects. Note that May 10th, Area 3 was a shift in location from Terra Ceia to Anna Maria/Palma Sola.'  
+  ) + 
+  theme(
+    legend.position = 'top', 
+    legend.title = element_blank(),
+    strip.background = element_blank(), 
+    strip.text = element_text(size = 14)
+  )
+    
+p1 + p2 + plot_layout(ncol = 1)
+  
+```
+
+### SAV vs macroalgae, by station
+
+```{r}
+mcrsel <- c("Red", "Green", "Brown", "Cyanobacteria")
+savsel <- c('Thalassia testudinum', 'Halodule wrightii', 'Syringodium filiforme')
+
+# add area
+savsum <- savtmp %>% 
+  inner_join(rstrnpts, ., by = 'station') %>% 
+  st_intersection(ppseg) %>% 
+  st_set_geometry(NULL) %>% 
+  mutate(
+    date = floor_date(date, unit = 'week')
+  ) %>% 
+  dplyr::group_by(area, date, station, sav_species) %>%
+  dplyr::summarise(
+    nsites = length(unique(location)),
+    bbest = sum(sav_bb, na.rm = T) / nsites
+  ) %>% 
+  filter(sav_species %in% savsel) %>% 
+  group_by(area, date, station) %>% 
+  summarize(
+    savbbest = mean(bbest)
+  )
+
+mcrsum <- mcrtmp %>% 
+  inner_join(rstrnpts, ., by = 'station') %>% 
+  st_intersection(ppseg) %>% 
+  st_set_geometry(NULL) %>% 
+  mutate(
+    date = floor_date(date, unit = 'week')
+  ) %>% 
+  dplyr::group_by(area, date, station, macroalgae_group) %>%
+  dplyr::summarise(
+    nsites = length(unique(location)),
+    bbest = sum(macroalgae_bb, na.rm = T) / nsites
+  ) %>% 
+  filter(macroalgae_group %in% mcrsel) %>% 
+  group_by(area, date, station) %>% 
+  summarize(
+    mcrbbest = mean(bbest)
+  )
+
+toplo <- full_join(mcrsum, savsum, by = c('area', 'station', 'date')) %>% 
+  mutate(
+    mo = month(date,label = T)
+  )
+
+ggplot(toplo, aes(x = mcrbbest, y = savbbest)) + 
+  geom_point(aes(fill = mo), colour = 'grey', pch = 21, size = 3) +
+  facet_grid(~ area, scales = 'free') +
+  theme_minimal(base_size = 14) + 
+  geom_smooth() +
+  coord_cartesian(ylim = c(0, NA)) +
+  labs(
+    y = 'SAV mean abundance (bb)',
+    x = 'Macroalgae mean abundance (bb)', 
+    caption = 'Results retained by transect'
+  ) +
+  theme(
+    legend.position = 'top', 
+    legend.title = element_blank(),
+    strip.background = element_blank(), 
+    strip.text = element_text(size = 14)
+  )
+```
+
+### Water quality vs macroalgae vs SAV
+
+```{r}
+nonbay <- c('BH01', 'P Port 2', 'P Port 3', 'PM Out', '20120409-01', 'PPC41', 'P Port 4', 'PMB01', 'NGS-S Pond')
+
+# add area
+savsum <- savtmp %>% 
+  inner_join(rstrnpts, ., by = 'station') %>% 
+  st_intersection(ppseg) %>% 
+  st_set_geometry(NULL) %>% 
+  # mutate(
+  #   date = floor_date(date, unit = 'week')
+  # ) %>% 
+  dplyr::group_by(area, date, station, sav_species) %>%
+  dplyr::summarise(
+    nsites = length(unique(location)),
+    bbest = sum(sav_bb, na.rm = T) / nsites
+  ) %>% 
+  filter(sav_species %in% savsel) %>% 
+  dplyr::group_by(date, area) %>%
+  dplyr::summarise(
+    savbbest = mean(bbest, na.rm = T),
+    .groups = 'drop'
+  ) 
+
+mcrsum <- mcrtmp %>% 
+  inner_join(rstrnpts, ., by = 'station') %>% 
+  st_intersection(ppseg) %>% 
+  st_set_geometry(NULL) %>% 
+  # mutate(
+  #   date = floor_date(date, unit = 'week')
+  # ) %>% 
+  dplyr::group_by(area, date, station, macroalgae_group) %>%
+  dplyr::summarise(
+    nsites = length(unique(location)),
+    bbest = sum(macroalgae_bb, na.rm = T) / nsites
+  ) %>% 
+  filter(macroalgae_group %in% mcrsel) %>% 
+  dplyr::group_by(date, area) %>%
+  dplyr::summarise(
+    mcrbbest = mean(bbest, na.rm = T),
+    .groups = 'drop'
+  ) 
+
+rswqtmp <- rswqdat %>% 
+  filter(var %in%  c('tn', 'nh34', 'chla', 'tp')) %>% 
+  filter(!station %in% nonbay) %>% 
+  inner_join(rsstatloc, ., by = c('station', 'source')) %>% 
+  st_intersection(ppseg) %>% 
+  st_set_geometry(NULL) %>% 
+  select(-qual, -bswqstation, -nrmrng, -source, -source_lng, -uni, -lbunis, -comment) %>% 
+  # mutate(
+  #   date = floor_date(date, unit = 'week')
+  # ) %>% 
+  group_by(date, area, var) %>% 
+  summarise(
+    val = mean(log(val)), 
+    val = exp(val)
+    ) %>% 
+  spread(var, val)
+
+toplo <- full_join(mcrsum, savsum, by = c('area', 'date')) %>% 
+  inner_join(rswqtmp, by = c('area', 'date')) %>% 
+  mutate(
+    mo = month(date,label = T)
+  )
+
+bssz <- 14
+
+mod1 <- summary(lm(chla ~ tn, toplo))
+txt <- paste0('Slope ', round(coefficients(mod1)[2, 1], 2), ', R2 ', round(mod1$r.squared, 2), ', pval ', round(coefficients(mod1)[2, 4], 3))
+p1 <- ggplot(toplo, aes(x = tn, y = chla)) + 
+  geom_point(aes(fill = mo), colour = 'grey', size = 3, pch = 21) + 
+  geom_smooth(method = 'lm') + 
+  labs(
+    x = 'Area averaged TN (mg/L)', 
+    y = 'Area averaged Chla (ug/L)', 
+    subtitle = txt, 
+    title = 'Chla ~ TN'
+  ) +
+  theme_minimal(base_family = bssz)
+
+mod2 <- summary(lm(mcrbbest ~ tn, toplo))
+txt <- paste0('Slope ', round(coefficients(mod2)[2, 1], 2), ', R2 ', round(mod2$r.squared, 2), ', pval ', round(coefficients(mod2)[2, 4], 3))
+p2 <- ggplot(toplo, aes(x = tn, y = mcrbbest)) + 
+  geom_point(aes(fill = mo), colour = 'grey', size = 3, pch = 21) + 
+  geom_smooth(method = 'lm') + 
+  labs(
+    x = 'Area averaged TN (mg/L)', 
+    y = 'Area averaged macroalgae abundance', 
+    subtitle = txt, 
+    title = 'Macroalgae ~ TN'
+  ) +
+  theme_minimal(base_family = bssz)
+
+mod3 <- summary(lm(savbbest ~ mcrbbest, toplo))
+txt <- paste0('Slope ', round(coefficients(mod3)[2, 1], 2), ', R2 ', round(mod3$r.squared, 2), ', pval ', round(coefficients(mod3)[2, 4], 3))
+p3 <- ggplot(toplo, aes(x = mcrbbest, y = savbbest)) +
+  geom_point(aes(fill = mo), colour = 'grey', size = 3, pch = 21) +
+  geom_smooth(method = 'lm') +
+  labs(
+    x = 'Area averaged macroalgae abundance',
+    y = 'Area averaged SAV abundance',
+    subtitle = txt,
+    title = 'SAV ~ Macroalgae'
+  ) +
+  theme_minimal(base_family = bssz)
+
+
+# mod4 <- summary(lm(chla ~ nh34, toplo))
+# txt <- paste0('Slope ', round(coefficients(mod4)[2, 1], 2), ', R2 ', round(mod4$r.squared, 2), ', pval ', round(coefficients(mod1)[2, 4], 3))
+# p4 <- ggplot(toplo, aes(x = nh34, y = chla)) + 
+#   geom_point(aes(fill = mo), colour = 'grey', size = 3, pch = 21) + 
+#   geom_smooth(method = 'lm') + 
+#   labs(
+#     x = 'Area averaged NH3 (mg/L)', 
+#     y = 'Area averaged Chla (ug/L)', 
+#     subtitle = txt, 
+#     title = 'Chla ~ NH3'
+#   ) +
+#   theme_minimal(base_family = bssz)
+# 
+# mod5 <- summary(lm(mcrbbest ~ nh34, toplo))
+# txt <- paste0('Slope ', round(coefficients(mod5)[2, 1], 2), ', R2 ', round(mod5$r.squared, 2), ', pval ', round(coefficients(mod5)[2, 4], 3))
+# p5 <- ggplot(toplo, aes(x = nh34, y = mcrbbest)) + 
+#   geom_point(aes(fill = mo), colour = 'grey', size = 3, pch = 21) + 
+#   geom_smooth(method = 'lm') + 
+#   labs(
+#     x = 'Area averaged NH3 (mg/L)', 
+#     y = 'Area averaged macroalgae abundance', 
+#     subtitle = txt, 
+#     title = 'Macroalgae ~ NH3'
+#   ) +
+#   theme_minimal(base_family = bssz)
+# 
+# mod6 <- summary(lm(savbbest ~ mcrbbest, toplo))
+# txt <- paste0('Slope ', round(coefficients(mod6)[2, 1], 2), ', R2 ', round(mod6$r.squared, 2), ', pval ', round(coefficients(mod6)[2, 4], 3))
+# p6 <- ggplot(toplo, aes(x = mcrbbest, y = savbbest)) + 
+#   geom_point(aes(fill = mo), colour = 'grey', size = 3, pch = 21) + 
+#   geom_smooth(method = 'lm') + 
+#   labs(
+#     x = 'Area averaged macroalgae abundance', 
+#     y = 'Area averaged SAV abundance', 
+#     subtitle = txt, 
+#     title = 'SAV ~ Macroalgae'
+#   ) +
+#   theme_minimal(base_family = bssz)  
+
+p1 + p2 + p3 + plot_layout(ncol = 3, guides = 'collect') & 
+  theme(
+    legend.position = 'top', 
+    legend.title = element_blank()
+  )
+```
+

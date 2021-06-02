@@ -1329,13 +1329,7 @@ out2all <- out2 %>%
   filter(!type %in% 'EQB') %>% # remove field blanks (other are duplicates FD)
   select(station, date, source, var, uni, val, qual)
 
-mpnrd1 <- bind_rows(out1all, out2all) %>% 
-  mutate(
-    uni = case_when(
-      var == 'chla' & uni == 'mgl' ~ 'ugl', 
-      T ~ uni
-    )
-  )
+mpnrd1 <- bind_rows(out1all, out2all)
 
 ## pinco ------------------------------------------------------------------
 
