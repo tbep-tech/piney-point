@@ -1,14 +1,14 @@
 ---
+title: Piney Point trends synthesis
+author: "MW Beck"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
-  html_document:
-    code_folding: hide
+  html_document
 ---
 
-# Trends {.tabset}
+```{r setup, echo = FALSE, message = F, warning = F, results = 'hide'}
 
-```{r setup, echo = TRUE, message = F, warning = F, results = 'hide'}
-
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.height = 7, fig.width = 12)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.height = 6, fig.width = 9)
 
 library(tidyverse)
 library(lubridate)
@@ -16,6 +16,7 @@ library(sf)
 library(ggmap)
 library(ggspatial)
 library(patchwork)
+library(bookdown)
 
 data(rswqdat)
 data(bswqdat)
@@ -23,9 +24,13 @@ data(bsstatloc)
 data(rsstatloc)
 data(ppseg)
 data(parms)
-data(rspydat)
+data(rsphydat)
+data(rsphypts)
 
-# combine 3 and 4 in ppseg
+cols <- c("#E16A86", "#50A315", "#009ADE")
+names(cols) <- levels(ppseg$area)
+
+# segments
 ppseg <- ppseg %>% 
   rename(area = Name) %>% 
   group_by(area) %>% 
@@ -39,62 +44,8 @@ ppseg <- ppseg %>%
 cols <- c("#E16A86", "#50A315", "#009ADE")
 names(cols) <- levels(ppseg$area)
 
-##
-# map
-
-buffdist <- 0.01
-northloc <- 'tr' 
-scaleloc <- 'bl'
-
-# layer extent as bbox plus buffer
-dat_ext <- ppseg %>% 
-  st_bbox %>% 
-  st_as_sfc %>% 
-  st_buffer(dist = buffdist) %>%
-  st_bbox %>% 
-  unname
-
-# reference data for ggsn, MUST have geometry named column
-ggsnref <- ppseg %>% 
-  st_bbox %>% 
-  st_as_sfc %>%
-  st_buffer(dist = buffdist / 2) %>% 
-  st_as_sf %>%
-  st_cast('POINT') %>% 
-  rename(geometry = x)
-
-# stamen base map
-bsmap1 <- get_stamenmap(bbox = dat_ext, maptype = 'toner-background', zoom = 10)
-
-# change opacity of basemap
-mapatt <- attributes(bsmap1)
-bsmap1_transparent <- matrix(adjustcolor(bsmap1, 
-                                         alpha.f = 0.2), 
-                             nrow = nrow(bsmap1))
-attributes(bsmap1_transparent) <- mapatt
-
-# plot
-mapin <- ggmap(bsmap1_transparent) +
-  geom_sf(data = ppseg, aes(fill = area), color = 'black', inherit.aes = F, alpha = 0.8) +
-  geom_sf_text(data = ppseg, aes(label = area), color = 'black', inherit.aes = F, alpha = 0.8, size = 6) +
-  scale_fill_manual(values = cols, drop = F) +
-  theme(
-    legend.title = element_blank(), 
-    panel.grid = element_blank(), 
-    axis.title = element_blank(), 
-    legend.justification = 'top',
-    axis.text.y = element_text(size = 7), 
-    axis.text.x = element_text(size = 7, angle = 30, hjust = 1),
-    panel.background = element_rect(fill = 'white'),
-    axis.ticks = element_line(colour = 'grey'),
-    panel.border = element_rect(colour = 'grey', fill = NA), 
-    legend.position = 'none'
-  ) +
-  annotation_scale(location = scaleloc) +
-  annotation_north_arrow(location = northloc, which_north = "true", height = grid::unit(0.75, "cm"), 
-                         width = grid::unit(0.75, "cm"))
-
-wqplo_fun <- function(rswqdat, bswqdat, ppseg, vr, mapin, cols, logtr = TRUE){
+# water quality plot fun
+wqplo_fun <- function(rswqdat, bswqdat, ppseg, vr, cols, logtr = TRUE){
 
   nonbay <- c('BH01', 'P Port 2', 'P Port 3', 'PM Out', '20120409-01', 'PPC41', 'P Port 4', 'PMB01', 'NGS-S Pond')
 
@@ -150,14 +101,14 @@ wqplo_fun <- function(rswqdat, bswqdat, ppseg, vr, mapin, cols, logtr = TRUE){
     unique
   
   ylab <- unique(rswqtmp$lbs)
-  
+
   p1 <- ggplot() + 
     geom_rect(data = bswqtmp, aes(xmin = datestr, xmax = dateend, ymin = minv, ymax = maxv, group = mo, fill = 'Monthly baseline (mean +/- 1 sd'), alpha = 0.2) +
     geom_boxplot(data = rswqtmp, aes(x = date, y = val, group = date), fill= bxcls$fillcl, outlier.colour = NA, lwd = 0.75, alpha = 0.8, show.legend = F) + 
     geom_jitter(data = rswqtmp, aes(x = date, y = val, group = date), alpha = 0.4, size = 0.75) + 
     scale_fill_manual(NULL, values = 'blue') +
     scale_linetype_manual(values = 'dashed') + 
-    facet_wrap(~area, ncol = 1, scales = 'free_y') + 
+    facet_grid(area ~ ., scales = 'free_y') + 
     scale_x_date(breaks = unique(rswqtmp$date), date_labels = '%b %d', expand = c(0.1, 0.1)) +
     labs(
       y = ylab, 
@@ -175,40 +126,183 @@ wqplo_fun <- function(rswqdat, bswqdat, ppseg, vr, mapin, cols, logtr = TRUE){
     p1 <- p1 + 
       scale_y_log10(paste0('log-', ylab))
   
- out <- p1 + mapin + plot_layout(ncol = 2, widths = c(1, 0.7))
+ out <- p1
   
  return(out)
  
 }
 
+# phyto plot fun
+phyplo_fun <- function(rsphydat, rsphypts, ppseg, vr, cols){
+    
+  dts <- tibble(date = seq.Date(min(rsphydat$date), max(rsphydat$date), by = 'days'))
+  
+  # monitoring data
+  toplo <- rsphydat %>% 
+    inner_join(rsphypts, ., by = c('station')) %>% 
+    st_intersection(ppseg) %>% 
+    st_set_geometry(NULL) %>% 
+    select(date, area, species) %>% 
+    unique %>% 
+    mutate(obs = 1) %>% 
+    complete(species, date, area, fill = list(obs = 0)) %>% 
+    filter(species == vr) %>% 
+    arrange(area, date) %>%
+    group_by(area) %>% 
+    mutate(
+      obs = cumsum(obs)
+    )
+
+  p1 <- ggplot(toplo, aes(x = date, y = obs, fill = area)) + 
+    geom_area(alpha = 0.8) +
+    scale_fill_manual(NULL, values = cols, drop = F) +
+    scale_x_date(expand = c(0, 0)) + 
+    theme_minimal(base_size = 14) + 
+    theme(
+      legend.position = 'top', 
+      strip.background = element_blank(), 
+      strip.text = element_text(size = 14), 
+      axis.title.x = element_blank()
+    ) + 
+    labs(
+      y = 'Cumulative observations', 
+      caption = 'Observations are based on whether any station in the area recorded the taxon'
+    )
+  
+  return(p1)
+  
+}
 ```
 
-## TN
+# {.tabset}
 
-```{r}
-wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'tn', mapin, cols, logtr = TRUE)
+## Region delineation 
+
+```{r, figh.height = 4, fig.width = 4, fig.margin = T}
+##
+# map
+
+buffdist <- 0.01
+northloc <- 'tr' 
+scaleloc <- 'bl'
+
+# layer extent as bbox plus buffer
+dat_ext <- ppseg %>% 
+  st_bbox %>% 
+  st_as_sfc %>% 
+  st_buffer(dist = buffdist) %>%
+  st_bbox %>% 
+  unname
+
+# reference data for ggsn, MUST have geometry named column
+ggsnref <- ppseg %>% 
+  st_bbox %>% 
+  st_as_sfc %>%
+  st_buffer(dist = buffdist / 2) %>% 
+  st_as_sf %>%
+  st_cast('POINT') %>% 
+  rename(geometry = x)
+
+# stamen base map
+bsmap1 <- get_stamenmap(bbox = dat_ext, maptype = 'toner-background', zoom = 10)
+
+# change opacity of basemap
+mapatt <- attributes(bsmap1)
+bsmap1_transparent <- matrix(adjustcolor(bsmap1, 
+                                         alpha.f = 0.2), 
+                             nrow = nrow(bsmap1))
+attributes(bsmap1_transparent) <- mapatt
+
+# plot
+map <- ggmap(bsmap1_transparent) +
+  geom_sf(data = ppseg, aes(fill = area), color = 'black', inherit.aes = F, alpha = 0.8) +
+  geom_sf_text(data = ppseg, aes(label = area), color = 'black', inherit.aes = F, alpha = 0.8, size = 6) +
+  scale_fill_manual(values = cols, drop = F) +
+  theme(
+    legend.title = element_blank(), 
+    panel.grid = element_blank(), 
+    axis.title = element_blank(), 
+    legend.justification = 'top',
+    axis.text.y = element_text(size = 8), 
+    axis.text.x = element_text(size = 8, angle = 30, hjust = 1),
+    panel.background = element_rect(fill = 'white'),
+    axis.ticks = element_line(colour = 'grey'),
+    panel.border = element_rect(colour = 'grey', fill = NA), 
+    legend.position = 'none'
+  ) +
+  annotation_scale(location = scaleloc) +
+  annotation_north_arrow(location = northloc, which_north = "true", height = grid::unit(0.75, "cm"), 
+                         width = grid::unit(0.75, "cm"))
+
+map
 ```
 
-## NH3
+## Water Quality {.tabset .tabset-pills}
+
+### TN
 
 ```{r}
-wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'nh34', mapin, cols, logtr = TRUE)
+wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'tn', cols, logtr = TRUE)
 ```
 
-## TP
+### NH3
 
 ```{r}
-wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'tp', mapin, cols, logtr = TRUE)
+wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'nh34', cols, logtr = TRUE)
 ```
 
-## Chl
+### TP
 
 ```{r}
-wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'chla', mapin, cols, logtr = TRUE)
+wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'tp', cols, logtr = TRUE)
 ```
 
-## DO Sat.
+### Chl
 
 ```{r}
-wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'dosat', mapin, cols, logtr = FALSE)
+wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'chla', cols, logtr = TRUE)
+```
+
+### DO Sat.
+
+```{r}
+wqplo_fun(rswqdat, bswqdat, ppseg, vr = 'dosat', cols, logtr = FALSE)
+```
+
+## Phtyoplankton {.tabset .tabset-pills}
+
+### Mixed algae
+
+```{r}
+phyplo_fun(rsphydat, rsphypts, ppseg, vr = 'mixed algae', cols)
+```
+
+### Centric diatoms
+
+```{r}
+phyplo_fun(rsphydat, rsphypts, ppseg, vr = 'Centric Diatoms', cols)
+```
+
+### Bacillariophyta
+
+```{r}
+phyplo_fun(rsphydat, rsphypts, ppseg, vr = 'Bacillariophyta', cols)
+```
+
+### Karenia brevis
+
+```{r}
+phyplo_fun(rsphydat, rsphypts, ppseg, vr = 'Karenia brevis', cols)
+```
+
+### Pseudo-nitzschia sp.
+
+```{r}
+phyplo_fun(rsphydat, rsphypts, ppseg, vr = 'Pseudo-nitzschia sp.', cols)
+```
+
+### Rhizosolenia setigera
+
+```{r}
+phyplo_fun(rsphydat, rsphypts, ppseg, vr = 'Rhizosolenia setigera', cols)
 ```
