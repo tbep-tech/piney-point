@@ -1,17 +1,20 @@
 
 library(tidyverse)
 library(lubridate)
+library(mapview)
 library(sf)
-library(ggmap)
-library(ggspatial)
-library(patchwork)
-library(extrafont)
+library(stars)
+library(raster)
+library(googlesheets4)
+library(googledrive)
+library(tbeptools)
 
 data(rswqdat)
 data(bswqdat)
 data(bsstatloc)
 data(rsstatloc)
 data(ppseg)
+data(segmask)
 
 source('R/funcs.R')
 
@@ -147,3 +150,116 @@ for(flt in flts){
   dev.off()
 
 }
+
+##
+# tracer plots
+
+cols <- grDevices::colorRampPalette(rev(RColorBrewer::brewer.pal(11, 'Spectral')))
+
+# mask
+
+tmp1 <- tempfile(fileext = '.zip')
+tmp2 <- tempdir()
+
+drive_download(as_id("1EjIDcpNbBHvoJ09-wlEJDdDE7v323qEe"), path = tmp1, overwrite = TRUE)
+
+unzip(tmp1, exdir = tmp2) 
+
+bnd <- list.files(tmp2, full.names = T) %>% 
+  grep('\\.shp$', ., value = T) %>% 
+  st_read %>%
+  st_transform(crs = 4326) %>% 
+  st_intersection(tbshed) %>% 
+  st_union()
+
+
+sbmask <- st_read('T:/05_GIS/PineyPoint/SB_boundary.shp') %>% 
+  st_transform(crs = 4326)
+
+tmp1 <- bnd %>% 
+  st_union %>% 
+  st_geometry()
+tmp2 <- sbmask %>% 
+  st_union() %>% 
+  st_geometry()
+
+tmp <- c(tmp1, tmp2) %>% 
+  st_union() %>% 
+  st_buffer(dist = 0.0001) %>% 
+  st_buffer(dist = -0.0001)  
+
+segmask <- tmp %>% 
+  st_bbox %>% 
+  st_as_sfc() %>% 
+  st_as_sf() %>% 
+  st_difference(tmp)
+
+
+rst1 <- raster('data/raw/HIND_20210410_18UTC_modified.tif') %>%
+  mask(segmask) %>% 
+  mask(ppseg) %>% 
+  st_as_stars
+
+p1 <- ggplot() + 
+  geom_stars(data = rst1) + 
+  geom_sf(data = ppseg, fill = NA, color = 'red', lwd = 1) + 
+  coord_sf(ylim = c(27.45, 27.85), xlim = c(-82.85, -82.4)) + 
+  theme_bw() +
+  theme(
+    legend.position = 'none', 
+    axis.text = element_blank(), 
+    axis.title = element_blank(),
+    axis.ticks = element_blank(), 
+    panel.grid = element_blank()
+  ) + 
+  scale_fill_distiller(palette= 'Spectral', na.value = NA)
+
+rst2 <- raster('data/raw/SFC_20210425_12UTC_modified.tif') %>%
+  mask(segmask) %>% 
+  mask(ppseg) %>% 
+  st_as_stars
+
+p2 <- ggplot() + 
+  geom_stars(data = rst2) + 
+  geom_sf(data = ppseg, fill = NA, color = 'red', lwd = 1) + 
+  coord_sf(ylim = c(27.45, 27.85), xlim = c(-82.85, -82.4)) + 
+  theme_bw() +
+  theme(
+    legend.position = 'none', 
+    axis.text = element_blank(), 
+    axis.title = element_blank(),
+    axis.ticks = element_blank(), 
+    panel.grid = element_blank()
+  ) + 
+  scale_fill_distiller(palette= 'Spectral', na.value = NA)
+
+rst3 <- raster('data/raw/SFC_20210518_02UTC_modified.tif') %>%
+  mask(segmask) %>% 
+  mask(ppseg) %>% 
+  st_as_stars
+
+p3 <- ggplot() + 
+  geom_stars(data = rst3) + 
+  geom_sf(data = ppseg, fill = NA, color = 'red', lwd = 1) + 
+  coord_sf(ylim = c(27.45, 27.85), xlim = c(-82.85, -82.4)) + 
+  theme_bw() +
+  theme(
+    legend.position = 'none', 
+    axis.text = element_blank(), 
+    axis.title = element_blank(),
+    axis.ticks = element_blank(), 
+    panel.grid = element_blank()
+  ) + 
+  scale_fill_distiller(palette= 'Spectral', na.value = NA)
+
+png('figure/synth_trace1.png', heigh = 6, width = 6, units = 'in', res = 300)
+print(p1)
+dev.off()
+
+png('figure/synth_trace2.png', heigh = 6, width = 6, units = 'in', res = 300)
+print(p2)
+dev.off()
+
+png('figure/synth_trace3.png', heigh = 6, width = 6, units = 'in', res = 300)
+print(p3)
+dev.off()
