@@ -39,7 +39,7 @@ tmp2 <- tempdir()
 
 drive_download(as_id("1EjIDcpNbBHvoJ09-wlEJDdDE7v323qEe"), path = tmp1, overwrite = TRUE)
 
-unzip(temp, exdir = tmp2) 
+unzip(tmp1, exdir = tmp2) 
 
 bnd <- list.files(tmp2, full.names = T) %>% 
   grep('\\.shp$', ., value = T) %>% 
@@ -65,6 +65,15 @@ ppseg <- st_read('T:/05_GIS/PineyPoint/PP_segs.shp') %>%
   st_transform(crs = 4326)
 
 save(ppseg, file = 'data/ppseg.RData', version = 2)
+
+
+# sbmask ------------------------------------------------------------------
+
+# sarasota bay mask
+sbmask <- st_read('T:/05_GIS/PineyPoint/SB_boundary.shp') %>% 
+  st_transform(crs = 4326)
+
+save(sbmask, file = 'data/sbmask.RData', version = 2)
 
 # normal ranges -----------------------------------------------------------
 
