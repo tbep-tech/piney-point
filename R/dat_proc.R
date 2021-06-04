@@ -2009,5 +2009,85 @@ tms <- paste(as.character(tms), 'Eastern')
 
 writeLines(tms, 'logs/rswqlog.txt')
 
+# all points - update anytime location data are changed -------------------
 
+data(rsstatloc)
+data(rstrnpts)
+data(rscntdat)
+data(rsphypts)
+data(rstrndatsav)
 
+# response sampling locations
+rsallpts <- list(
+  `water quality` = rsstatloc %>%
+    select(station, source), 
+  `seagrass and macroalgae` = rstrnpts %>% 
+    filter(station %in% rstrndatsav$station) %>% 
+    select(station, source), 
+  `contaminants` = rscntdat %>%  
+    left_join(rsstatloc, ., by = 'station') %>% 
+    select(station, source = source.x) %>% 
+    unique,
+  `algae` = rsphypts %>% 
+    left_join(rsphydat, by = 'station') %>% 
+    select(station, source) %>%
+    na.omit() %>% 
+    unique
+  ) %>% 
+  enframe('type', 'value') %>% 
+  unnest('value') %>%
+  st_as_sf() %>% 
+  mutate(
+    lng = st_coordinates(.)[, 1],
+    lat = st_coordinates(.)[, 2]
+  ) %>% 
+  st_set_geometry(NULL) %>% 
+  group_by(station, source) %>% 
+  arrange(type) %>% 
+  nest() %>% 
+  mutate(
+    data = purrr::map(data, function(x){
+      
+      type <- paste(x$type, collapse = ', ')
+      
+      lng <- mean(x$lng)
+      lat <- mean(x$lat)
+      
+      out <- tibble(
+        type = type, 
+        lng = lng, 
+        lat = lat
+      )
+      
+      return(out)
+      
+    })
+  ) %>% 
+  unnest(data) %>% 
+  arrange(station, source) %>% 
+  ungroup %>% 
+  mutate(
+    source = tolower(source),
+    lng = ifelse(duplicated(lng), jitter(lng, factor = 10), lng),
+    lat = ifelse(duplicated(lat), jitter(lat, factor = 10), lat), 
+    source_lng = case_when(
+      source == 'pinco' ~ 'Pinellas Co.', 
+      source == 'epchc' ~ 'Hillsborough Co.', 
+      source == 'fldep' ~ 'Florida DEP', 
+      source == 'mpnrd' ~ 'Manatee Co.', 
+      source == 'ncf' ~ 'New College Fl.', 
+      source == 'tbep' ~ 'TBEP', 
+      source == 'usf' ~ 'USF', 
+      source == 'uf' ~ 'UF',
+      source == 'esa' ~ 'ESA', 
+      source == 'sbep' ~ 'SBEP'
+    ), 
+    source_lng = case_when(
+      source %in% c('usf', 'fldep') & type == 'algae' ~ 'FWC-FWRI', 
+      T ~ source_lng
+    )
+  ) %>%
+  select(-source) %>% 
+  st_as_sf(coords = c('lng', 'lat'), crs = 4326)
+
+save(rsallpts, file = 'data/rsallpts.RData', version = 2)

@@ -54,6 +54,7 @@ load('data/rscntthr.RData')
 load('data/rsphydat.RData')
 load('data/rsphypts.RData')
 load('data/wqrefmap.RData')
+load('data/rsallpts.RData')
 
 # logs
 rswqlog <- readLines('https://tbep-tech.github.io/piney-point/logs/rswqlog.txt')
@@ -77,8 +78,8 @@ fml <- 'Lato Light'
 cols <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = 'Set1'))(6)
 
 # station colors on maps
-stacols <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = 'Accent'))(length(unique(rsstatloc$source_lng)))
-names(stacols) <- sort(unique(rsstatloc$source_lng))
+stacols <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = 'Accent'))(length(unique(rsallpts$source_lng)))
+names(stacols) <- sort(unique(rsallpts$source_lng))
 
 # variable color on wq maps
 vrscols <- RColorBrewer::brewer.pal(n = 9, name = 'Blues')
@@ -207,21 +208,14 @@ bswqmap <- mapview(tomap, homebutton = F, layer.name = 'Data source', map.types 
   addLegend("topright", title = 'Data source', opacity = 1, labels = tomapcols$source, colors = tomapcols$col) 
 
 # current base map
-rscolsin <- rswqdat %>% 
-  left_join(rsstatloc, by = 'source') %>% 
-  pull(source_lng) %>% 
-  unique %>% 
-  sort %>% 
-  stacols[.] 
-rswqmap <- rsstatloc %>% 
-  filter(station %in% rswqdat$station) %>% 
-  mapview(zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = rscolsin, map.types = mptyps, alpha.regions = 0.9) %>% 
+rswqmap <- rsallpts %>% 
+  mapview(zcol = 'source_lng', homebutton = F, layer.name = 'Data source', col.regions = stacols, map.types = mptyps, alpha.regions = 0.9) %>% 
   .@map %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE))
 
 # summary of agencies reporting for value boxes
-agns <- rswqdat %>% 
-  pull(source) %>% 
+agns <- rsallpts %>% 
+  pull(source_lng) %>% 
   unique %>% 
   length
 
@@ -238,7 +232,7 @@ dysm <- rswqdat %>%
   length
 
 # summary of sites being monitored for value boxes
-stsm <- rswqdat %>% 
+stsm <- rsallpts %>% 
   pull(station) %>% 
   unique %>% 
   length
