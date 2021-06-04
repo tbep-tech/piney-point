@@ -94,12 +94,14 @@ pleg <- ggplot() +
   scale_fill_manual(NULL, values = 'blue') +
   theme_minimal(base_size = 14) + 
   theme(
-    legend.position = 'top', 
+    legend.position = 'top',
+    panel.background = element_rect(fill = "transparent",colour = NA), 
+    plot.background = element_rect(fill = "transparent",colour = NA)
   )
 pleg <- g_legend(pleg)
 
 fl <- 'figure/synth_leg.png'
-png(fl, family = 'Lato', res = 200, height = 2.5, width = 6, units = 'in')
+png(fl, family = 'Lato', res = 200, height = 2.5, width = 6, units = 'in', bg = 'transparent')
 grid::grid.newpage()
 grid::grid.draw(pleg)
 dev.off()
@@ -138,12 +140,29 @@ for(flt in flts){
       panel.grid.minor.y = element_blank(),
       legend.position = 'none', 
       strip.background = element_blank(), 
-      axis.text.x = element_text(size = 9)
+      axis.text.x = element_text(size = 9),
+      panel.background = element_rect(fill = "transparent",colour = NA), 
+      plot.background = element_rect(fill = "transparent",colour = NA)
     )
   
-  fl <- paste('figure/synth_', vr, '_', flt, '.png')
-  png(fl, family = 'Lato', res = 200, height = 2.5, width = 6, units = 'in')
+  fl <- paste0('figure/synth_', vr, '_', flt, '.png')
+  png(fl, family = 'Lato', res = 200, height = 2.5, width = 6, units = 'in', bg = 'transparent')
   print(p)
   dev.off()
 
 }
+
+##
+# segments
+p <- ggplot() + 
+  geom_sf(data = ppseg, fill = NA, colour = 'tomato1', size = 1) +
+  theme_void() + 
+  theme(
+    panel.background = element_rect(fill = "transparent",colour = NA), 
+    plot.background = element_rect(fill = "transparent",colour = NA)
+  )
+
+fl <- 'figure/synth_seg.png'
+png(fl, family = 'Lato', res = 200, height = 2.5, width = 6, units = 'in', bg = 'transparent')
+print(p)
+dev.off()
