@@ -66,14 +66,13 @@ ppseg <- st_read('T:/05_GIS/PineyPoint/PP_segs.shp') %>%
 
 save(ppseg, file = 'data/ppseg.RData', version = 2)
 
+# sb watershed ------------------------------------------------------------
 
-# sbmask ------------------------------------------------------------------
-
-# sarasota bay mask
-sbmask <- st_read('T:/05_GIS/PineyPoint/SB_boundary.shp') %>% 
+# sarasota bay watershed
+sbshed <- st_read('T:/05_GIS/PineyPoint/SB_boundary.shp') %>% 
   st_transform(crs = 4326)
 
-save(sbmask, file = 'data/sbmask.RData', version = 2)
+save(sbshed, file = 'data/sbshed.RData', version = 2)
 
 # normal ranges -----------------------------------------------------------
 
