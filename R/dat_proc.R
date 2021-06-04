@@ -1170,7 +1170,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ## fldep ------------------------------------------------------------------
 
-fl <- fls[which(fls$name == 'FLDEP_20210601'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210604'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 fldep1 <- flsht %>% 
   clean_names %>% 
@@ -1347,81 +1347,81 @@ mpnrd1 <- bind_rows(out1all, out2all)
 
 ## pinco ------------------------------------------------------------------
 
-# lab results
-ids <- fls[grep('^PINCO_labresults', fls$name), 'id'] %>% pull(id)
-out1 <- NULL
-for(id in ids) {
-
-  # sleep to not bonk api limit
-  Sys.sleep(wait)
-
-  dat <- read_sheet(id)
-
-  tmp <- dat %>%
-    clean_names() %>%
-    select(
-      station = collection_site,
-      date = collect_date,
-      var = analyte_name,
-      val = formatted_result,
-      uni = result_units,
-      qual = qualifiers
-    ) %>%
-    mutate(
-      station = case_when(
-        station == 'PMOutfall' ~ 'PM Out',
-        station == 'TBEP-MCBHO2' ~ 'TBEP-MCBH02',
-        station %in% c('BH0', 'BH15', 'BH25') ~ paste0('TBEP-', station),
-        station == 'TBEP0' ~ 'TBEP-BH0',
-        station == 'TBEP15' ~ 'TBEP-BH15',
-        station == 'TBEP25' ~ 'TBEP-BH25',
-        station == 'Clamber 4' ~ 'CB4',
-        station == 'Clamber 6' ~ 'CB6',
-        station == 'E7-2A' ~ 'E7-A',
-        station == 'E7-2B' ~ 'E7-B',
-        station == 'E7-2C' ~ 'E7-C',
-        station == 'E7-2D' ~ 'E7-D',
-        grepl('\\sS$', station) ~ paste0('MC', station),
-        T ~ station
-      ),
-      station = gsub('\\sS$', '', station),
-      station = gsub('^PC\\s', 'PC', station),
-      station = gsub('^MC\\s', 'MC', station),
-      station = gsub('^Skyway\\s', 'Skyway', station),
-      var = case_when(
-        var == 'Ammonia' ~ 'nh34',
-        var == 'Nitrate+Nitrite (N)' ~ 'no23',
-        var == 'Orthophosphate as P(Dissolved)' ~ 'orthop',
-        var == 'Total Phosphorus' ~ 'tp',
-        var == 'Total Suspended Solids' ~ 'tss',
-        var == 'Turbidity' ~ 'turb',
-        var == 'Chlorophyll a (Corrected)' ~ 'chla',
-        var == 'Total Kjeldahl Nitrogen' ~ 'tkn',
-        T ~ var
-      ),
-      val = as.numeric(gsub('[^0-9.-]', '', val)),
-      uni = case_when(
-        uni == 'mg/L' ~ 'mgl',
-        uni == 'NTU' ~ 'ntu',
-        uni == 'mg/m3' ~ 'ugl',
-        T ~ uni
-      ),
-      source = 'pinco',
-      source = case_when(
-        station %in% c("TBEP-BH0", "TBEP-BH15", "TBEP-BH25", "TBEP-MCBH02") ~ 'tbep',
-        T ~ source
-      ),
-      date = as.Date(date)
-    ) %>%
-    filter(!station %in% c('MC- FB', 'PP-FB')) %>% # these are validation samples, no data
-    filter(var %in% parms$var)
-
-  if(nrow(tmp) == 0)
-    next()
-  
-  out1 <- bind_rows(out1, tmp)
-
-}
+# # lab results
+# ids <- fls[grep('^PINCO_labresults', fls$name), 'id'] %>% pull(id)
+# out1 <- NULL
+# for(id in ids) {
+# 
+#   # sleep to not bonk api limit
+#   Sys.sleep(wait)
+# 
+#   dat <- read_sheet(id)
+# 
+#   tmp <- dat %>%
+#     clean_names() %>%
+#     select(
+#       station = collection_site,
+#       date = collect_date,
+#       var = analyte_name,
+#       val = formatted_result,
+#       uni = result_units,
+#       qual = qualifiers
+#     ) %>%
+#     mutate(
+#       station = case_when(
+#         station == 'PMOutfall' ~ 'PM Out',
+#         station == 'TBEP-MCBHO2' ~ 'TBEP-MCBH02',
+#         station %in% c('BH0', 'BH15', 'BH25') ~ paste0('TBEP-', station),
+#         station == 'TBEP0' ~ 'TBEP-BH0',
+#         station == 'TBEP15' ~ 'TBEP-BH15',
+#         station == 'TBEP25' ~ 'TBEP-BH25',
+#         station == 'Clamber 4' ~ 'CB4',
+#         station == 'Clamber 6' ~ 'CB6',
+#         station == 'E7-2A' ~ 'E7-A',
+#         station == 'E7-2B' ~ 'E7-B',
+#         station == 'E7-2C' ~ 'E7-C',
+#         station == 'E7-2D' ~ 'E7-D',
+#         grepl('\\sS$', station) ~ paste0('MC', station),
+#         T ~ station
+#       ),
+#       station = gsub('\\sS$', '', station),
+#       station = gsub('^PC\\s', 'PC', station),
+#       station = gsub('^MC\\s', 'MC', station),
+#       station = gsub('^Skyway\\s', 'Skyway', station),
+#       var = case_when(
+#         var == 'Ammonia' ~ 'nh34',
+#         var == 'Nitrate+Nitrite (N)' ~ 'no23',
+#         var == 'Orthophosphate as P(Dissolved)' ~ 'orthop',
+#         var == 'Total Phosphorus' ~ 'tp',
+#         var == 'Total Suspended Solids' ~ 'tss',
+#         var == 'Turbidity' ~ 'turb',
+#         var == 'Chlorophyll a (Corrected)' ~ 'chla',
+#         var == 'Total Kjeldahl Nitrogen' ~ 'tkn',
+#         T ~ var
+#       ),
+#       val = as.numeric(gsub('[^0-9.-]', '', val)),
+#       uni = case_when(
+#         uni == 'mg/L' ~ 'mgl',
+#         uni == 'NTU' ~ 'ntu',
+#         uni == 'mg/m3' ~ 'ugl',
+#         T ~ uni
+#       ),
+#       source = 'pinco',
+#       source = case_when(
+#         station %in% c("TBEP-BH0", "TBEP-BH15", "TBEP-BH25", "TBEP-MCBH02") ~ 'tbep',
+#         T ~ source
+#       ),
+#       date = as.Date(date)
+#     ) %>%
+#     filter(!station %in% c('MC- FB', 'PP-FB')) %>% # these are validation samples, no data
+#     filter(var %in% parms$var)
+# 
+#   if(nrow(tmp) == 0)
+#     next()
+#   
+#   out1 <- bind_rows(out1, tmp)
+# 
+# }
 
 # compiled results
 ids <- fls[grep('^PINCO_compiledresults', fls$name), 'id'] %>% pull(id)
@@ -1489,9 +1489,19 @@ out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
       station == 'PMOutfall' ~ 'PM Out',
       station == 'TBEP-MCBHO2' ~ 'TBEP-MCBH02',
       station %in% c('BH0', 'BH15', 'BH25') ~ paste0('TBEP-', station),
+      station == 'TBEP0' ~ 'TBEP-BH0',
+      station == 'TBEP15' ~ 'TBEP-BH15',
+      station == 'TBEP25' ~ 'TBEP-BH25',
+      station %in% c('Clamber 4', 'Clambar4') ~ 'CB4',
+      station %in% c('Clamber 6', 'Clambar6') ~ 'CB6',
+      station %in% c('E7-2A', 'E7-2A-21-02') ~ 'E7-A',
+      station %in% c('E7-2B', 'E7-2B-21-02') ~ 'E7-B',
+      station %in% c('E7-2C', 'E7-2C-21-01') ~ 'E7-C',
+      station %in% c('E7-2D', 'E7-2D-21-02') ~ 'E7-D',
+      grepl('^DeSoto', station) ~ gsub('^DeSoto', 'Desoto', station),
+      grepl('\\sS$', station) ~ paste0('MC', station),
       T ~ station
     ),
-    station = gsub('^Skyway\\s', 'Skyway', station),
     source = case_when(
       station %in% c("TBEP-BH0", "TBEP-BH15", "TBEP-BH25", "TBEP-MCBH02") ~ 'tbep', 
       T ~ source
@@ -1563,7 +1573,7 @@ out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
 #   unique
 
 # there are diff samples by depth for in situ, avg out
-pinco1 <- bind_rows(out1, out2) %>% 
+pinco1 <- bind_rows(out2) %>% 
   group_by(station, date, source, var, uni, qual) %>% 
   summarise(
     val = mean(val, na.rm = T), 
