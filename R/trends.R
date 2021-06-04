@@ -14,7 +14,8 @@ data(bswqdat)
 data(bsstatloc)
 data(rsstatloc)
 data(ppseg)
-data(segmask)
+data(tbhished)
+data(sbshed)
 
 source('R/funcs.R')
 
@@ -40,8 +41,7 @@ nonbay <- c('BH01', 'P Port 2', 'P Port 3', 'PM Out', '20120409-01', 'PPC41', 'P
 
 vr <- 'tn'
 
-##
-# wq data
+# water quality plots -----------------------------------------------------
 
 # monitoring data
 rswqtmp <- rswqdat %>% 
@@ -155,8 +155,8 @@ for(flt in flts){
 
 }
 
-##
-# segments
+# pp segments -------------------------------------------------------------
+
 p <- ggplot() + 
   geom_sf(data = ppseg, fill = NA, colour = 'tomato1', size = 1) +
   theme_void() + 
@@ -170,35 +170,15 @@ png(fl, family = 'Lato', res = 200, height = 2.5, width = 6, units = 'in', bg = 
 print(p)
 dev.off()
 
-##
-# tracer plots
+# tracer plots ------------------------------------------------------------
 
 cols <- grDevices::colorRampPalette(rev(RColorBrewer::brewer.pal(11, 'Spectral')))
 
-# mask
-
-tmp1 <- tempfile(fileext = '.zip')
-tmp2 <- tempdir()
-
-drive_download(as_id("1EjIDcpNbBHvoJ09-wlEJDdDE7v323qEe"), path = tmp1, overwrite = TRUE)
-
-unzip(tmp1, exdir = tmp2) 
-
-bnd <- list.files(tmp2, full.names = T) %>% 
-  grep('\\.shp$', ., value = T) %>% 
-  st_read %>%
-  st_transform(crs = 4326) %>% 
-  st_intersection(tbshed) %>% 
-  st_union()
-
-
-sbmask <- st_read('T:/05_GIS/PineyPoint/SB_boundary.shp') %>% 
-  st_transform(crs = 4326)
-
-tmp1 <- bnd %>% 
+# mask for tb and sb
+tmp1 <- tbhished %>% 
   st_union %>% 
   st_geometry()
-tmp2 <- sbmask %>% 
+tmp2 <- sbshed %>% 
   st_union() %>% 
   st_geometry()
 
@@ -207,15 +187,14 @@ tmp <- c(tmp1, tmp2) %>%
   st_buffer(dist = 0.0001) %>% 
   st_buffer(dist = -0.0001)  
 
-segmask <- tmp %>% 
+allsegmask <- tmp %>% 
   st_bbox %>% 
   st_as_sfc() %>% 
   st_as_sf() %>% 
   st_difference(tmp)
 
-
 rst1 <- raster('data/raw/HIND_20210410_18UTC_modified.tif') %>%
-  mask(segmask) %>% 
+  mask(allsegmask) %>% 
   mask(ppseg) %>% 
   st_as_stars
 
@@ -234,7 +213,7 @@ p1 <- ggplot() +
   scale_fill_distiller(palette= 'Spectral', na.value = NA)
 
 rst2 <- raster('data/raw/SFC_20210425_12UTC_modified.tif') %>%
-  mask(segmask) %>% 
+  mask(allsegmask) %>% 
   mask(ppseg) %>% 
   st_as_stars
 
@@ -253,7 +232,7 @@ p2 <- ggplot() +
   scale_fill_distiller(palette= 'Spectral', na.value = NA)
 
 rst3 <- raster('data/raw/SFC_20210518_02UTC_modified.tif') %>%
-  mask(segmask) %>% 
+  mask(allsegmask) %>% 
   mask(ppseg) %>% 
   st_as_stars
 

@@ -30,7 +30,7 @@ parms <- tibble(
 
 save(parms, file = 'data/parms.RData', version = 2)
 
-# tb high res boundary ----------------------------------------------------
+# tb hires watershed boundary ---------------------------------------------
 
 # https://drive.google.com/file/d/1EjIDcpNbBHvoJ09-wlEJDdDE7v323qEe/view?usp=sharing
 
@@ -41,21 +41,27 @@ drive_download(as_id("1EjIDcpNbBHvoJ09-wlEJDdDE7v323qEe"), path = tmp1, overwrit
 
 unzip(tmp1, exdir = tmp2) 
 
-bnd <- list.files(tmp2, full.names = T) %>% 
+tbhished <- list.files(tmp2, full.names = T) %>% 
   grep('\\.shp$', ., value = T) %>% 
   st_read %>%
   st_transform(crs = 4326) %>% 
   st_intersection(tbshed) %>% 
   st_union()
 
-segmask <- bnd %>% 
-  st_bbox %>% 
-  st_as_sfc() %>% 
-  st_as_sf() %>% 
-  st_difference(bnd)
+save(tbhished, file = 'data/tbhished.RData', version = 2)
 
 file.remove(tmp1)
 file.remove(list.files(tmp2, full.names = T))
+
+# tb watershed mask -------------------------------------------------------
+
+data(tbhished)
+
+segmask <- tbhished %>% 
+  st_bbox %>% 
+  st_as_sfc() %>% 
+  st_as_sf() %>% 
+  st_difference(tbhished)
 
 save(segmask, file = 'data/segmask.RData', version = 2)
 
