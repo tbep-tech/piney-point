@@ -851,7 +851,21 @@ rsphydatpinco <- flphy %>%
       station == 'S. Cockroach 1' ~ 'SCR1', 
       station == 'S. Cockroach 2' ~ 'SCR2', 
       station == 'Cockroach 1' ~ 'CR1', 
-      station == 'Cockroach 2' ~ 'CR2', 
+      station == 'Cockroach 2' ~ 'CR2',
+      station %in% c('S4T1', 'S4T2', 'S4T3', 'S3T5', 'S3T6') ~ paste0(station, 'a'),
+      station %in% c('BH0', 'BH15', 'BH25') ~ paste0('TBEP-', station),
+      station == 'TBEP0' ~ 'TBEP-BH0',
+      station == 'TBEP15' ~ 'TBEP-BH15',
+      station == 'TBEP25' ~ 'TBEP-BH25',
+      grepl('^Skyway\\sE', station) ~ gsub('^Skyway\\sE', 'SkywayE-', station),
+      grepl('^Skyway\\sW', station) ~ gsub('^Skyway\\sW', 'SkywayW-', station),
+      station == 'MB1' ~ 'MB01', 
+      station == 'MC202'~ 'MC-202',
+      station == 'W8-A-21-PP' ~ 'W8 A 21 03',
+      station == 'W8-B-21-PP' ~ 'W8 B 21 03', 
+      station == 'W8-C-21-PP' ~ 'W8 C 21 03', 
+      station == 'W8-D-21-PP' ~ 'W8 D 21 03', 
+      grepl('^DeSoto\\s|^Desoto\\s', station) ~ gsub('^DeSoto\\s|^Desoto\\s', 'Desoto-', station),
       T ~ station
     ), 
     source = 'pinco', 
@@ -936,8 +950,12 @@ rsphydat <- rsphydat %>%
     species = gsub('sp$', 'sp.', species), 
     species = gsub('spp$', 'spp.', species),
     species = gsub('Karnia', 'Karenia', species),
-    species = gsub('\\spresent', '', species)
-  )
+    species = gsub('\\spresent', '', species), 
+    species = gsub('^Prorocentrum$|^Prorocentrum\\ssp\\.$', 'Prorocentrum sp.', species),
+    species = gsub('^Nitzchia$|^Nitzschia\\ssp\\.$', 'Nitzschia sp.', species),
+    species = gsub('^Rhizosolenia$|^Rhizosolenia\\sspp\\.$', 'Rhizosolenia sp.', species),
+  ) %>% 
+  filter(species != 'chains')
 
 # break out karenia samples in separate rows
 tmp <- rsphydat %>% 
