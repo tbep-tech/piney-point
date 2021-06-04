@@ -828,6 +828,14 @@ rsphydatfwri <- flphy2 %>%
   mutate(
     date = as.Date(date), 
     source = 'usf', 
+    station = case_when(
+      station %in% c('E PP01', 'PP01', 'PP 01') ~ 'PP01', 
+      station %in% c('E PP02', 'PP02', 'PP 02') ~ 'PP02', 
+      station %in% c('E PP03/USF Piney H (M)', 'PP 03/USF Piney H (M)') ~ 'PP03/USF Piney H (M)', 
+      station %in% c('E PP04', 'PP04', 'PP 04') ~ 'PP04', 
+      station %in% c('E PP05', 'PP05', 'PP 05') ~ 'PP05', 
+      T ~ station
+    ),
     typ = 'Qualitative'
   )
 
@@ -859,7 +867,7 @@ rsphydatpinco <- flphy %>%
       station == 'TBEP25' ~ 'TBEP-BH25',
       grepl('^Skyway\\sE', station) ~ gsub('^Skyway\\sE', 'SkywayE-', station),
       grepl('^Skyway\\sW', station) ~ gsub('^Skyway\\sW', 'SkywayW-', station),
-      station == 'MB1' ~ 'MB01', 
+      station == 'MB1' ~ 'MB-01', 
       station == 'MC202'~ 'MC-202',
       station == 'W8-A-21-PP' ~ 'W8 A 21 03',
       station == 'W8-B-21-PP' ~ 'W8 B 21 03', 
