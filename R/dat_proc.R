@@ -2023,6 +2023,7 @@ data(rsstatloc)
 data(rstrnpts)
 data(rscntdat)
 data(rsphypts)
+data(rsphydat)
 data(rstrndatsav)
 
 # response sampling locations
