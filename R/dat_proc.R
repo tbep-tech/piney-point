@@ -735,9 +735,10 @@ data(rscntthr)
 # file.remove(tmpfl)
 
 # from gdrive
-# https://docs.google.com/spreadsheets/d/19FWq7gjRfLj_aFIdFkQGXfZZNn-mlEDPvm5HUleGgb8/edit#gid=1628126622
+# 
+# https://docs.google.com/spreadsheets/d/1bFhEFg8AC91IDn1ujM5s7knteq69wYKDtQlAv15yti8/edit?usp=sharing
 
-rawdat <- read_sheet('19FWq7gjRfLj_aFIdFkQGXfZZNn-mlEDPvm5HUleGgb8')
+rawdat <- read_sheet('1bFhEFg8AC91IDn1ujM5s7knteq69wYKDtQlAv15yti8', skip = 8)
 
 # duplicate wq data are removed with rswqdat
 rscntdat <- rawdat %>% 
@@ -755,10 +756,13 @@ rscntdat <- rawdat %>%
     uni2 = paste0('(', uni, ')'),
     source = 'fldep', 
     station = gsub('Point\\-', 'Point ', station), 
-    station = gsub('\\sPoint\\s', ' ', station)
+    station = gsub('\\sPoint\\s', ' ', station), 
+    var = gsub('(^.*\\s)\\(.*\\)$', '\\1', var), 
+    val = unlist(val), 
+    val = as.numeric(val)
   ) %>% 
   filter(!grepl('Blank', station)) %>% 
-  filter(!var %in% c('Ammonia-N', 'Chlorophyll-a, Corrected', 'Chlorophyll-a, Uncorrected', 'Dominant sample taxon', 'Kjeldahl Nitrogen', 'NO2NO3-N', 'O-Phosphate-P', 'Total-P', 'TSS', 'Turbidity')) %>% 
+  filter(!var %in% c('Alpha-Counting Error', 'Alpha, Total', 'Ammonia-N', 'Chlorophyll-a, Corrected', 'Chlorophyll-a, Uncorrected', 'Dominant sample taxon', 'Kjeldahl Nitrogen', 'NO2NO3-N', 'O-Phosphate-P', 'Radium 228-Counting Error', 'Radium 226-Counting Error', 'Total-P', 'TSS', 'Turbidity')) %>% 
   unite('var', var, uni2, remove = F, sep = ' ') %>% 
   select(-uni2) 
 
@@ -1079,6 +1083,7 @@ ncfsta1 <- read.csv('data/raw/ncf_stations.csv') %>%
   )
 usfsta1 <- read.csv('data/raw/usf_stations.csv')
 tbepsta1 <- read.csv('data/raw/tbep_stations.csv')
+ufsta1 <- read.csv('data/raw/uf_stations.csv')
 
 # esa
 esa <- read.csv('data/raw/esa_stations.csv') 
@@ -1104,7 +1109,7 @@ esastat1 <- esa %>%
   select(source, station, lon, lat)
 
 # combine all
-rsstatloc <- bind_rows(epchcsta1, fldepsta1, mpnrdsta1, pincosta1, ncfsta1, usfsta1, tbepsta1, esastat1) %>% 
+rsstatloc <- bind_rows(epchcsta1, fldepsta1, mpnrdsta1, pincosta1, ncfsta1, usfsta1, tbepsta1, esastat1, ufsta1) %>% 
   mutate(
     source = source,
     source_lng = case_when(
@@ -1115,7 +1120,8 @@ rsstatloc <- bind_rows(epchcsta1, fldepsta1, mpnrdsta1, pincosta1, ncfsta1, usfs
       source == 'ncf' ~ 'New College Fl.', 
       source == 'tbep' ~ 'TBEP', 
       source == 'usf' ~ 'USF', 
-      source == 'esa' ~ 'ESA'
+      source == 'esa' ~ 'ESA', 
+      source == 'uf' ~ 'UF'
     )
   ) %>% 
   select(source_lng, source, station, lat, lon, comment) %>% 
@@ -1196,7 +1202,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ## fldep ------------------------------------------------------------------
 
-fl <- fls[which(fls$name == 'FLDEP_20210610'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210611'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 fldep1 <- flsht %>% 
   clean_names %>% 
@@ -1905,9 +1911,71 @@ for(id in ids){
 
 usf1 <- out1
 
+## uf ----------------------------------------------------------------------
+
+ids <- fls[grep('UF\\_Morrison', fls$name), 'id'] %>% pull(id)
+out1 <- NULL
+for(id in ids){
+  
+  Sys.sleep(wait)
+  flsht <- read_sheet(id)
+  outtmp <- flsht %>% 
+    clean_names %>% 
+    select(
+      station = tbep_transect_id,
+      uf_sample_id, 
+      site_description, 
+      source = sampling_partner,
+      date,
+      nh34_mgl = nh4n_mg_l, 
+      nh34_qual = nh4n_flag, 
+      no23_mgl = no3n_mg_l, 
+      no23_qual = no3n_flag, 
+      orthop_mgl = ortho_p_ug_l, 
+      orthop_qual = ortho_p_flag, 
+      tp_mgl = total_p_ug_l, 
+      tp_qual = total_p_flag
+    ) %>% 
+    mutate(
+      station = case_when(
+        uf_sample_id %in% c('TB017', 'TB019', 'TB024') ~ uf_sample_id, 
+        station == 'NA' ~ site_description, 
+        T ~ station
+      ), 
+      station = gsub('^SPP', 'SPPC', station),
+      source = tolower(source),
+      date = date(date), 
+      orthop_mgl = orthop_mgl / 1000, # ug/l to mg/l
+      tp_mgl = tp_mgl / 1000 # ug/l to mg/l
+    ) %>% 
+    select(-uf_sample_id, -site_description)
+  
+  outwq <- outtmp %>%
+    select(-matches('\\_qual$')) %>%
+    gather('var', 'val', -station, -source, -date) %>%
+    separate(var, c('var', 'uni'), sep = '_') %>% 
+    mutate(val = pmax(0, val))
+  
+  outqual <- outtmp %>%
+    select(date, station, source, matches('\\_qual$')) %>%
+    gather('var', 'qual', -date, -source, -station) %>%
+    mutate(var = gsub('\\_qual$', '', var)) 
+  
+  out <- full_join(outwq, outqual, by = c('date', 'station', 'var', 'source')) %>% 
+    group_by(source, station, date, var, uni, qual) %>% 
+    summarise(val = mean(val, na.rm = T), .groups = 'drop') %>% 
+    select(station, date, source, var, uni, val, qual) %>% 
+    filter(!is.na(val))
+  
+  out1 <- bind_rows(out1, out)
+  
+}
+
+uf1 <- out1
+
 ## combine all ------------------------------------------------------------
 
-rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1, usf1) %>%
+rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1, usf1, uf1) %>%
   ungroup %>% 
   unique %>%
   filter(!is.na(val)) %>%
