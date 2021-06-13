@@ -1051,8 +1051,6 @@ save(rsbntpts, file = 'data/rsbntpts.RData', version = 2)
 
 # coordinated response station locations ----------------------------------
 
-# these are stations actively being monitoring by four agencies
-
 epchcsta1 <- read.csv('data/raw/epc_stations.csv') %>% 
   mutate(
     source = 'epchc', 
@@ -1124,7 +1122,7 @@ rsstatloc <- bind_rows(epchcsta1, fldepsta1, mpnrdsta1, pincosta1, ncfsta1, usfs
       source == 'uf' ~ 'UF'
     )
   ) %>% 
-  select(source_lng, source, station, lat, lon, comment) %>% 
+  select(source_lng, source, station, lat, lon) %>% 
   arrange(source_lng, station)
 
 write.csv(rsstatloc, 'data/raw/wq_stations_all.csv', row.names = F)
@@ -1166,7 +1164,7 @@ rswqlns <- rsstatloc %>%
       len <- st_length(out) %>% 
         which.min
       out <- out[len]
-      
+
       return(out)
       
     })

@@ -1,5 +1,7 @@
 library(dplyr)
+library(tidyr)
 library(here)
+library(sf)
 
 load(file = here('data/rswqdat.RData'))
 load(file = here('data/rsstatloc.RData'))
