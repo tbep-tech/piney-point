@@ -5,9 +5,9 @@ test_that("Checking for duplicate stations by source in rsstatloc", {
     unique %>% 
     group_by(source) %>% 
     nest() %>% 
-    deframe %>% 
+    tibble::deframe() %>% 
     lapply(duplicated) %>% 
-    enframe %>% 
+    tibble::enframe() %>% 
     unnest(value)
     
   chk <- any(dups$value)
