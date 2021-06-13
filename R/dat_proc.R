@@ -1161,7 +1161,7 @@ rswqlns <- rsstatloc %>%
   nest() %>% 
   mutate(
     lns = purrr::map(data, function(x){
-      
+
       out <- st_nearest_points(x, bswqloc) 
       len <- st_length(out) %>% 
         which.min
@@ -1172,7 +1172,8 @@ rswqlns <- rsstatloc %>%
     })
   ) %>% 
   select(-data) %>%
-  unnest('lns') %>% 
+  unnest('lns') %>%
+  ungroup() %>% 
   st_as_sf() %>% 
   st_geometry()
 
