@@ -1154,13 +1154,14 @@ rswqnear <- rsstatloc %>%
   unique
 
 rswqlns <- rsstatloc %>% 
-  select(station) %>% 
-  group_by(station) %>% 
+  select(source, station) %>% 
+  group_by(source, station) %>% 
   nest() %>% 
   mutate(
     lns = purrr::map(data, function(x){
 
-      out <- st_nearest_points(x, bswqloc) 
+      out <- st_nearest_points(x, bswqloc) %>% 
+        st_cast('LINESTRING')
       len <- st_length(out) %>% 
         which.min
       out <- out[len]
