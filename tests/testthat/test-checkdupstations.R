@@ -1,7 +1,6 @@
 test_that("Checking for duplicate stations by source in rsstatloc", {
   
   dups <- rsstatloc %>% 
-    st_set_geometry(NULL) %>% 
     select(source, station) %>% 
     unique %>% 
     group_by(source) %>% 
