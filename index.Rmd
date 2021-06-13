@@ -661,7 +661,7 @@ rsmap1 <- reactive({
     # hover pt labels
     labs <- paste0('Station: ', tomap$station, ', Date: ', tomap$date, ', ', vrlb, ': ', round(tomap$val, 2))
   
-    m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, map.types = mptyps, layerId = tomap$station, popup = NULL)
+    m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, map.types = mptyps, popup = NULL)
     
   }
   
@@ -678,14 +678,14 @@ rsmap1 <- reactive({
     labs2 <- paste0('Station: ', tomap2$station, ', Date: ', tomap2$date, ', ', vrlb, ': ', round(tomap2$val, 2))
 
     if(nrow(tomap1) == 0)
-      m <- mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F, map.types = mptyps, layerId = tomap2$station, popup = NULL)
+      m <- mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F, map.types = mptyps, popup = NULL)
   
     if(nrow(tomap2) == 0)
-      m <- mapview(tomap1, cexbs = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0, layerId = tomap1$station, popup = NULL)
+      m <- mapview(tomap1, cexbs = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0, popup = NULL)
     
     if(nrow(tomap1) > 0 & nrow(tomap2) > 0)
-      m <- mapview(tomap1, cex = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0, layerId = tomap1$station, popup = NULL) +
-        mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F, map.types = mptyps, layerId = tomap2$station, popup = NULL)
+      m <- mapview(tomap1, cex = tomap1$cexs, label = labs1, legend = F, layer.name = F, col.regions = tomap1$cols, homebutton = F, map.types = mptyps, lwd = 0, popup = NULL) +
+        mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F, map.types = mptyps, popup = NULL)
     
   }
   
