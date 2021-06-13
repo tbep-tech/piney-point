@@ -1938,7 +1938,6 @@ for(id in ids){
     ) %>% 
     mutate(
       station = case_when(
-        uf_sample_id %in% c('TB017', 'TB019', 'TB024') ~ uf_sample_id, 
         station == 'NA' ~ site_description, 
         T ~ station
       ), 

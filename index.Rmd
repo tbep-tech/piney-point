@@ -85,7 +85,7 @@ names(stacols) <- sort(unique(rsallpts$source_lng))
 vrscols <- RColorBrewer::brewer.pal(n = 9, name = 'Blues')
 
 # variable color on cnt maps
-cntcols <- RColorBrewer::brewer.pal(n = 9, name = 'Purples')
+cntcols <- RColorBrewer::brewer.pal(n = 9, name = 'Greens')
 
 # variable color on 
 # value box colors
