@@ -1948,7 +1948,8 @@ for(id in ids){
       orthop_mgl = orthop_mgl / 1000, # ug/l to mg/l
       tp_mgl = tp_mgl / 1000 # ug/l to mg/l
     ) %>% 
-    select(-uf_sample_id, -site_description)
+    select(-uf_sample_id, -site_description) %>% 
+    filter(!grepl('^SSJS|St\\.\\sJoseph\\sSound$', station)) # remove st. joseph sound stations
   
   outwq <- outtmp %>%
     select(-matches('\\_qual$')) %>%
