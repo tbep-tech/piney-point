@@ -2103,8 +2103,8 @@ rsallpts <- list(
     filter(station %in% rstrndatsav$station) %>% 
     select(station, source), 
   `contaminants` = rscntdat %>%  
-    left_join(rsstatloc, ., by = 'station') %>% 
-    select(station, source = source.x) %>% 
+    inner_join(rsstatloc, ., by = c('station', 'source')) %>% 
+    select(station, source) %>% 
     unique,
   `algae` = rsphypts %>% 
     left_join(rsphydat, by = 'station') %>% 
