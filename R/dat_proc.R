@@ -830,6 +830,7 @@ rsphydatfwri <- flphy2 %>%
     othertox_ugl = `Other Toxin (micrograms/L)`
   ) %>% 
   mutate(
+    date = unlist(date),
     date = as.Date(date), 
     source = 'usf', 
     station = case_when(
