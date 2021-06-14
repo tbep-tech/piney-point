@@ -1656,12 +1656,12 @@ Column {.tabset .tabset-fade}
 column(12,
   column(3, HTML('<b>ALL DATA ARE PROVISIONAL, click on a station to graph results</b><br></br>')),
   column(9,
-    materialSwitch(inputId = 'rmvsta1', label = 'Remove stations on land near Piney Point (these can skew in-bay results)?', width = '100%')
+    materialSwitch(inputId = 'rmvsta1', label = 'Remove stations on land near Piney Point (these can skew in-bay results)?', value = T, width = '100%')
   )
 )
 column(12,
   column(3, 
-    selectInput('varsel1', HTML('<b>Select variable:</b>'), choices = vrs, selected = 'nh34')       
+    selectInput('varsel1', HTML('<b>Select variable:</b>'), choices = vrs, selected = 'chla')       
   ), 
   column(9, 
     renderUI({
@@ -1685,7 +1685,7 @@ column(12,
   ), 
   column(9,
     fillRow(
-    materialSwitch(inputId = 'rngemph', label = 'Emphasize results out of normal range?', width = '100%'),
+    materialSwitch(inputId = 'rngemph', label = 'Emphasize results out of normal range?', value = T, width = '100%'),
     renderUI({
       
       # input
