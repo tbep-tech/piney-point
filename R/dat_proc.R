@@ -627,6 +627,7 @@ rstrndatsav <- rstrndat %>%
   select(date, station, location, sav_species, sav_abundance, sav_bb, epibiota_density) %>% 
   group_by(date, station, location) %>% 
   filter(sav_species != 'NA') %>% 
+  filter(sav_species != '.') %>% 
   mutate(sav_species = factor(sav_species, levels = savlevs)) %>% 
   tidyr::complete(
     sav_species,  
