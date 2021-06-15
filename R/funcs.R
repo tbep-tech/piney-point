@@ -103,8 +103,7 @@ show_rstransect <- function(savdat, mcrdat, savsel, mcrsel, base_size = 12){
     unique %>% 
     sort
   
-  xlocs <- unique(savxlms, mcrxlms)
-  xlms <- range(xlocs)
+  xlms <- range(savxlms, mcrxlms)
   
   # get dates for factor levels
   # this makes sure that y values on plots are shared
@@ -121,21 +120,12 @@ show_rstransect <- function(savdat, mcrdat, savsel, mcrsel, base_size = 12){
   savdatfrm <- savdat %>%
     dplyr::mutate(
       Year = lubridate::year(date),
-      location = factor(location, levels = xlocs),
+      location = as.numeric(as.character(location)),
       pa = ifelse(bb == 0, 0, 1), 
       date = format(date, '%b %d'), 
       date = factor(date, levels = dts)
     ) %>% 
-    dplyr::select(Year, date, location, taxa, abundance, pa, bb) %>% 
-    group_by(Year) %>% 
-    complete(
-      date, location, taxa,
-      fill = list(pa = 0, bb = 0, abundance = NA)
-    ) %>% 
-    ungroup() %>% 
-    mutate(
-      location = as.numeric(as.character(location))
-    )
+    dplyr::select(Year, date, location, taxa, abundance, pa, bb)
   
   # sort color palette so its the same regardless of species selected
   savcol <- colpal(length(savlevs))
@@ -209,21 +199,12 @@ show_rstransect <- function(savdat, mcrdat, savsel, mcrsel, base_size = 12){
   mcrdatfrm <- mcrdat %>%
     dplyr::mutate(
       Year = lubridate::year(date),
-      location = factor(location, levels = xlocs),
+      location = as.numeric(as.character(location)),
       pa = ifelse(bb == 0, 0, 1), 
       date = format(date, '%b %d'), 
       date = factor(date, levels = dts)
     ) %>% 
-    dplyr::select(Year, date, location, taxa, abundance, pa, bb) %>% 
-    group_by(Year) %>% 
-    complete(
-      date, location, taxa,
-      fill = list(pa = 0, bb = 0, abundance = NA)
-    ) %>% 
-    ungroup() %>% 
-    mutate(
-      location = as.numeric(as.character(location))
-    )
+    dplyr::select(Year, date, location, taxa, abundance, pa, bb)
   
   # sort color palette so its the same regardless of species selected
   mcrcol <- c('tomato1', 'lightgreen', 'burlywood3', 'lightblue')

@@ -626,7 +626,6 @@ rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>%
 rstrndatsav <- rstrndat %>% 
   select(date, station, location, sav_species, sav_abundance, sav_bb, epibiota_density) %>% 
   group_by(date, station, location) %>% 
-  filter(sav_species != 'NA') %>% 
   filter(sav_species != '.') %>% 
   mutate(
     sav_species = factor(sav_species, levels = savlevs),
@@ -647,7 +646,7 @@ maxcols <- rstrndat$macroalgae_species %>%
 # you will get a warning with separate, this is normal
 rstrndatmcr <- rstrndat %>% 
   select(date, station, location, macroalgae_group, macroalgae_abundance, macroalgae_bb) %>% 
-  filter(macroalgae_group != 'NA') %>% 
+  # filter(macroalgae_group != 'NA') %>% 
   separate(macroalgae_group, maxcols, sep = ', ') %>% 
   gather('var', 'macroalgae_group', !!maxcols) %>% 
   filter(!is.na(macroalgae_group)) %>% 
@@ -660,7 +659,6 @@ rstrndatmcr <- rstrndat %>%
 
 # expand all by locations sampled each date to get true zeroes
 rstrndat <- bind_rows(rstrndatmcr, rstrndatsav) %>% 
-  filter(!is.na(bb)) %>% 
   group_by(date, station) %>% 
   complete(
     location, taxa,
@@ -673,7 +671,8 @@ rstrndat <- bind_rows(rstrndatmcr, rstrndatsav) %>%
       taxa %in% grplevs ~ 'mcr'
     )
   ) %>% 
-  select(date, station, location, typ, taxa, abundance, bb)
+  select(date, station, location, typ, taxa, abundance, bb) %>% 
+  filter(!is.na(taxa))
 
 save(rstrndat, file = 'data/rstrndat.RData', version = 2)
 
