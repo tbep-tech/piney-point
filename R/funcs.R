@@ -81,7 +81,7 @@ plo_fun <- function(wqdat, station, cols, parms){
 
 # function for plotting rapid response transect data
 # modified from show_transect in tbpetools
-show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, base_size = 12){
+show_rstransect <- function(trndat, mcrdat, savsel, mcrsel, base_size = 12){
 
   savlevs <- c('Thalassia testudinum', 'Halodule wrightii', 'Syringodium filiforme', 'Ruppia maritima', 'Halophila engelmannii', 'Halophila decipiens')
   grplevs <- c('Red', 'Green', 'Brown', 'Cyanobacteria')
@@ -93,14 +93,12 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   szrng <- c(2, 16)
 
   # xlims
-  savxlms <- rstrndatsav %>%
-    filter(station %in% !!station) %>%  
+  savxlms <- trndat %>%
     pull(location) %>% 
     unique %>% 
     sort
   
-  mcrxlms <- rstrndatmcr %>%
-    filter(station %in% !!station) %>%  
+  mcrxlms <- mcrdat %>%
     pull(location) %>% 
     unique %>% 
     sort
@@ -109,11 +107,9 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   
   # get dates for factor levels
   # this makes sure that y values on plots are shared
-  dts1 <- rstrndatsav %>% 
-    dplyr::filter(station %in% !!station) %>% 
+  dts1 <- trndat %>% 
     pull(date)
-  dts2 <- rstrndatmcr %>% 
-    dplyr::filter(station %in% !!station) %>% 
+  dts2 <- mcrdat %>% 
     pull(date)
   dts <- c(dts1, dts1) %>% 
     unique %>%
@@ -121,8 +117,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     format('%b %d')
 
   # prep sav plot data
-  savdat <- rstrndatsav %>%
-    dplyr::filter(station %in% !!station) %>%
+  savdat <- trndat %>%
     dplyr::mutate(
       Year = lubridate::year(date),
       location = as.numeric(location),
@@ -200,8 +195,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     guides(fill = guide_legend(override.aes = list(size = 7), order = 1))
   
   # prep mcr plot data
-  mcrdat <- rstrndatmcr %>%
-    dplyr::filter(station %in% !!station) %>%
+  mcrdat <- mcrdat %>%
     dplyr::mutate(
       Year = lubridate::year(date),
       location = as.numeric(location),

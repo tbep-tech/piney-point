@@ -1046,12 +1046,19 @@ rstrnsavsel <- reactive({
   if(is.null(trnsel2))
     trnsel2 <- rstrns[1]
 
-  out <- rstrndatsav %>% 
-    filter(station %in% !!trnsel2) %>% 
+  datout <- rstrndatsav %>% 
+    filter(station %in% !!trnsel2)
+    
+  selout <- datout %>% 
     filter(sav_bb > 0) %>% 
     pull(sav_species) %>% 
     unique %>% 
     as.character
+
+  out <- list(
+    datout = datout, 
+    selout = selout
+  )
   
   return(out)
   
@@ -1065,13 +1072,20 @@ rstrnmcrsel <- reactive({
   
   if(is.null(trnsel2))
     trnsel2 <- rstrns[1]
-  
-  out <- rstrndatmcr %>% 
-    filter(station %in% !!trnsel2) %>% 
+
+  datout <- rstrndatmcr %>% 
+    filter(station %in% !!trnsel2)  
+    
+  selout <- datout %>% 
     filter(macroalgae_bb > 0) %>% 
     pull(macroalgae_group) %>% 
     unique %>% 
     as.character
+  
+  out <- list(
+    datout = datout, 
+    selout = selout
+  )
   
   return(out)
   
@@ -1084,14 +1098,14 @@ rstrnplo1 <- reactive({
   savsel <- input$savsel
   mcrsel <- input$mcrsel
   rstrnsavsel <- rstrnsavsel()
-  trnsel2 <- input$rstrnmap1_marker_click$id
-  
-  if(is.null(trnsel2))
-    trnsel2 <- rstrns[1]
+  rstrnmcrsel <- rstrnmcrsel()
   
   req(!is.null(mcrsel) | !is.null(savsel))
   
-  p <- show_rstransect(rstrndatsav, rstrndatmcr, station = trnsel2, savsel = savsel, mcrsel = mcrsel, base_size = 18) 
+  trndat <- rstrnsavsel$datout
+  mcrdat <- rstrnmcrsel$datout
+  
+  p <- show_rstransect(trndat, mcrdat, savsel = savsel, mcrsel = mcrsel, base_size = 18) 
  
   return(p)
   
@@ -1951,12 +1965,12 @@ column(12,
   ), 
   column(4,
     renderUI(
-      selectInput(inputId = 'savsel', label = HTML('<b>Select SAV species:</b>'), choices = rstrnsavsel(), selected = rstrnsavsel(), multiple = T, selectize = T, width = '100%')
+      selectInput(inputId = 'savsel', label = HTML('<b>Select SAV species:</b>'), choices = rstrnsavsel()$selout, selected = rstrnsavsel()$selout, multiple = T, selectize = T, width = '100%')
     )
   ),
   column(4,
     renderUI(
-      selectInput(inputId = 'mcrsel', label = HTML('<b>Select macroalgae group:</b>'), choices = rstrnmcrsel(), selected = rstrnmcrsel(), multiple = T, selectize = T, width = '100%')
+      selectInput(inputId = 'mcrsel', label = HTML('<b>Select macroalgae group:</b>'), choices = rstrnmcrsel()$selout, selected = rstrnmcrsel()$selout, multiple = T, selectize = T, width = '100%')
     )
   )
 )
