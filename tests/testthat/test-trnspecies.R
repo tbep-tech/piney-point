@@ -1,6 +1,6 @@
 test_that("Checking if transect species are correct", {
   
-  chk <- anyNA(rstrndatsav$sav_species)
+  chk <- anyNA(rstrndat$taxa)
   
   expect_false(chk)
   
