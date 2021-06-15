@@ -117,8 +117,8 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     pull(date)
   dts <- c(dts1, dts1) %>% 
     unique %>%
-    format('%b %d') %>% 
-    sort
+    sort %>% 
+    format('%b %d')
 
   # prep sav plot data
   savdat <- rstrndatsav %>%
