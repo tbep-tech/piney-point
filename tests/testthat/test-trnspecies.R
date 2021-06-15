@@ -1,4 +1,4 @@
-test_that("Checking if sav species are correct", {
+test_that("Checking if transect species are correct", {
   
   chk <- anyNA(rstrndatsav$sav_species)
   

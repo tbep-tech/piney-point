@@ -628,16 +628,12 @@ rstrndatsav <- rstrndat %>%
   group_by(date, station, location) %>% 
   filter(sav_species != 'NA') %>% 
   filter(sav_species != '.') %>% 
-  mutate(sav_species = factor(sav_species, levels = savlevs)) %>% 
-  tidyr::complete(
-    sav_species,  
-    fill = list(sav_bb = 0)
-  ) %>% 
-  ungroup() %>% 
   mutate(
+    sav_species = factor(sav_species, levels = savlevs),
     station = as.character(station), 
     location = as.numeric(as.character(location))
-  )
+  ) %>% 
+  select(date, station, location, taxa = sav_species, abundance = sav_abundance, bb = sav_bb) 
 
 # find how many new macroalgae columns we'll need since can have multiple per cell
 maxcols <- rstrndat$macroalgae_species %>% 
@@ -656,22 +652,30 @@ rstrndatmcr <- rstrndat %>%
   gather('var', 'macroalgae_group', !!maxcols) %>% 
   filter(!is.na(macroalgae_group)) %>% 
   mutate(
-    macroalgae_group = factor(macroalgae_group, levels = grplevs)
+    macroalgae_group = factor(macroalgae_group, levels = grplevs),
+    station = as.character(station), 
+    location = as.numeric(as.character(location)), 
   ) %>% 
-  group_by(station, date, location) %>% 
-  tidyr::complete(
-    macroalgae_group,
-    fill = list(macroalgae_bb = 0)
-  ) %>%
+  select(date, station, location, taxa = macroalgae_group, abundance = macroalgae_abundance, bb = macroalgae_bb) 
+
+# expand all by locations sampled each date to get true zeroes
+rstrndat <- bind_rows(rstrndatmcr, rstrndatsav) %>% 
+  filter(!is.na(bb)) %>% 
+  group_by(date, station) %>% 
+  complete(
+    location, taxa,
+    fill = list(bb = 0, abundance = '<1%')
+  ) %>% 
   ungroup() %>% 
   mutate(
-    station = as.character(station), 
-    location = as.numeric(as.character(location))
+    typ = case_when(
+      taxa %in% savlevs ~ 'sav', 
+      taxa %in% grplevs ~ 'mcr'
+    )
   ) %>% 
-  select(date, station, location, macroalgae_group, macroalgae_abundance, macroalgae_bb) 
+  select(date, station, location, typ, taxa, abundance, bb)
 
-save(rstrndatsav, file = 'data/rstrndatsav.RData', version = 2)
-save(rstrndatmcr, file = 'data/rstrndatmcr.RData', version = 2)
+save(rstrndat, file = 'data/rstrndat.RData', version = 2)
 
 # for log
 tms <- Sys.time()
@@ -2094,7 +2098,7 @@ data(rstrnpts)
 data(rscntdat)
 data(rsphypts)
 data(rsphydat)
-data(rstrndatsav)
+data(rstrndat)
 
 # response sampling locations
 rsallpts <- list(

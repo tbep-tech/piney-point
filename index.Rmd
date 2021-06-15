@@ -44,8 +44,7 @@ load('data/trnpts.RData')
 load('data/trnlns.RData')
 load('data/rstrnpts.RData')
 load('data/rstrnlns.RData')
-load('data/rstrndatmcr.RData')
-load('data/rstrndatsav.RData')
+load('data/rstrndat.RData')
 load('data/macrodat.RData')
 load('data/rsbntpts.RData')
 load('data/bswqrngs.RData')
@@ -112,8 +111,8 @@ spp <- c("Halodule", "Syringodium", "Thalassia", "Halophila", "Ruppia", "Caulerp
 # seagrass transects near pp
 trns <- sort(unique(bstransect$Transect))
 
-# macroalgae transect near pp
-rstrns <- sort(unique(rstrndatsav$station))
+# response transects near pp
+rstrns <- sort(unique(rstrndat$station))
 
 # benthic sites
 rsbnts <- sort(unique(rsbntpts$station))
@@ -1046,12 +1045,14 @@ rstrnsavsel <- reactive({
   if(is.null(trnsel2))
     trnsel2 <- rstrns[1]
 
-  datout <- rstrndatsav %>% 
-    filter(station %in% !!trnsel2)
+  datout <- rstrndat %>% 
+    filter(station %in% !!trnsel2) %>% 
+    filter(typ == 'sav') %>% 
+    mutate(taxa = fct_drop(taxa))
     
   selout <- datout %>% 
-    filter(sav_bb > 0) %>% 
-    pull(sav_species) %>% 
+    filter(bb > 0) %>% 
+    pull(taxa) %>% 
     unique %>% 
     as.character
 
@@ -1073,12 +1074,14 @@ rstrnmcrsel <- reactive({
   if(is.null(trnsel2))
     trnsel2 <- rstrns[1]
 
-  datout <- rstrndatmcr %>% 
-    filter(station %in% !!trnsel2)  
+  datout <- rstrndat %>% 
+    filter(station %in% !!trnsel2) %>% 
+    filter(typ == 'mcr') %>% 
+    mutate(taxa = fct_drop(taxa))
     
   selout <- datout %>% 
-    filter(macroalgae_bb > 0) %>% 
-    pull(macroalgae_group) %>% 
+    filter(bb > 0) %>% 
+    pull(taxa) %>% 
     unique %>% 
     as.character
   

@@ -81,7 +81,7 @@ plo_fun <- function(wqdat, station, cols, parms){
 
 # function for plotting rapid response transect data
 # modified from show_transect in tbpetools
-show_rstransect <- function(trndat, mcrdat, savsel, mcrsel, base_size = 12){
+show_rstransect <- function(savdat, mcrdat, savsel, mcrsel, base_size = 12){
 
   savlevs <- c('Thalassia testudinum', 'Halodule wrightii', 'Syringodium filiforme', 'Ruppia maritima', 'Halophila engelmannii', 'Halophila decipiens')
   grplevs <- c('Red', 'Green', 'Brown', 'Cyanobacteria')
@@ -93,7 +93,7 @@ show_rstransect <- function(trndat, mcrdat, savsel, mcrsel, base_size = 12){
   szrng <- c(2, 16)
 
   # xlims
-  savxlms <- trndat %>%
+  savxlms <- savdat %>%
     pull(location) %>% 
     unique %>% 
     sort
@@ -103,11 +103,12 @@ show_rstransect <- function(trndat, mcrdat, savsel, mcrsel, base_size = 12){
     unique %>% 
     sort
   
-  xlms <- range(savxlms, mcrxlms)
+  xlocs <- unique(savxlms, mcrxlms)
+  xlms <- range(xlocs)
   
   # get dates for factor levels
   # this makes sure that y values on plots are shared
-  dts1 <- trndat %>% 
+  dts1 <- savdat %>% 
     pull(date)
   dts2 <- mcrdat %>% 
     pull(date)
@@ -117,14 +118,24 @@ show_rstransect <- function(trndat, mcrdat, savsel, mcrsel, base_size = 12){
     format('%b %d')
 
   # prep sav plot data
-  savdat <- trndat %>%
+  savdatfrm <- savdat %>%
     dplyr::mutate(
       Year = lubridate::year(date),
-      location = as.numeric(location),
-      pa = ifelse(sav_bb == 0, 0, 1), 
+      location = factor(location, levels = xlocs),
+      pa = ifelse(bb == 0, 0, 1), 
       date = format(date, '%b %d'), 
       date = factor(date, levels = dts)
-    ) 
+    ) %>% 
+    dplyr::select(Year, date, location, taxa, abundance, pa, bb) %>% 
+    group_by(Year) %>% 
+    complete(
+      date, location, taxa,
+      fill = list(pa = 0, bb = 0, abundance = NA)
+    ) %>% 
+    ungroup() %>% 
+    mutate(
+      location = as.numeric(as.character(location))
+    )
   
   # sort color palette so its the same regardless of species selected
   savcol <- colpal(length(savlevs))
@@ -135,12 +146,12 @@ show_rstransect <- function(trndat, mcrdat, savsel, mcrsel, base_size = 12){
   leglab <- 'Abundance (bb)'
 
   # data with species
-  toplo1a <- savdat %>%
-    dplyr::filter(sav_species %in% !!savsel) %>% 
+  toplo1a <- savdatfrm %>%
+    dplyr::filter(taxa %in% !!savsel) %>% 
     dplyr::filter(pa == 1) %>%
     dplyr::mutate(
-      sav_bb = round(sav_bb, 1),
-      tltp = paste0(sav_species, ', ', sav_abundance)
+      bb = round(bb, 1),
+      tltp = paste0(taxa, ', ', abundance)
       ) %>% 
     dplyr::arrange(date, location)
 
@@ -162,7 +173,7 @@ show_rstransect <- function(trndat, mcrdat, savsel, mcrsel, base_size = 12){
     ungroup()
   
   # data w/o species, no facet
-  toplo2a <- savdat %>%
+  toplo2a <- savdatfrm %>%
     group_by(date, location) %>%
     filter(sum(pa) == 0) %>%
     ungroup() %>%
@@ -171,7 +182,7 @@ show_rstransect <- function(trndat, mcrdat, savsel, mcrsel, base_size = 12){
   
   pa <- ggplot2::ggplot(toplo1a, ggplot2::aes(y = date, x = location)) +
     ggplot2::geom_point(data = toplo2a, alpha = 1, colour = 'black', size = 2) +
-    ggplot2::geom_point(aes(size = sav_bb, fill = sav_species), alpha = 0.8, pch = 21) +
+    ggplot2::geom_point(aes(size = bb, fill = taxa), alpha = 0.8, pch = 21) +
     ggplot2::scale_fill_manual(values = savcol) +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng) +
     ggplot2::theme_minimal(base_size = base_size, base_family = 'Roboto') +
@@ -193,16 +204,26 @@ show_rstransect <- function(trndat, mcrdat, savsel, mcrsel, base_size = 12){
       title = 'Submerged aquatic vegetation'
     ) + 
     guides(fill = guide_legend(override.aes = list(size = 7), order = 1))
-  
+
   # prep mcr plot data
-  mcrdat <- mcrdat %>%
+  mcrdatfrm <- mcrdat %>%
     dplyr::mutate(
       Year = lubridate::year(date),
-      location = as.numeric(location),
-      pa = ifelse(macroalgae_bb == 0, 0, 1), 
+      location = factor(location, levels = xlocs),
+      pa = ifelse(bb == 0, 0, 1), 
       date = format(date, '%b %d'), 
       date = factor(date, levels = dts)
-    ) 
+    ) %>% 
+    dplyr::select(Year, date, location, taxa, abundance, pa, bb) %>% 
+    group_by(Year) %>% 
+    complete(
+      date, location, taxa,
+      fill = list(pa = 0, bb = 0, abundance = NA)
+    ) %>% 
+    ungroup() %>% 
+    mutate(
+      location = as.numeric(as.character(location))
+    )
   
   # sort color palette so its the same regardless of species selected
   mcrcol <- c('tomato1', 'lightgreen', 'burlywood3', 'lightblue')
@@ -213,12 +234,12 @@ show_rstransect <- function(trndat, mcrdat, savsel, mcrsel, base_size = 12){
   leglab <- 'Abundance (bb)'
   
   # data with species
-  toplo1b <- mcrdat %>%
-    dplyr::filter(macroalgae_group %in% mcrsel) %>% 
+  toplo1b <- mcrdatfrm %>%
+    dplyr::filter(taxa %in% mcrsel) %>% 
     dplyr::filter(pa == 1) %>%
     dplyr::mutate(
-      macroalgae_bb = round(macroalgae_bb, 1),
-      tltp = paste0(macroalgae_group, ', ',  macroalgae_abundance)
+      bb = round(bb, 1),
+      tltp = paste0(taxa, ', ',  abundance)
       )
   
   # jitter duplicates
@@ -237,9 +258,9 @@ show_rstransect <- function(trndat, mcrdat, savsel, mcrsel, base_size = 12){
       )
     ) %>% 
     ungroup()
-  
+
   # data w/o species, no facet
-  toplo2b <- mcrdat %>%
+  toplo2b <- mcrdatfrm %>%
     group_by(date, location) %>%
     filter(sum(pa) == 0) %>%
     ungroup() %>%
@@ -249,7 +270,7 @@ show_rstransect <- function(trndat, mcrdat, savsel, mcrsel, base_size = 12){
   pb <- ggplot2::ggplot(toplo1b, ggplot2::aes(y = date, x = location)) +
     ggplot2::geom_point(data = toplo2b, colour = 'black', alpha = 1, size = 2) +
     ggplot2::geom_point(inherit.aes = F, aes(colour = 'Empty sample'), x = NA, y = NA) +
-    ggplot2::geom_point(aes(size = macroalgae_bb, fill = macroalgae_group), alpha = 0.8, pch = 21) +
+    ggplot2::geom_point(aes(size = bb, fill = taxa), alpha = 0.8, pch = 21) +
     ggplot2::scale_fill_manual(values = mcrcol) +
     ggplot2::scale_colour_manual(values = 'black') +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng, guide = F) +
