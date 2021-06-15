@@ -107,6 +107,19 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   
   xlms <- range(savxlms, mcrxlms)
   
+  # get dates for factor levels
+  # this makes sure that y values on plots are shared
+  dts1 <- rstrndatsav %>% 
+    dplyr::filter(station %in% !!station) %>% 
+    pull(date)
+  dts2 <- rstrndatmcr %>% 
+    dplyr::filter(station %in% !!station) %>% 
+    pull(date)
+  dts <- c(dts1, dts1) %>% 
+    unique %>%
+    format('%b %d') %>% 
+    sort
+
   # prep sav plot data
   savdat <- rstrndatsav %>%
     dplyr::filter(station %in% !!station) %>%
@@ -115,7 +128,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
       location = as.numeric(location),
       pa = ifelse(sav_bb == 0, 0, 1), 
       date = format(date, '%b %d'), 
-      date = factor(date, ordered = T)
+      date = factor(date, levels = dts)
     ) 
   
   # sort color palette so its the same regardless of species selected
@@ -125,7 +138,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
   
   # legend labels
   leglab <- 'Abundance (bb)'
-  
+
   # data with species
   toplo1a <- savdat %>%
     dplyr::filter(sav_species %in% !!savsel) %>% 
@@ -167,6 +180,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     ggplot2::scale_fill_manual(values = savcol) +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng) +
     ggplot2::theme_minimal(base_size = base_size, base_family = 'Roboto') +
+    ggplot2::scale_y_discrete(limits = dts, breaks = dts) + 
     ggplot2::scale_x_continuous(breaks = savxlms) +
     ggplot2::coord_cartesian(xlim = xlms) +
     ggplot2::theme(
@@ -193,7 +207,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
       location = as.numeric(location),
       pa = ifelse(macroalgae_bb == 0, 0, 1), 
       date = format(date, '%b %d'), 
-      date = factor(date, ordered = T)
+      date = factor(date, levels = dts)
     ) 
   
   # sort color palette so its the same regardless of species selected
@@ -246,6 +260,7 @@ show_rstransect <- function(rstrndatsav, rstrndatmcr, station, savsel, mcrsel, b
     ggplot2::scale_colour_manual(values = 'black') +
     ggplot2::scale_radius(limits = range(abubrks), labels = abulabs, breaks = abubrks, range = szrng, guide = F) +
     ggplot2::theme_minimal(base_size = base_size, base_family = 'Roboto') +
+    ggplot2::scale_y_discrete(limits = dts, breaks = dts) + 
     ggplot2::scale_x_continuous(breaks = mcrxlms) +
     ggplot2::coord_cartesian(xlim = xlms) +
     ggplot2::theme(
