@@ -1175,7 +1175,7 @@ rsphymap <- reactive({
   
   # update stasel3 with default 
   stasel3 <<- toadd$station
-  
+  browser()
   out <- mapview(tomap, homebutton = F, legend = F) %>% 
     .@map %>% 
     clearMarkers() %>%

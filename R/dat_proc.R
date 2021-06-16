@@ -895,9 +895,9 @@ rsphydatpinco <- flphy %>%
 
 # has TNTC for nanoplankton (too numerous to count), these are filtered
 # counts in cells/0.1mL, converted to cells/L
-id <- fls[grep('^EPC', fls$name), 'id'] %>% pull(id)
+id <- fls[grep('^EPC_Plankton$', fls$name), 'id'] %>% pull(id)
 flphy <- read_sheet(id)
-rsphydatepc <- flphy %>%
+rsphydatepc1 <- flphy %>%
   select(
     date = Date,
     station = Station,
@@ -937,6 +937,44 @@ rsphydatepc <- flphy %>%
     uni = 'cells/L'
   )
 
+# counts in cells/0.1mL, converted to cells/L
+# this sheet includes a bunch of phyto data not near PP
+
+data(bswqdat)
+
+id <- fls[grep('^EPC_PP', fls$name), 'id'] %>% pull(id)
+flphy <- read_sheet(id)
+rsphydatepc2 <- flphy %>%
+  select(
+    date = SampleTime,
+    station = StationNumber,
+    species = NAME,
+    val = COUNT
+  ) %>%
+  filter(!species %in% 'Nanoplankton') %>%
+  mutate(
+    date = date(date),
+    station = as.character(station),
+    val = val * 10, # cells/0.1mL to cells/mL,
+    val = val * 1000, # cells/L
+    valqual = case_when(
+      val < 1e3 ~ 'Not present/Background',
+      val >= 1e3 & val < 1e4 ~ 'Very low',
+      val >= 1e4 & val < 1e5 ~ 'Low',
+      val >= 1e5 & val < 1e6 ~ 'Medium',
+      val >= 1e6 & val ~ 'High'
+    ),
+    source = 'epchc',
+    typ = 'Quantitative',
+    uni = 'cells/L'
+  ) %>% 
+  filter(station %in% bswqdat$station)
+
+# there is some overlap between the two files
+rsphydatepc <- bind_rows(rsphydatepc1, rsphydatepc2) %>% 
+  arrange(date, station) %>% 
+  unique
+
 ## 
 # combine all
 
@@ -971,6 +1009,19 @@ rsphydat <- rsphydat %>%
     species = gsub('^Prorocentrum$|^Prorocentrum\\ssp\\.$', 'Prorocentrum sp.', species),
     species = gsub('^Nitzchia$|^Nitzschia\\ssp\\.$', 'Nitzschia sp.', species),
     species = gsub('^Rhizosolenia$|^Rhizosolenia\\sspp\\.$', 'Rhizosolenia sp.', species),
+    species = gsub('^TINTINNIDA$', 'Tintinnida', species), 
+    species = gsub('^Thalassionema nitzchioides$', 'Thalassionema nitzschioides', species),
+    species = gsub('^Thalassionema nitzchioides$', 'Thalassionema nitzschioides', species), 
+    species = gsub('^MIOZOA$', 'Miozoa', species),
+    species = gsub('^Gyrosigma$', 'Gyrosigma sp.', species),
+    species = gsub('^Gymnodinium$', 'Gymnodinium sp.', species),
+    species = gsub('^EUGLENOZOA$', 'Euglenozoa', species),
+    species = gsub('^CHLOROPHYTA$', 'Chlorophyta', species),
+    species = gsub('^Dictyocha$', 'Dictyocha sp.', species), 
+    species = gsub('^Mesodinium Fubrum$', 'Mesodinium rubrum', species), 
+    species = gsub('^Mixed Picoplankton$|^Nanoplankton$|^Mixed Picoplankton and Nanoplankton$', 'mixed algae', species),
+    species = gsub('^Protoperidinium$', 'Protoperidinium sp.', species),
+    species = gsub('^Protoperdinium pellucidum$', 'Protoperidinium pellucidum', species)
   ) %>% 
   filter(species != 'chains')
 
@@ -2104,7 +2155,7 @@ rsallpts <- list(
   `water quality` = rsstatloc %>%
     select(station, source), 
   `seagrass and macroalgae` = rstrnpts %>% 
-    filter(station %in% rstrndatsav$station) %>% 
+    filter(station %in% rstrndat$station) %>% 
     select(station, source), 
   `contaminants` = rscntdat %>%  
     inner_join(rsstatloc, ., by = c('station', 'source')) %>% 
