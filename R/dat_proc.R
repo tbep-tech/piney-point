@@ -1138,6 +1138,7 @@ ncfsta1 <- read.csv('data/raw/ncf_stations.csv') %>%
 usfsta1 <- read.csv('data/raw/usf_stations.csv')
 tbepsta1 <- read.csv('data/raw/tbep_stations.csv')
 ufsta1 <- read.csv('data/raw/uf_stations.csv')
+cospsta1 <- read.csv('data/raw/cosp_stations.csv')
 
 # esa
 esa <- read.csv('data/raw/esa_stations.csv') 
@@ -1163,7 +1164,7 @@ esastat1 <- esa %>%
   select(source, station, lon, lat)
 
 # combine all
-rsstatloc <- bind_rows(epchcsta1, fldepsta1, mpnrdsta1, pincosta1, ncfsta1, usfsta1, tbepsta1, esastat1, ufsta1) %>% 
+rsstatloc <- bind_rows(epchcsta1, fldepsta1, mpnrdsta1, pincosta1, ncfsta1, usfsta1, tbepsta1, esastat1, ufsta1, cospsta1) %>% 
   mutate(
     source = source,
     source_lng = case_when(
@@ -1175,7 +1176,9 @@ rsstatloc <- bind_rows(epchcsta1, fldepsta1, mpnrdsta1, pincosta1, ncfsta1, usfs
       source == 'tbep' ~ 'TBEP', 
       source == 'usf' ~ 'USF', 
       source == 'esa' ~ 'ESA', 
-      source == 'uf' ~ 'UF'
+      source == 'uf' ~ 'UF', 
+      source == 'sbep' ~ 'SBEP',
+      source == 'cosp' ~ 'City of St. Pete'
     )
   ) %>% 
   select(source_lng, source, station, lat, lon) %>% 
@@ -1258,7 +1261,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ## fldep ------------------------------------------------------------------
 
-fl <- fls[which(fls$name == 'FLDEP_20210618'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210620'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 fldep1 <- flsht %>% 
   clean_names %>% 
@@ -2029,9 +2032,72 @@ for(id in ids){
 
 uf1 <- out1
 
+## city of st pete --------------------------------------------------------
+
+ids <- fls[grep('COSP\\sOpen', fls$name), 'id'] %>% pull(id)
+out1 <- NULL
+for(id in ids){
+  
+  Sys.sleep(wait)
+  flsht <- read_sheet(id)
+  out <- flsht %>% 
+    clean_names %>% 
+    select(
+      station = site, 
+      date = sampled,
+      var = analyte, 
+      val = result, 
+      uni = units,
+      qual = dep_qualifier
+    ) %>% 
+    mutate(
+      date = mdy_hms(date),
+      date = date(date),
+      val = as.numeric(val),
+      var = case_when(
+        var == 'Ammonia-N' ~ 'nh34', 
+        var == 'Chlorophyll-a' ~ 'chla', 
+        var == 'Dissolved Oxygen' ~ 'do', 
+        var == 'Dissolved Oxygen Saturation' ~ 'dosat', 
+        var == 'Nitrate+Nitrite-N' ~ 'no23', 
+        var == 'Orthophosphate as P' ~ 'orthop', 
+        var == 'pH' ~ 'ph', 
+        var == 'Salinity' ~ 'sal', 
+        var == 'Secchi Disk' ~ 'secchi', 
+        var == 'Temperature' ~ 'temp', 
+        var == 'Total Kjeldahl Nitrogen' ~ 'tkn', 
+        var == 'Total Nitrogen' ~ 'tn', 
+        var == 'Total Phosphorous' ~ 'tp', 
+        var == 'TSS' ~ 'tss', 
+        var == 'Turbidity' ~ 'turb'
+      ),
+      uni = case_when(
+        uni %in% c('mg/L', 'mg/l') ~ 'mgl', 
+        uni == 'meter' ~ 'm', 
+        uni == 'mg/m3' ~ 'ugl', 
+        uni == 'NTU' ~ 'ntu', 
+        uni == 'PSU' ~ 'ppt', 
+        uni == 'deg C' ~ 'c', 
+        uni == 'SU' ~ 'none', 
+        uni == '%' ~ 'per'
+      ),
+      source = 'cosp'
+    ) %>% 
+    filter(var %in% parms$var) %>% 
+    group_by(source, station, date, var, uni, qual) %>% 
+    summarise(val = mean(val, na.rm = T), .groups = 'drop') %>% 
+    select(station, date, source, var, uni, val, qual) %>% 
+    filter(!is.na(val))
+  
+  out1 <- bind_rows(out1, out)
+  
+}
+
+cosp1 <- out1
+
 ## combine all ------------------------------------------------------------
 
-rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1, usf1, uf1) %>%
+rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1, usf1, uf1, cosp1) %>%
   ungroup %>% 
   unique %>%
   filter(!is.na(val)) %>%
@@ -2213,7 +2279,8 @@ rsallpts <- list(
       source == 'usf' ~ 'USF', 
       source == 'uf' ~ 'UF',
       source == 'esa' ~ 'ESA', 
-      source == 'sbep' ~ 'SBEP'
+      source == 'sbep' ~ 'SBEP', 
+      source == 'cosp' ~ 'City of St. Pete'
     ), 
     source_lng = case_when(
       source %in% c('usf', 'fldep') & type == 'algae' ~ 'FWC-FWRI', 

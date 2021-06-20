@@ -664,7 +664,7 @@ rsmap1 <- reactive({
   
     # hover pt labels
     labs <- paste0('Station: ', tomap$station, ', Date: ', tomap$date, ', ', vrlb, ': ', round(tomap$val, 2))
-  
+
     m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, map.types = mptyps, popup = NULL, layerId = tomap$id)
     
   }
@@ -673,13 +673,13 @@ rsmap1 <- reactive({
   if(nrow(tomap) != 0 & rngemph){
     
     req(rngsel1)
-    
+
     tomap1 <- tomap %>% filter(inrng != !!rngsel1)
     tomap2 <- tomap %>% filter(inrng == !!rngsel1)
     
     # hover pt labels
-    labs1 <- paste0('Station: ', tomap1$id, ', Date: ', tomap1$date, ', ', vrlb, ': ', round(tomap1$val, 2))
-    labs2 <- paste0('Station: ', tomap2$id, ', Date: ', tomap2$date, ', ', vrlb, ': ', round(tomap2$val, 2))
+    labs1 <- paste0('Station: ', tomap1$station, ', Date: ', tomap1$date, ', ', vrlb, ': ', round(tomap1$val, 2))
+    labs2 <- paste0('Station: ', tomap2$station, ', Date: ', tomap2$date, ', ', vrlb, ': ', round(tomap2$val, 2))
 
     if(nrow(tomap1) == 0)
       m <- mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F, map.types = mptyps, layerId = tomap2$id, popup = NULL)
