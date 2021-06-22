@@ -1021,7 +1021,9 @@ rsphydat <- rsphydat %>%
     species = gsub('^Mesodinium Fubrum$', 'Mesodinium rubrum', species), 
     species = gsub('^Mixed Picoplankton$|^Nanoplankton$|^Mixed Picoplankton and Nanoplankton$', 'mixed algae', species),
     species = gsub('^Protoperidinium$', 'Protoperidinium sp.', species),
-    species = gsub('^Protoperdinium pellucidum$', 'Protoperidinium pellucidum', species)
+    species = gsub('^Protoperdinium pellucidum$', 'Protoperidinium pellucidum', species), 
+    species = gsub('^Dominant\\staxon\\:\\s', '', species), 
+    species = gsub('dominant\\sspecies:\\s', '', species)
   ) %>% 
   filter(species != 'chains')
 
