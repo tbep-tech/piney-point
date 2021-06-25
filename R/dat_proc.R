@@ -1591,6 +1591,9 @@ out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
       station %in% c('E7-2B', 'E7-2B-21-02') ~ 'E7-B',
       station %in% c('E7-2C', 'E7-2C-21-01') ~ 'E7-C',
       station %in% c('E7-2D', 'E7-2D-21-02') ~ 'E7-D',
+      station %in% c("FD-A-21-03", "FD-B-21-03", "FD-C-21-03", "FD-D-21-03", "W7-A-21-03", 
+                     "W7-B-21-03", "W7-C-21-03", "W7-D-21-03", "W8-A-21-03", "W8-B-21-03", 
+                     "W8-C-21-03", "W8-D-21-03") ~ gsub('\\-', ' ', station),
       grepl('^DeSoto', station) ~ gsub('^DeSoto', 'Desoto', station),
       grepl('\\sS$', station) ~ paste0('MC', station),
       T ~ station
