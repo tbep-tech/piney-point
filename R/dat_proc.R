@@ -836,7 +836,7 @@ rsphydatfwri <- flphy2 %>%
   mutate(
     date = unlist(date),
     date = as.Date(date), 
-    source = 'usf', 
+    source = 'fwri', 
     station = case_when(
       station %in% c('E PP01', 'PP01', 'PP 01') ~ 'PP01', 
       station %in% c('E PP02', 'PP02', 'PP 02') ~ 'PP02', 
@@ -1085,10 +1085,16 @@ rsphypts <- rsphypts %>%
   st_as_sf(coords = c('lng', 'lat'), crs = 4326) %>% 
   mutate( 
     lng = st_coordinates(.)[,1],
-    lat = st_coordinates(.)[,2]
+    lat = st_coordinates(.)[,2], 
+    source_lng = case_when(
+      source == 'pinco' ~ 'Pinellas Co.', 
+      source == 'epchc' ~ 'Hillsborough Co.', 
+      source == 'fldep' ~ 'FWC-FWRI', 
+      source == 'fwri' ~ 'FWC-FWRI'
+    )
   ) %>% 
   select(
-    station, lng, lat, typ, col
+    source, source_lng, station, lng, lat, typ, col
   )
 
 save(rsphypts, file = 'data/rsphypts.RData', version = 2)
@@ -2237,7 +2243,7 @@ rsallpts <- list(
     select(station, source) %>% 
     unique,
   `algae` = rsphypts %>% 
-    left_join(rsphydat, by = 'station') %>% 
+    left_join(rsphydat, by = c('station', 'source')) %>% 
     select(station, source) %>%
     na.omit() %>% 
     unique
@@ -2292,7 +2298,7 @@ rsallpts <- list(
       source == 'cosp' ~ 'City of St. Pete'
     ), 
     source_lng = case_when(
-      source %in% c('usf', 'fldep') & type == 'algae' ~ 'FWC-FWRI', 
+      source %in% c('fwri', 'fldep') & type == 'algae' ~ 'FWC-FWRI', 
       T ~ source_lng
     )
   ) %>%

@@ -132,6 +132,12 @@ srcs <- rsstatloc %>%
   select(source_lng, source) %>% 
   unique
 
+# phyto sources lookup
+physrcs <- rsphypts %>% 
+  st_set_geometry(NULL) %>% 
+  select(source_lng, source) %>% 
+  unique
+
 # variables to select from available
 vrs <- parms %>% 
   select(lbs, var) %>% 
@@ -1189,7 +1195,7 @@ rsphymap <- reactive({
       weight = 1,
       fillOpacity = 1,
       radius= 4,
-      label = ~paste0('Station: ', station)
+      label = ~paste0('Station: ', station, ', Source: ', source_lng)
     ) %>% 
     addCircleMarkers(
       data = toadd,
@@ -1201,7 +1207,7 @@ rsphymap <- reactive({
       weight = 1,
       fillOpacity = 1,
       radius= 6,
-      label = ~paste0('Station: ', station)
+      label = ~paste0('Station: ', station, ', Source: ', source_lng)
     ) %>%  
     addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE)) %>% 
     addLegend("topright", title = 'Data type', opacity = 1, labels = phyleg$typ, colors = phyleg$col)  %>% 
@@ -1230,7 +1236,7 @@ observeEvent(input$rsphymap1_marker_click, {
       weight = 1,
       fillOpacity = 1,
       radius= 6,
-      label = ~paste0('Station: ', station)
+      label = ~paste0('Station: ', station, ', Source: ', source_lng)
     ) 
   
 })
@@ -1269,7 +1275,7 @@ observeEvent(input$dyssel3, {
       weight = 1,
       fillOpacity = 1,
       radius= 4,
-      label = ~paste0('Station: ', station)
+      label = ~paste0('Station: ', station, ', Source: ', source_lng)
     ) %>% 
     addCircleMarkers(
       data = toadd,
@@ -1281,7 +1287,7 @@ observeEvent(input$dyssel3, {
       weight = 1,
       fillOpacity = 1,
       radius= 6,
-      label = ~paste0('Station: ', station)
+      label = ~paste0('Station: ', station, ', Source: ', source_lng)
     ) %>% 
     addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE))
   
@@ -1303,7 +1309,7 @@ rsphymap2 <- reactive({
     unique
   
   tomap <- rsphypts %>% 
-    select(station) %>% 
+    select(station, source_lng) %>% 
     filter(station %in% stas) %>% 
     mutate(
       label = case_when(
@@ -1334,7 +1340,7 @@ rsphymap2 <- reactive({
       weight = 1,
       fillOpacity = 1,
       radius= tomap$cex,
-      label = ~paste0('Station: ', station)
+      label = ~paste0('Station: ', station, ', Source: ', source_lng)
     ) %>% 
     addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE)) %>%
     addLegend("topright", title = NULL, opacity = 1, labels = paste(physel1, 'present'), colors = col) 
@@ -1365,7 +1371,7 @@ rsphydat1 <- reactive({
   phyout <- rsphydat %>% 
     filter(station %in% stasel3) %>% 
     filter(date >= dyssel3[1] & date <= dyssel3[2]) %>% 
-    left_join(srcs, by = 'source')
+    left_join(physrcs, by = 'source')
   
   wqout <- rswqdat %>% 
     filter(station %in% stasel3) %>%
@@ -1391,13 +1397,7 @@ rsphydat2 <- reactive({
   out <- rsphydat %>% 
     filter(species %in% physel1) %>% 
     filter(date >= dyssel3[1] & date <= dyssel3[2]) %>% 
-    left_join(srcs, by = 'source') %>% 
-    mutate(
-      source_lng = case_when(
-        source_lng %in% c('Florida DEP', 'USF') ~ 'FWC-FWRI', 
-        T ~ source_lng
-      )
-    ) %>% 
+    left_join(physrcs, by = 'source') %>% 
     select(
       source_lng,
       station,
@@ -1480,12 +1480,6 @@ rsphytab1 <- reactive({
   out <- NULL
   if(typ == 'Qualitative') 
     out <- phydat %>% 
-      mutate(
-        source_lng = case_when(
-          source_lng %in% c('Florida DEP', 'USF') ~ 'FWC-FWRI', 
-          T ~ source_lng
-        )
-      ) %>% 
       select(
         Source = source_lng,
         Station = station,
@@ -1929,16 +1923,7 @@ Select the station to view by clicking a marker on the map.  The station map on 
 
 For all stations, water quality data collected at the station will also be shown in a table below the algal results, if available.  You can choose which water quality variable is shown from the selection menu at the top. 
 
-Stations on the map that have different names but occur at the same location are slightly offset from each other for easier viewing.  Data (phytoplankton or water quality) from stations at the same location are not combined in the tables or plots to not mix data collected with potentially different methods used by different labs.  Overlapping stations include:
-
-* USF Piney 26 - USF Piney 15
-* USF Piney 32 - USF Piney 23
-* USF Piney 27 - USF Piney 19
-* USF Piney B - USF Piney 16
-* Piney 6 - 90
-* Piney 19 - 16
-* Piney 20 - 84
-* Piney 7 - 21
+Stations on the map that have different names but occur at the same location are slightly offset from each other for easier viewing.  Data (phytoplankton or water quality) from stations at the same location are not combined in the tables or plots to not mix data collected with potentially different methods used by different labs.
 
 #### Selecting taxa from a menu
 
