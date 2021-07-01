@@ -1019,7 +1019,8 @@ rsphydat <- rsphydat %>%
     species = gsub('^Protoperidinium$', 'Protoperidinium sp.', species),
     species = gsub('^Protoperdinium pellucidum$', 'Protoperidinium pellucidum', species), 
     species = gsub('^Dominant\\staxon\\:\\s', '', species), 
-    species = gsub('dominant\\sspecies:\\s', '', species)
+    species = gsub('dominant\\sspecies:\\s', '', species), 
+    species = gsub('^Thalassiosira sp\\,\\sKarenia brevis$', 'Thalassiosira sp.; Karenia brevis', species)
   ) %>% 
   filter(species != 'chains')
 
@@ -1273,13 +1274,13 @@ fldep1 <- flsht %>%
     station = station_id, 
     date = sample_date, 
     secchi_m = secchi_depth_m, 
-    temp_c = water_temperature_c_surface, 
+    temp_c = water_temperature_o_c_surface, 
     sal_ppt = salinity_0_00_surface, 
     dosat_per = d_o_percent_sat_surface, 
     ph_none = p_h_surface, 
     nh34_mgl = ammonia_n_mg_n_l, 
     orthop_mgl = orthophosphate_p_mg_p_l, 
-    chla_ugl = chlorophyll_a_corrected_mg_l, # this is ugl, janitor think mu is m
+    chla_ugl = chlorophyll_a_corrected_aeg_l, # this is ugl, janitor think mu is m
     turb_ntu = turbidity_ntu, 
     tp_mgl = total_phosphorus_mg_p_l, 
     tn_mgl = total_nitrogen_calculated_mg_n_l,
