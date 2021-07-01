@@ -688,29 +688,25 @@ writeLines(tms, 'logs/rstrnlog.txt')
 gdrive_pth <- 'https://drive.google.com/drive/u/0/folders/1xiLuuvXQsiOWxLBZKq_81dA8ajVn9w2G'
 
 fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
-fl <- fls[which(fls$name == 'SBEP_TBEP_Rapid_Macroalgae_Weight_Data'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'Rapid_Macroalgae_Weight_Data'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 
-macrodat <- flsht %>% 
+rstrnwts <- flsht %>% 
   mutate(
     date = as.Date(date),
     genus = case_when(
-      genus == 'ACAN' ~ 'Acan', 
-      genus == 'CODIUM' ~ 'Codium', 
-      genus == 'GRAC' ~ 'Grad', 
-      genus == 'GRAC/ACAN' ~ 'Grac/Acan', 
-      genus == 'GRAC/EUCH' ~ 'Grac/Euch', 
-      genus == 'GRAC/HALY' ~ 'Grac/Haly', 
-      genus == 'HYP/GRAC' ~ 'Hyp/Grac', 
-      genus == 'LAUR' ~ 'Laur', 
-      genus == 'MIXED RED' ~ 'Mixed Red', 
-      genus == 'ULVA' ~ 'Ulva', 
-      genus == 'UNKOWN' ~ 'Unknown',
+      genus == 'Acanthophora,Gracilaria' ~ 'Acanthophora and Gracilaria', 
+      genus %in% c('Lynbgya', 'Lynbya') ~ 'Lyngbya', 
+      genus == 'Mixed Drift Red' ~ 'Mixed Drift Reds',
       T ~ genus
+    ), 
+    station = case_when(
+      station == 'STBC1' ~ 'STCB1', 
+      T ~ station
     )
   )
 
-save(macrodat, file = 'data/macrodat.RData', version = 2)
+save(rstrnwts, file = 'data/rstrnwts.RData', version = 2)
 
 # contaminants from DEP ---------------------------------------------------
 
