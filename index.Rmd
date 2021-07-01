@@ -1628,7 +1628,7 @@ valueBox(vars, 'Parameters monitored', color = boxcol, icon = 'fa-vial')
 ### 
 
 ```{r}
-valueBox(dysm, 'Days of sampling', color = boxcol, icon = 'fa-calendar')
+valueBox(dysm, 'Days with samples', color = boxcol, icon = 'fa-calendar')
 ```
 
 ### 
