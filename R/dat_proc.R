@@ -569,7 +569,7 @@ abulevs <- c('<1%', '1-5%', '6-25%', '26-50%', '51-75%', '76-100%')
 
 rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>% 
   mutate(
-    date = as.Date(date)
+    date = as.Date(Date)
   ) %>% 
   select(
     date, 
