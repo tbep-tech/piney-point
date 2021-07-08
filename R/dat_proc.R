@@ -82,7 +82,7 @@ save(sbshed, file = 'data/sbshed.RData', version = 2)
 
 # normal ranges -----------------------------------------------------------
 
-# get March, April ranges from 2006 to present
+# 2006 to 2020 by month, epc and manco data
 
 data(parms)
 
@@ -177,8 +177,8 @@ bswqrngsepchc <- epcraw %>%
   mutate(
     val = as.numeric(val)
   ) %>% 
-  filter(yr > 2005 & mo %in% c(3, 4)) %>% 
-  group_by(station, var, uni) %>% 
+  filter(yr > 2005 & yr < 2021) %>% 
+  group_by(station, mo, var, uni) %>% 
   summarise(
     lat = mean(lat, na.rm = T), 
     lng = mean(lng, na.rm = T),
@@ -255,8 +255,8 @@ bswqrngsmpnrd <- mandat %>%
       T ~ uni
     )
   ) %>%  
-  filter(yr > 2005 & mo %in% c(3, 4)) %>% 
-  group_by(station, var, uni) %>% 
+  filter(yr > 2005 & yr < 2021) %>% 
+  group_by(station, mo, var, uni) %>% 
   summarise(
     lat = mean(lat, na.rm = T), 
     lng = mean(lng, na.rm = T),
@@ -2152,25 +2152,28 @@ rswqdat <- rswqdat %>%
 
 # sf object of bswq stations
 bswqloc <- bswqrngs %>% 
-  select(bswqstation, var, lat, lng) %>% 
+  select(bswqstation, mo, var, lat, lng) %>% 
   unique() %>% 
   as.data.frame(stringsAsFactors = F) %>% 
   st_as_sf(coords = c('lng', 'lat'), crs = prj)
 
-# nearest epc stations to rswq stations
-rswqnear <- rswqdat %>% 
-  select(station, var) %>% 
+# nearest longterm stations to rswq stations
+rswqnear <- rswqdat %>%
+  mutate(mo = month(date)) %>% 
+  select(station, source, mo, var) %>% 
   unique %>% 
-  inner_join(rsstatloc, ., by = 'station') %>% 
-  select(station, var) %>% 
-  group_by(var) %>% 
+  inner_join(rsstatloc, ., by = c('station', 'source')) %>% 
+  select(station, source, mo, var) %>% 
+  unique() %>% 
+  group_by(station, source, mo, var) %>% 
   nest() %>% 
   mutate(
-    bswqstation = purrr::pmap(list(var, data), function(var, data){
+    bswqstation = purrr::pmap(list(mo, var, data), function(mo, var, data){
       
       # subset ref stations by var
       varsel <- var
-      bswqlocsub <- bswqloc %>% dplyr::filter(var %in% varsel)
+      mosel <- mo
+      bswqlocsub <- bswqloc %>% dplyr::filter(var %in% varsel & mo %in% mosel)
       
       # find nearest
       out <- data %>% 
@@ -2186,13 +2189,13 @@ rswqnear <- rswqdat %>%
   select(-data) %>% 
   unnest('bswqstation') %>% 
   select(-geometry) %>% 
-  ungroup %>% 
-  unique
+  ungroup
 
 # add column if in/out of range based on closest epc station
 rswqdat <- rswqdat %>% 
-  left_join(., rswqnear, by = c('station', 'var')) %>% 
-  left_join(., bswqrngs, by = c('bswqstation', 'var', 'uni')) %>% 
+  mutate(mo = month(date)) %>% 
+  left_join(., rswqnear, by = c('station', 'var', 'mo', 'source')) %>% 
+  left_join(., bswqrngs, by = c('bswqstation', 'var', 'mo', 'uni')) %>% 
   rename(source = source.x) %>% 
   select(-source.y) %>% 
   rowwise() %>% 
@@ -2208,7 +2211,7 @@ rswqdat <- rswqdat %>%
   ) %>% 
   unite(nrmrng, c('minv', 'maxv'), sep = '-') %>% 
   ungroup %>% 
-  select(-avev, -stdv, -sigdig, -lat, -lng)
+  select(-mo, -avev, -stdv, -sigdig, -lat, -lng)
 
 save(rswqdat, file = 'data/rswqdat.RData', version = 2)
 

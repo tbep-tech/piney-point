@@ -29,6 +29,7 @@ library(reactable)
 library(tbeptools)
 library(patchwork)
 library(shinyWidgets)
+library(lubridate)
 
 source('R/funcs.R')
 
@@ -1726,7 +1727,7 @@ Use the variable selection menu on the top to view results for a measured water 
 
 What is the normal range for a parameter?
 
-The "normal range" is based on the long-term March/April average plus and minus 1 standard deviation of the mean for each parameter.  The long-term values that are compared to the current results are from baseline data at the permanent (reference) station nearest to the current water quality station. Many, but not all, of the current sampling stations are new locations selected to best characterize potential changes in water quality near Piney Point. See the [REFERENCE STATIONS](https://shiny.tbep.org/piney-point/#section-reference-stations) map to view the current water quality stations relative to the reference stations used to establish the normal range.  The station used as reference for the normal range is shown in the table, together with the estimated normal range. The normal ranges change by location.  If a parameter measured at the current station is unavailable for comparison at the nearest reference station, the normal range is used from the next closest reference station.  
+The "normal range" is based on the long-term average plus and minus 1 standard deviation of the mean for the month of observation of each parameter. The long-term values that are compared to the current results are from baseline data at the permanent (reference) station nearest to the current water quality station where data are available. Many, but not all, of the current sampling stations are new locations selected to best characterize potential changes in water quality near Piney Point. See the [REFERENCE STATIONS](https://shiny.tbep.org/piney-point/#section-reference-stations) map to view the current water quality stations relative to the reference stations used to establish the normal range. The station used as reference for the normal range is shown in the table, together with the estimated normal range. The normal ranges change by location and month. If a parameter measured at the current station is unavailable for comparison for the nearest reference station and given month, the normal range is used from the next closest reference station where the parameter is available. 
 
 How are the data interpreted? 
 

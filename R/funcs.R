@@ -286,7 +286,8 @@ show_rstransect <- function(savdat, mcrdat, savsel, mcrsel, base_size = 12){
 # function for creating popup plot with mapview click
 rswqpopup_plo <- function(station, datin){
   
-  toplo <- datin %>% 
+  # monitoring data
+  toplo1 <- datin %>% 
     filter(station == !!station) %>% 
     separate(nrmrng, c('minrng', 'maxrng'), sep = '-') %>% 
     mutate(
@@ -294,16 +295,31 @@ rswqpopup_plo <- function(station, datin){
       maxrng = as.numeric(maxrng)
     )
   
-  ylb <- unique(toplo$lbs)
-  minrng <- unique(toplo$minrng)
-  maxrng <- unique(toplo$maxrng)
-  ylm <- range(c(minrng, maxrng, toplo$val), na.rm = TRUE)
+  # reference data
+  toplo2 <- toplo1 %>% 
+    select(date, minrng, maxrng) %>%
+    mutate(
+      mo = lubridate::month(date)
+    ) %>% 
+    group_by(mo) %>% 
+    mutate(
+      datestr = floor_date(date, unit = 'month'),
+      dateend = ceiling_date(date, unit = 'month')
+    ) %>% 
+    ungroup %>% 
+    select(-date) %>% 
+    unique
+  
+  ylb <- unique(toplo1$lbs)
+  minrng <- unique(toplo1$minrng)
+  maxrng <- unique(toplo1$maxrng)
+  ylm <- range(c(minrng, maxrng, toplo1$val), na.rm = TRUE)
 
   out <- ggplot() + 
-    geom_line(data = toplo, aes(x = date, y = val)) + 
-    geom_point(data = toplo, aes(x = date, y = val), size = 2) + 
-    geom_rect(aes(xmin = min(toplo$date) - 5, xmax = max(toplo$date) + 5, ymin = minrng, ymax = maxrng, fill = 'Normal range'), alpha = 0.2) +
-    coord_cartesian(ylim = ylm, xlim = range(toplo$date)) + 
+    geom_line(data = toplo1, aes(x = date, y = val)) + 
+    geom_point(data = toplo1, aes(x = date, y = val), size = 2) + 
+    geom_rect(data = toplo2, aes(xmin = datestr, xmax = dateend, ymin = minrng, ymax = maxrng, fill = 'Monthly normal range', group = mo), alpha = 0.2) +
+    coord_cartesian(ylim = ylm, xlim = range(toplo1$date)) + 
     scale_fill_manual(values = 'blue') +
     theme_minimal(base_size = 18) + 
     theme(
