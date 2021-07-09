@@ -1266,7 +1266,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ## fldep ------------------------------------------------------------------
 
-fl <- fls[which(fls$name == 'FLDEP_20210705'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210709'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 fldep1 <- flsht %>% 
   clean_names %>% 
@@ -1686,32 +1686,42 @@ pinco1 <- bind_rows(out2) %>%
 
 ## ncf --------------------------------------------------------------------
 
-# sleep to not bonk api limit
-Sys.sleep(wait)
+ids <- fls[grepl('^NCF\\_waterquality', fls$name), 'id'] %>% pull(id) 
 
-fl <- fls[which(fls$name == 'NCF_waterquality_Apr2021'), 'id'] %>% pull(id)
-flsht <- read_sheet(fl)
-ncf1 <- flsht %>% 
-  select(
-    station = Set, 
-    date = Date, 
-    temp = Temp_C, 
-    secchi = Turbidity_m, 
-    sal = Salinity_ppt,
-    do = DO_mg
-  ) %>% 
-  gather('var', 'val', -station, -date) %>% 
-  mutate(
-    date = as.Date(date),
-    source = 'ncf', 
-    qual = NA_character_, 
-    uni = case_when(
-      var == 'temp' ~ 'c', 
-      var == 'secchi' ~ 'm', 
-      var == 'sal' ~ 'ppt', 
-      var == 'do' ~ 'mgl'
+ncfout1 <- NULL
+for(id in ids){
+  
+  # sleep to not bonk api limit
+  Sys.sleep(wait)
+  
+  flsht <- read_sheet(id)
+  tmp <- flsht %>% 
+    select(
+      station = Set, 
+      date = Date, 
+      temp = Temp_C, 
+      secchi = Turbidity_m, 
+      sal = Salinity_ppt,
+      do = DO_mg
+    ) %>% 
+    gather('var', 'val', -station, -date) %>% 
+    mutate(
+      date = as.Date(date),
+      source = 'ncf', 
+      qual = NA_character_, 
+      uni = case_when(
+        var == 'temp' ~ 'c', 
+        var == 'secchi' ~ 'm', 
+        var == 'sal' ~ 'ppt', 
+        var == 'do' ~ 'mgl'
+      )
     )
-  )
+  
+  ncfout1 <- bind_rows(ncfout1, tmp)
+
+}
+
+ncf1 <- ncfout1
 
 ## epc --------------------------------------------------------------------
 
