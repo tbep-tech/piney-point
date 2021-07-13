@@ -23,6 +23,7 @@ library(mapview)
 library(sf)
 library(leaflet)
 library(WtRegDO)
+library(shinyWidgets)
 
 source('R/funcs.R')
 
@@ -69,11 +70,24 @@ datsel <- reactive({
   varsel1 <- input$varsel1
   varsel2 <- input$varsel2
   dtsel <- input$dtsel
-  
-  out <- lobodat %>% 
+
+  dat <- lobodat %>% 
     select(DateTimeStamp, !!varsel1, !!varsel2) %>% 
     filter(as.Date(DateTimeStamp) >= dtsel[1] & as.Date(DateTimeStamp) <= dtsel[2])
+  
+  datsmt <- dat %>% 
+    mutate_if(is.numeric, function(x){
+      stats::filter(x, rep(1 / 24, 24))
+    })
 
+  out <- full_join(dat, datsmt, by = 'DateTimeStamp') %>% 
+    rename_if(grepl('\\.x$', names(.)), function(x){
+      gsub('\\.x$', '', x)
+    }) %>% 
+    rename_if(grepl('\\.y$', names(.)), function(x){
+      gsub('\\.y$', '_smth', x)
+    })
+  
   return(out)
   
 })
@@ -97,9 +111,10 @@ tsplo <- reactive({
   # inputs
   varsel1 <- input$varsel1
   varsel2 <- input$varsel2
+  addtrn <- input$addtrn
   dtsel <- input$dtsel
   datsel <- datsel()
-  
+  browser()
   # dtsel to posix for coord_cartesian
   dtsel <- as.POSIXct(c(dtsel[1], dtsel[2] + 1), tz = attr(datsel$DateTimeStamp, 'tzone'))
   
@@ -137,6 +152,17 @@ tsplo <- reactive({
     theme_minimal(base_size = 16) + 
     labs(x = lb1, y = lb2) + 
     geom_smooth(method = 'lm')
+  
+  # add smooth trend line
+  if(addtrn){
+    
+    p1 <- p1 + 
+      geom_line(aes_string(y = paste0(varsel1, '_smth')), color = 'tomato1', size = 1)
+    
+    p2 <- p2 + 
+      geom_line(aes_string(y = paste0(varsel2, '_smth')), color = 'tomato1', size = 1)
+    
+  }
   
   p <- (p1 / p2) | p3
   
@@ -222,6 +248,10 @@ column(12,
 
 column(12, 
   sliderInput('dtsel', 'Select date range:', min = dtrng[1], max =  dtrng[2], value = dtrng, timeFormat="%Y-%m-%d")
+)
+
+column(12, 
+  materialSwitch(inputId = 'addtrn', label = 'Add 24hr mean trend?', value = F, width = '100%')       
 )
 
 HTML('<br>')
