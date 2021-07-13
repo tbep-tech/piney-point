@@ -77,7 +77,7 @@ datsel <- reactive({
   
   datsmt <- dat %>% 
     mutate_if(is.numeric, function(x){
-      stats::filter(x, rep(1 / 24, 24))
+      stats::filter(x, rep(1 / 24, 24), sides = 1)
     })
 
   out <- full_join(dat, datsmt, by = 'DateTimeStamp') %>% 
@@ -251,7 +251,7 @@ column(12,
 )
 
 column(12, 
-  materialSwitch(inputId = 'addtrn', label = 'Add 24hr mean trend?', value = F, width = '100%')       
+  materialSwitch(inputId = 'addtrn', label = 'Add 24hr mean trend?', value = T, width = '100%')       
 )
 
 HTML('<br>')
