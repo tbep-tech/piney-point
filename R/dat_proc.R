@@ -1307,6 +1307,7 @@ fldep1 <- flsht %>%
       station == 'Piney 17' & var == 'secchi' & val == 21 ~ 2.1, 
       T ~ val
     ),
+    station = gsub('^Piney\\s\\s17$', 'Piney 17', station),
     source = 'fldep'
   ) %>% 
   select(station, date, source, var, uni, val, qual) %>% 
