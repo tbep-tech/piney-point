@@ -60,6 +60,18 @@ evnts <- lobodat %>%
 # date range on input data
 dtrng <- range(lobodat$DateTimeStamp) %>% 
   as.Date
+
+datsmt <- lobodat %>% 
+  mutate_if(is.numeric, function(x){
+    stats::filter(x, rep(1 / 24, 24), sides = 1)
+  })
+lobodat <- full_join(lobodat, datsmt, by = 'DateTimeStamp') %>% 
+  rename_if(grepl('\\.x$', names(.)), function(x){
+    gsub('\\.x$', '', x)
+  }) %>% 
+  rename_if(grepl('\\.y$', names(.)), function(x){
+    gsub('\\.y$', '_smth', x)
+  })
 ```
 
 ```{r reactives}
@@ -71,23 +83,13 @@ datsel <- reactive({
   varsel2 <- input$varsel2
   dtsel <- input$dtsel
 
+  varsel1smth <- paste0(varsel1, '_smth')
+  varsel2smth <- paste0(varsel2, '_smth')
+  
   dat <- lobodat %>% 
-    select(DateTimeStamp, !!varsel1, !!varsel2) %>% 
-    filter(as.Date(DateTimeStamp) >= dtsel[1] & as.Date(DateTimeStamp) <= dtsel[2])
-  
-  datsmt <- dat %>% 
-    mutate_if(is.numeric, function(x){
-      stats::filter(x, rep(1 / 24, 24), sides = 1)
-    })
+    select(DateTimeStamp, !!varsel1, !!varsel2, !!varsel1smth, !!varsel2smth) %>% 
+    filter(as.Date(DateTimeStamp) >= dtsel[1] & as.Date(DateTimeStamp) <= dtsel[2]) %>% 
 
-  out <- full_join(dat, datsmt, by = 'DateTimeStamp') %>% 
-    rename_if(grepl('\\.x$', names(.)), function(x){
-      gsub('\\.x$', '', x)
-    }) %>% 
-    rename_if(grepl('\\.y$', names(.)), function(x){
-      gsub('\\.y$', '_smth', x)
-    })
-  
   return(out)
   
 })
