@@ -126,7 +126,7 @@ tsplo <- reactive({
 
   p1 <- ggplot(datsel, aes_string(x = 'DateTimeStamp', y = varsel1)) + 
     geom_line() + 
-    geom_point() + 
+    # geom_point() + 
     annotate('rect', xmin = evnts[1], xmax = evnts[2], ymin = -Inf, ymax = Inf, fill = 'orange', alpha = 0.2) +
     annotate('text', x = evnts[1] + 2e4, y = ytxt, hjust = 0, label = 'Active discharge', color = 'orange', size = 5) +
     coord_cartesian(xlim = dtsel) + 
@@ -138,7 +138,7 @@ tsplo <- reactive({
   
   p2 <- ggplot(datsel, aes_string(x = 'DateTimeStamp', y = varsel2)) + 
     geom_line() + 
-    geom_point() + 
+    # geom_point() + 
     annotate('rect', xmin = evnts[1], xmax = evnts[2], ymin = -Inf, ymax = Inf, fill = 'orange', alpha = 0.2) +
     coord_cartesian(xlim = dtsel) + 
     theme_minimal(base_size = 16) + 
