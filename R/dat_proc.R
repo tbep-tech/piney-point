@@ -1129,10 +1129,10 @@ kbrdat <- results$features %>%
     date = as.Date(date)
   ) %>% 
   select(
-    date, station = description, sal_ppt = salinity, temp_c = water_temp, kb_10kcelll = cellcount, longitude, latitude
+    date, station = description, sal_ppt = salinity, temp_c = water_temp, kb_100kcelll = cellcount, longitude, latitude
   ) %>% 
   mutate(
-    kb_10kcelll = kb_10kcelll / 1e5
+    kb_100kcelll = kb_100kcelll / 1e5
   ) %>% 
   gather('var', 'val', -date, -station, -longitude, -latitude) %>% 
   separate(var, c('var', 'uni'), sep = '_') %>% 
