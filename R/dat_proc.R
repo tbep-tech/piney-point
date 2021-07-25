@@ -994,19 +994,17 @@ rsphydat <- rsphydat %>%
     species = gsub('^Nitzchia', 'Nitzschia', species),
     species = gsub('nitzchioides$|nitzschioides$', 'nitzschiodes', species),
     species = gsub('^Guinardia$', 'Guinardia sp', species),
-    species = gsub('^Pseudo\\-nitzschia$|^Pseudo\\-nitzschia sp$|^Pseudo\\-nitzschia spp\\.$', 'Pseudo-nitzschia sp', species), 
+    species = gsub('^Pseudo\\-nitzschia$|^Pseudo\\-nitzschia sp$|^Pseudo\\-nitzschia spp\\.$|^Pseudo\\-nitzschia\\sspp\\.', 'Pseudo-nitzschia sp.', species), 
     species = gsub('^Chaetoceros$', 'Chaetoceros sp', species),
-    species = gsub('^Skeletonema$', 'Skeletonema spp', species),
+    species = gsub('^Skeletonema$|^Skeletonema\\sspp\\.', 'Skeletonema sp.', species),
     species = gsub('^Thalassiosira$', 'Thalassiosira sp', species),
     species = gsub('; no dominant species in sample', '', species),
-    species = gsub('\\.$', '', species), 
-    species = gsub('sp$', 'sp.', species), 
-    species = gsub('spp$', 'spp.', species),
+    species = gsub('\\.$', '', species),
     species = gsub('Karnia', 'Karenia', species),
     species = gsub('\\spresent', '', species), 
     species = gsub('^Prorocentrum$|^Prorocentrum\\ssp\\.$', 'Prorocentrum sp.', species),
     species = gsub('^Nitzchia$|^Nitzschia\\ssp\\.$', 'Nitzschia sp.', species),
-    species = gsub('^Rhizosolenia$|^Rhizosolenia\\sspp\\.$', 'Rhizosolenia sp.', species),
+    species = gsub('^Rhizosolenia$|^Rhizosolenia\\sspp\\.|Rhizosolenia\\sspp\\.$', 'Rhizosolenia sp.', species),
     species = gsub('^TINTINNIDA$', 'Tintinnida', species), 
     species = gsub('^Thalassionema nitzchioides$', 'Thalassionema nitzschioides', species),
     species = gsub('^Thalassionema nitzchioides$', 'Thalassionema nitzschioides', species), 
@@ -1022,7 +1020,8 @@ rsphydat <- rsphydat %>%
     species = gsub('^Protoperdinium pellucidum$', 'Protoperidinium pellucidum', species), 
     species = gsub('^Dominant\\staxon\\:\\s', '', species), 
     species = gsub('dominant\\sspecies:\\s', '', species), 
-    species = gsub('^Thalassiosira sp\\,\\sKarenia brevis$', 'Thalassiosira sp.; Karenia brevis', species)
+    species = gsub('^Thalassiosira sp\\,\\sKarenia brevis$', 'Thalassiosira sp.; Karenia brevis', species),
+    species = gsub('sp$|spp$|sp\\.$|spp\\.$', 'sp.', species)
   ) %>% 
   filter(species != 'chains')
 
@@ -1313,7 +1312,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ## fldep ------------------------------------------------------------------
 
-fl <- fls[which(fls$name == 'FLDEP_20210723'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210725'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 fldep1 <- flsht %>% 
   clean_names %>% 
