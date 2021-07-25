@@ -229,10 +229,10 @@
 "Pinellas Co.","pinco","E7-B",27.7542,-82.621
 "Pinellas Co.","pinco","E7-C",27.70455,-82.6226
 "Pinellas Co.","pinco","E7-D",27.71755,-82.6215
-"Pinellas Co.","pinco","FD-A-21-04",27.63022,82.70364
-"Pinellas Co.","pinco","FD-B-21-04",27.61594,82.73225
-"Pinellas Co.","pinco","FD-C-21-04",27.62323,82.72099
-"Pinellas Co.","pinco","FD-D-21-04",27.62661,82.72245
+"Pinellas Co.","pinco","FD-A-21-04",27.63022,-82.70364
+"Pinellas Co.","pinco","FD-B-21-04",27.61594,-82.73225
+"Pinellas Co.","pinco","FD-C-21-04",27.62323,-82.72099
+"Pinellas Co.","pinco","FD-D-21-04",27.62661,-82.72245
 "Pinellas Co.","pinco","FD A 21 03",27.6416288,-82.7049521
 "Pinellas Co.","pinco","FD B 21 03",27.6521863,-82.7060673
 "Pinellas Co.","pinco","FD C 21 03",27.6450391,-82.7179611
@@ -275,15 +275,15 @@
 "Pinellas Co.","pinco","RP1",27.662158,-82.5418628
 "Pinellas Co.","pinco","RP2",27.6640585,-82.5451244
 "Pinellas Co.","pinco","S3T5",27.67438,-82.53723
-"Pinellas Co.","pinco","S3T5a-100",27.67439,82.53732
+"Pinellas Co.","pinco","S3T5a-100",27.67439,-82.53732
 "Pinellas Co.","pinco","S3T6",27.64379,-82.55785
-"Pinellas Co.","pinco","S3T6a-100",27.64375,82.55777
+"Pinellas Co.","pinco","S3T6a-100",27.64375,-82.55777
 "Pinellas Co.","pinco","S4T1",27.63397,-82.56985
-"Pinellas Co.","pinco","S4T1c-0",27.63383,82.56993
+"Pinellas Co.","pinco","S4T1c-0",27.63383,-82.56993
 "Pinellas Co.","pinco","S4T2",27.6075,-82.57349
-"Pinellas Co.","pinco","S4T2a-0",27.60748,82.57364
+"Pinellas Co.","pinco","S4T2a-0",27.60748,-82.57364
 "Pinellas Co.","pinco","S4T3",27.59434,-82.59364
-"Pinellas Co.","pinco","S4T3a-0",27.59422,82.59338
+"Pinellas Co.","pinco","S4T3a-0",27.59422,-82.59338
 "Pinellas Co.","pinco","SC1",27.6780451,-82.5311983
 "Pinellas Co.","pinco","SCR1",27.6780451,-82.5311983
 "Pinellas Co.","pinco","SCR2",27.6788432,-82.5342024
@@ -295,22 +295,22 @@
 "Pinellas Co.","pinco","TB017",27.666,-82.544
 "Pinellas Co.","pinco","TB019",27.607,-82.567
 "Pinellas Co.","pinco","TB024",27.593,-82.592
-"Pinellas Co.","pinco","W7-A-21-04",27.76341,82.75393
-"Pinellas Co.","pinco","W7-B-21-02",27.74258,82.73212
-"Pinellas Co.","pinco","W7-C-21-04",27.73848,82.7213
-"Pinellas Co.","pinco","W7-D-21-04",27.71858,82.73436
+"Pinellas Co.","pinco","W7-A-21-04",27.76341,-82.75393
+"Pinellas Co.","pinco","W7-B-21-02",27.74258,-82.73212
+"Pinellas Co.","pinco","W7-C-21-04",27.73848,-82.7213
+"Pinellas Co.","pinco","W7-D-21-04",27.71858,-82.73436
 "Pinellas Co.","pinco","W7 A 21 03",27.71442779,-82.72712875
 "Pinellas Co.","pinco","W7 B 21 03",27.71469137,-82.73582841
 "Pinellas Co.","pinco","W7 C 21 03",27.73410924,-82.6930255
 "Pinellas Co.","pinco","W7 D 21 03",27.72662635,-82.71902639
 "Pinellas Co.","pinco","W8-A",27.65292,-82.694
-"Pinellas Co.","pinco","W8-A-21-04",27.65371,82.73792
+"Pinellas Co.","pinco","W8-A-21-04",27.65371,-82.73792
 "Pinellas Co.","pinco","W8-B",27.64857,-82.7207
-"Pinellas Co.","pinco","W8-B-21-04",27.68769,82.67396
+"Pinellas Co.","pinco","W8-B-21-04",27.68769,-82.67396
 "Pinellas Co.","pinco","W8-C",27.65134,-82.7002
-"Pinellas Co.","pinco","W8-C-21-04",27.63602,82.7056
+"Pinellas Co.","pinco","W8-C-21-04",27.63602,-82.7056
 "Pinellas Co.","pinco","W8-D",27.66779,-82.6994
-"Pinellas Co.","pinco","W8-D-21-04",27.64285,82.72668
+"Pinellas Co.","pinco","W8-D-21-04",27.64285,-82.72668
 "Pinellas Co.","pinco","W8 A 21 03",27.67559883,-82.71452197
 "Pinellas Co.","pinco","W8 B 21 03",27.70071243,-82.66337973
 "Pinellas Co.","pinco","W8 C 21 03",27.64412691,-82.73153366
