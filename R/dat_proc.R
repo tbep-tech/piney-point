@@ -1142,7 +1142,132 @@ kbrdat <- results$features %>%
 
 save(kbrdat, file = 'data/kbrdat.RData', version = 2)
 
-# benthic sampling stations -----------------------------------------------
+# benthic -----------------------------------------------------------------
+
+## data -------------------------------------------------------------------
+
+# TBBI scores, pulled code from tbeptools
+# salinity was not availabe at sites, so estimated from rswqdat
+
+fltax <- read_sheet('1ilqIhAyNkqjumditq8TYqG4NLsVcO3_AHljip_X1LWs')
+taxdat <- fltax %>% 
+  select(date = Date, station = StationNumber, FAMILY, NAME, TaxaCount = Count, AdjCount) %>% 
+  mutate(
+    date = as.Date(date)
+  )
+
+# taxa counts aggregated by station & taxa list id
+taxasums <- taxdat %>%
+  dplyr::group_by(station, FAMILY, NAME) %>%
+  dplyr::summarise(
+    SumofCount = sum(TaxaCount, na.rm = T),
+    SumofAdjCount = sum(AdjCount, na.rm = T),
+    .groups = 'drop'
+  )
+
+# biology stats aggregated by station
+biostats <- taxasums %>%
+  dplyr::group_by(station) %>%
+  dplyr::summarise(
+    SpeciesRichness = length(na.omit(NAME)),
+    RawCountAbundance = sum(SumofCount, na.rm = T),
+    AdjCountAbundance = sum(SumofAdjCount, na.rm = T),
+    .groups = 'drop'
+  )
+
+spionid <- taxasums %>%
+  dplyr::filter(FAMILY %in% 'Spionidae') %>%
+  dplyr::group_by(station) %>%
+  dplyr::summarise(SpionidAbundance = sum(SumofAdjCount, na.rm = T), .groups = 'drop')
+capitellid <-  taxasums %>%
+  dplyr::filter(FAMILY %in% 'Capitellidae') %>%
+  dplyr::group_by(station) %>%
+  dplyr::summarise(CapitellidAbundance = sum(SumofAdjCount, na.rm = T), .groups = 'drop')
+
+# calculate biology populations/abundance by station
+biostatspopulation <- biostats %>%
+  dplyr::left_join(spionid, by = 'station') %>%
+  dplyr::left_join(capitellid, by = 'station') %>%
+  dplyr::mutate(
+    Salinity = 30, # this was the general salinity beginning of April
+    StandPropLnSpecies = dplyr::case_when(
+      is.na(SpeciesRichness) | is.na(Salinity) ~ 0,
+      T ~ ((log(SpeciesRichness + 1) / log(10))
+           / ((( 3.2983 - 0.23576 * Salinity ) +  0.01081 * Salinity^2) - 0.00015327 * Salinity^3)
+           - 0.84227
+      ) / 0.18952
+    ),
+    SpeciesRichness = ifelse(is.na(SpeciesRichness), 0, SpeciesRichness),
+    RawCountAbundance = ifelse(is.na(RawCountAbundance), 0, RawCountAbundance),
+    TotalAbundance = ifelse(is.na(AdjCountAbundance), 0, AdjCountAbundance),
+    SpionidAbundance = ifelse(is.na(SpionidAbundance), 0, SpionidAbundance),
+    CapitellidAbundance = ifelse(is.na(CapitellidAbundance), 0, CapitellidAbundance)
+  ) %>%
+  dplyr::select(station, SpeciesRichness, RawCountAbundance, TotalAbundance, SpionidAbundance, CapitellidAbundance, StandPropLnSpecies)
+
+biostatstbbi <- biostatspopulation %>%
+  dplyr::mutate(
+    TBBI = dplyr::case_when(
+      CapitellidAbundance == 0 & SpionidAbundance != 0 ~
+        (((-0.11407) + (StandPropLnSpecies * 0.32583 ) +
+            (((asin(SpionidAbundance / TotalAbundance) - 0.11646 ) / (0.18554)) *
+               (-0.1502)) + ((-0.51401) * (-0.60943))) - (-3.3252118)) / (0.7578544 + 3.3252118),
+      
+      CapitellidAbundance != 0 & SpionidAbundance == 0 ~
+        (((-0.11407) + (StandPropLnSpecies * 0.32583) + ((-0.62768) * (-0.1502)) +
+            ((( asin( CapitellidAbundance / TotalAbundance) - 0.041249) / 0.08025) *
+               (-0.60943))) - (-3.3252118)) / (0.7578544 + 3.3252118),
+      
+      CapitellidAbundance == 0 & SpionidAbundance == 0 & TotalAbundance != 0 ~
+        (((-0.11407) + (StandPropLnSpecies * 0.32583) + ((-0.62768) * (-0.1502)) +
+            ((-0.51401) * (-0.60943))) - (-3.3252118)) / ( 0.7578544 + 3.3252118),
+      
+      TotalAbundance == 0 ~ 0,
+      T ~ ((( -0.11407) + (StandPropLnSpecies * 0.32583) +
+              (((asin(SpionidAbundance / TotalAbundance) - 0.11646) / 0.18554) * (-0.1502)) +
+              (((asin( CapitellidAbundance / TotalAbundance) - 0.041249) / 0.08025) *
+                 (-0.60943))) - (-3.3252118)) / (0.7578544 + 3.3252118)
+    ),
+    TBBI = round(100 * TBBI, 2)
+  ) %>%
+  dplyr::select(station, TotalAbundance, SpeciesRichness, TBBI) %>%
+  dplyr::filter(!is.na(station))
+
+dts <- taxdat %>% 
+  select(station, date) %>% 
+  unique
+
+# family sums
+taxfams <- taxdat %>% 
+  group_by(station, FAMILY) %>% 
+  summarise(
+    TotalAbundance = sum(AdjCount, na.rm = T), 
+    .groups = 'drop'
+  ) %>% 
+  group_by(station) %>% 
+  nest() %>% 
+  rename(family_abu = data)
+
+# total abundance is individuals/m2
+rsbntdat <- biostatstbbi %>%
+  dplyr::mutate(
+    TBBICat = dplyr::case_when(
+      TBBI == 0 ~ 'Empty Sample',
+      TBBI < 73 ~ 'Degraded',
+      TBBI >= 73 & TBBI < 87 ~ 'Intermediate',
+      TBBI >= 87 ~ 'Healthy',
+      T ~ NA_character_
+    ), 
+    typ = 'baseline'
+  ) %>% 
+  left_join(dts, ., by = 'station') %>% 
+  left_join(taxfams, by = 'station')
+
+save(rsbntdat, file = 'data/rsbntdat.RData', version = 2)
+
+# add log
+
+## locations --------------------------------------------------------------
 
 # https://docs.google.com/spreadsheets/d/1eJ64uMX7WOrt2XrjxKV67W5Y_EiXDh_9gBFpaBXuQWo/edit#gid=0
 flbnt <- read_sheet('1eJ64uMX7WOrt2XrjxKV67W5Y_EiXDh_9gBFpaBXuQWo')
