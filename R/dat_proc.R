@@ -1265,7 +1265,12 @@ rsbntdat <- biostatstbbi %>%
 
 save(rsbntdat, file = 'data/rsbntdat.RData', version = 2)
 
-# add log
+# for log
+tms <- Sys.time()
+attr(tms, 'tzone') <- 'America/New_York'
+tms <- paste(as.character(tms), 'Eastern')
+
+writeLines(tms, 'logs/rsbntlog.txt')
 
 ## locations --------------------------------------------------------------
 

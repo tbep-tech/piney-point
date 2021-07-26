@@ -56,11 +56,12 @@ load('data/wqrefmap.RData')
 load('data/rsallpts.RData')
 
 # logs
-rswqlog <- readLines('https://tbep-tech.github.io/piney-point/logs/rswqlog.txt')
-rscntlog <- readLines('https://tbep-tech.github.io/piney-point/logs/rscntlog.txt')
-rsphylog <- readLines('https://tbep-tech.github.io/piney-point/logs/rsphylog.txt')
-rstrnlog <- readLines('https://tbep-tech.github.io/piney-point/logs/rstrnlog.txt')
-
+rswqlog <- readLines('logs/rswqlog.txt')
+rscntlog <- readLines('logs/rscntlog.txt')
+rsphylog <- readLines('logs/rsphylog.txt')
+rstrnlog <- readLines('logs/rstrnlog.txt')
+rsbntlog <- readLines('logs/rsbntlog.txt')
+  
 ##
 # globals
 
@@ -2088,7 +2089,7 @@ BENTHIC SURVEYS {data-navmenu="CURRENT DATA"}
 Column {data-width=275}
 -----------------------------------------------------------------------
 
-### __STATION LOCATIONS - PINEY POINT AT MARKER__
+### __STATION LOCATIONS - PINEY POINT AT MARKER__, last update `r rsbntlog`
 
 ```{r}
 output$rsbntmap1 <- renderLeaflet(rsbntmap)
