@@ -1258,9 +1258,18 @@ rsbntdat <- biostatstbbi %>%
       TBBI >= 87 ~ 'Healthy',
       T ~ NA_character_
     ), 
+    col = dplyr::case_when(
+      TBBICat == 'Empty Sample' ~ 'grey', 
+      TBBICat == 'Degraded' ~ 'red', 
+      TBBICat == 'Intermediate' ~ 'yellow', 
+      TBBICat == 'Healthy' ~ 'darkgreen', 
+    ),
     typ = 'baseline'
   ) %>% 
   left_join(dts, ., by = 'station') %>% 
+  mutate(
+    mo = as.character(month(date, abbr = F, label = T))
+  ) %>% 
   left_join(taxfams, by = 'station')
 
 save(rsbntdat, file = 'data/rsbntdat.RData', version = 2)
@@ -1281,7 +1290,8 @@ rsbntpts <- flbnt %>%
   mutate(
     longitude = lng, 
     latitude = lat, 
-    source = 'epchc'
+    source = 'epchc', 
+    source_lng = 'Hillsborough Co.'
     ) %>% 
   st_as_sf(coords = c('longitude', 'latitude'), crs = 4326)
 

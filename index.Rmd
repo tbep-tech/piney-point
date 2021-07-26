@@ -47,6 +47,7 @@ load('data/rstrnpts.RData')
 load('data/rstrnlns.RData')
 load('data/rstrndat.RData')
 load('data/rsbntpts.RData')
+load('data/rsbntdat.RData')
 load('data/bswqrngs.RData')
 load('data/rscntdat.RData')
 load('data/rscntthr.RData')
@@ -117,6 +118,9 @@ rstrns <- sort(unique(rstrndat$station))
 
 # benthic sites
 rsbnts <- sort(unique(rsbntpts$station))
+
+# benthoc months
+rsbntsmo <- sort(unique(rsbntdat$mo))
 
 # phyto days
 rsphydys <- sort(unique(rsphydat$date))
@@ -338,43 +342,6 @@ rstrnmap <- rstrnmap %>%
     ) %>% 
   addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE)) %>% 
   setView(mapcenter[1], mapcenter[2], zoom = 11)
-
-# response benthic sampling base map
-rsbntmap <- mapview(rsbntpts, homebutton = F, legend = F) %>% 
-  .@map %>% 
-  clearMarkers() %>% 
-  addCircleMarkers(
-    data = rsbntpts,
-    layerId = ~station,
-    stroke = TRUE,
-    color = 'black',
-    fill = TRUE,
-    fillColor = 'grey',
-    weight = 1,
-    fillOpacity = 1,
-    radius= 4,
-    label = ~paste0('Station: ', station)
-  ) %>% 
-  addStaticLabels(
-    data = rsbntpts,
-    label = rsbntpts$station, 
-    direction = 'top', 
-    textsize = '15px',
-    offset = c(0, 1)
-  ) %>% 
-  addCircleMarkers(
-      data = rsbntpts[rsbntpts$station %in% rsbnts[1], ],
-      layerId = 'selpt',
-      stroke = TRUE,
-      color = 'black',
-      fill = TRUE,
-      fillColor = 'red',
-      weight = 1,
-      fillOpacity = 1,
-      radius= 6,
-      label = ~paste0('Station: ', station)
-    ) %>% 
-  addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE))
 ```
 
 ```{r reactives}
@@ -1121,15 +1088,73 @@ rstrnplo1 <- reactive({
   
 })
 
+# binding for benthic marker select
+makeReactiveBinding('stasel2')
+
+# benthic station selection map click
+observeEvent(input$rsbntmap1_marker_click, {
+  stasel2 <<- input$rsbntmap1_marker_click$id
+})
+
+# rapid response base benthic map
+rsbntmap <- reactive({
+  
+  # input
+  bntsel <- input$bntsel
+  
+  # select month to map
+  tomap <- rsbntdat %>% 
+    filter(mo %in% bntsel) %>% 
+    select(station, col, TBBICat) %>% 
+    left_join(rsbntpts, ., by = 'station')
+
+  # response benthic sampling base map
+  out <- mapview(tomap, homebutton = F, legend = F) %>% 
+    .@map %>% 
+    clearMarkers() %>% 
+    addCircleMarkers(
+      data = tomap,
+      layerId = ~station,
+      stroke = TRUE,
+      color = 'black',
+      fill = TRUE,
+      fillColor = ~col,
+      weight = 1,
+      fillOpacity = 1,
+      radius= 4,
+      label = ~paste0('Station: ', station, ' (', source_lng, '), ', TBBICat)
+    ) %>% 
+    addCircleMarkers(
+        data = tomap[tomap$station %in% rsbnts[1], ],
+        layerId = 'selpt',
+        stroke = TRUE,
+        color = 'black',
+        fill = TRUE,
+        fillColor = ~col,
+        weight = 2,
+        fillOpacity = 1,
+        radius= 8,
+        label = ~paste0('Station: ', station, ' (', source_lng, '), ', TBBICat)
+      ) %>% 
+    addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE)) %>% 
+    addLegend("topright", title = 'Benthic condition', opacity = 1, labels = c('Healthy', 'Intermediate', 'Degraded'), colors = c('darkgreen', 'yellow', 'red')) %>% 
+    setView(mapcenter[1], mapcenter[2], zoom = 11)
+    
+})
+
 # rapid response benthic map selection, rsbntmap1
 rsbntmap1 <- leafletProxy('rsbntmap1')
 observeEvent(input$rsbntmap1_marker_click, {
 
   # input
-  stasel2 <- input$rsbntmap1_marker_click$id
+  bntsel <- input$bntsel
   
-  toadd <- rsbntpts %>% 
-    filter(station %in% stasel2)
+  toadd <- rsbntdat %>% 
+    filter(station %in% stasel2) %>% 
+    filter(mo %in% bntsel) %>% 
+    inner_join(rsbntpts, ., by = 'station') %>% 
+    select(station, source_lng, TBBICat, col)
+  
   rsbntmap1 <- rsbntmap1 %>% 
     removeMarker('selpt') %>% 
     addCircleMarkers(
@@ -1138,13 +1163,83 @@ observeEvent(input$rsbntmap1_marker_click, {
       stroke = TRUE,
       color = 'black',
       fill = TRUE,
-      fillColor = 'red',
-      weight = 1,
+      fillColor = ~col,
+      weight = 2,
       fillOpacity = 1,
-      radius= 6,
-      label = ~paste0('Station: ', station)
+      radius= 8,
+      label = ~paste0('Station: ', station, ' (', source_lng, '), ', TBBICat)
     ) 
   
+})
+
+# rapid response benthic data 1
+rsbntdat1 <- reactive({
+  
+  # input
+  bntsel <- input$bntsel
+  
+  if(is.null(stasel2))
+    stasel2 <- rsbnts[1]
+  
+  out <- rsbntdat %>% 
+    filter(mo %in% bntsel) %>% 
+    filter(station %in% stasel2)
+  
+  return(out)
+  
+})
+
+# rapid response benthic gauge
+rsbntgge1 <- reactive({
+  
+  # input
+  rsbntdat1 <- rsbntdat1()
+
+  out <- gauge(round(rsbntdat1$TBBI, 1), min = 0, max = 100, label = '', gaugeSectors(
+    danger = c(0, 73), warning = c(73, 87), success = c(87, 100),
+    colors = c('darkgreen', 'yellow', 'red')
+  ))
+  
+  return(out)
+
+})
+
+# rapid response benthic plot 
+rsbntplo1 <- reactive({
+    
+  # input
+  rsbntdat1 <- rsbntdat1()
+  
+  toplo <- rsbntdat1 %>% 
+    pull(family_abu) %>% 
+    .[[1]] %>% 
+    filter(!is.na(FAMILY)) %>% 
+    arrange(TotalAbundance) 
+  
+  # orange color palette
+  cols <- c("#FFF5EB", "#FEE6CE", "#FDD0A2", "#FDAE6B", "#FD8D3C", "#F16913", 
+            "#D94801", "#A63603", "#7F2704")
+  
+  out <- ggplot(toplo, aes(y = reorder(FAMILY, TotalAbundance), x = TotalAbundance)) + 
+    geom_bar(stat = 'identity', aes(fill = TotalAbundance), colour = 'black', alpha = 0.6) + 
+    scale_x_log10(expand = c(0, 0), limits = c(1, max(rsbntdat$TotalAbundance))) +
+    scale_fill_gradientn(colours = cols, trans = 'log10') +
+    theme_minimal(base_size = 16) + 
+    theme(
+      legend.position = 'none', 
+      legend.title = element_blank(), 
+      strip.background = element_blank(), 
+      axis.title.y = element_blank(), 
+      panel.grid.major.y = element_blank(), 
+      panel.grid.minor.y = element_blank(), 
+      axis.text.y = element_text(size = 9)
+    ) + 
+    labs(
+      x = 'Abundance (indviduals / m2)'
+    )
+  
+  return(out)
+
 })
 
 # binding for marker select and year
@@ -1196,7 +1291,7 @@ rsphymap <- reactive({
       weight = 1,
       fillOpacity = 1,
       radius= 4,
-      label = ~paste0('Station: ', station, ', Source: ', source_lng)
+      label = ~paste0('Station: ', station, ' (', source_lng, ')')
     ) %>% 
     addCircleMarkers(
       data = toadd,
@@ -1237,7 +1332,7 @@ observeEvent(input$rsphymap1_marker_click, {
       weight = 1,
       fillOpacity = 1,
       radius= 6,
-      label = ~paste0('Station: ', station, ', Source: ', source_lng)
+      label = ~paste0('Station: ', station, ' (', source_lng, ')')
     ) 
   
 })
@@ -1276,7 +1371,7 @@ observeEvent(input$dyssel3, {
       weight = 1,
       fillOpacity = 1,
       radius= 4,
-      label = ~paste0('Station: ', station, ', Source: ', source_lng)
+      label = ~paste0('Station: ', station, ' (', source_lng, ')')
     ) %>% 
     addCircleMarkers(
       data = toadd,
@@ -1341,7 +1436,7 @@ rsphymap2 <- reactive({
       weight = 1,
       fillOpacity = 1,
       radius= tomap$cex,
-      label = ~paste0('Station: ', station, ', Source: ', source_lng)
+      label = ~paste0('Station: ', station, ' (', source_lng, ')')
     ) %>% 
     addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE)) %>%
     addLegend("topright", title = NULL, opacity = 1, labels = paste(physel1, 'present'), colors = col) 
@@ -1652,7 +1747,7 @@ WATER QUALITY RESULTS {data-navmenu="CURRENT DATA"}
 Column {data-width=400}
 -----------------------------------------------------------------------
 
-### __STATION LOCATIONS - PINEY POINT AT MARKER__
+### __STATION LOCATIONS - PINEY POINT AT MARKER__, last update `r rswqlog`
 
 ```{r}
 output$rswqpopup <- renderPlot(rswqpopup())
@@ -2086,29 +2181,55 @@ __All results shown relative to a threshold are provided as reference only and d
 BENTHIC SURVEYS {data-navmenu="CURRENT DATA"}
 =======================================================================
 
-Column {data-width=275}
+Column {data-width=400}
 -----------------------------------------------------------------------
 
 ### __STATION LOCATIONS - PINEY POINT AT MARKER__, last update `r rsbntlog`
 
 ```{r}
-output$rsbntmap1 <- renderLeaflet(rsbntmap)
+output$rsbntmap1 <- renderLeaflet(rsbntmap())
 leafletOutput('rsbntmap1')
 ```
 
-Column {data-width=650}
+Column {.tabset .tabset-fade}
 -----------------------------------------------------------------------
+
+<br>
+```{r}
+column(12, 
+  column(6, 
+    HTML('<b>Select a station by clicking a marker on the map</b>') 
+  ),
+  column(6, 
+    selectInput(inputId = 'bntsel', label = HTML('<b>Select sample date:</b>'), choices = rsbntsmo)
+  )
+)
+```
 
 ### __STATION RESULTS__
 
 ```{r}
-fillCol(flex = c(0.03, 1),
-  fillRow(
-     HTML('<b>Select a station by clicking a marker on the map</b>') 
-  ),
-  HTML('<h5>Baseline samples (biology, sediment chemistry) near Piney Point were collected 2021-04-12. Data will be made available after analysis is finalized (expected no earlier than December 2021 due to sample processing times).<br></br>Additional information regarding the Tampa Bay Benthic Monitoring Program is available at <a href="https://tbep.org/tampa-bay-benthic-index/">https://tbep.org/tampa-bay-benthic-index/</a>.</h5>')
+output$rsbntgge1 <- renderGauge(rsbntgge1())
+output$rsbntplo1 <- renderPlot(rsbntplo1())
+output$rsbnttxt1 <- renderUI(HTML(paste0('<b>Benthic condition</b>: ', rsbntdat1()$TBBICat)))
+
+fillCol(flex = c(NA, NA, NA, 1),
+  uiOutput('rsbnttxt1'),
+  gaugeOutput('rsbntgge1', width = 400, height = 900), 
+  HTML('<b>Family abundance</b>'), 
+  plotOutput('rsbntplo1')
 )
 ```
+
+### __INFORMATION__
+
+Initial sediment samples near Piney Point were collected 2021-04-07. These samples will be compared with samples collected in the fall to determine a potential impact of Piney Point on the benthic communities. 
+
+For each sample at each station, benthic organisms living in the sediment were identified and enumerated.  This information is used to calculate the Tampa Bay Benthic Index (TBBI) to quantify the ecological health of the benthic community as affected by the the quality of the sediments they inhabit.  Samples are scored as Healthy, Intermediate, or Degraded based on continuous TBBI scores from 0 - 100. Contaminants and other pollutants from the Piney Point effluent may negatively impact benthic communities and the TBBI will reflect these changes. 
+
+The graphics on the __STATION RESULTS__ tab show the estimated TBBI score for the selected site (top) and a plot of the abundances of organisms found at the site (bottom). 
+
+Additional information regarding the Tampa Bay Benthic Monitoring Program is available at <a href="https://tbep.org/tampa-bay-benthic-index/">https://tbep.org/tampa-bay-benthic-index/</a>.
 
 WATER QUALITY {data-navmenu="BASELINE DATA"}
 =======================================================================
