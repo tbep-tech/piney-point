@@ -1280,7 +1280,8 @@ flbnt <- read_sheet('1eJ64uMX7WOrt2XrjxKV67W5Y_EiXDh_9gBFpaBXuQWo')
 rsbntpts <- flbnt %>% 
   mutate(
     longitude = lng, 
-    latitude = lat
+    latitude = lat, 
+    source = 'epchc'
     ) %>% 
   st_as_sf(coords = c('longitude', 'latitude'), crs = 4326)
 
@@ -2417,6 +2418,7 @@ data(rscntdat)
 data(rsphypts)
 data(rsphydat)
 data(rstrndat)
+data(rsbntpts)
 
 # response sampling locations
 rsallpts <- list(
@@ -2433,6 +2435,9 @@ rsallpts <- list(
     left_join(rsphydat, by = c('station', 'source')) %>% 
     select(station, source) %>%
     na.omit() %>% 
+    unique,
+  `benthic` = rsbntpts %>% 
+    select(station, source) %>% 
     unique
   ) %>% 
   enframe('type', 'value') %>% 
