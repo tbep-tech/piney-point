@@ -1268,7 +1268,7 @@ rsbntdat <- biostatstbbi %>%
   ) %>% 
   left_join(dts, ., by = 'station') %>% 
   mutate(
-    mo = as.character(month(date, abbr = F, label = T))
+    modt = paste0(as.character(month(date, abbr = F, label = T)), ' 2021')
   ) %>% 
   left_join(taxfams, by = 'station')
 

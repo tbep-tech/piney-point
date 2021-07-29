@@ -120,7 +120,7 @@ rstrns <- sort(unique(rstrndat$station))
 rsbnts <- sort(unique(rsbntpts$station))
 
 # benthoc months
-rsbntsmo <- sort(unique(rsbntdat$mo))
+rsbntsmodt <- sort(unique(rsbntdat$modt))
 
 # phyto days
 rsphydys <- sort(unique(rsphydat$date))
@@ -1104,7 +1104,7 @@ rsbntmap <- reactive({
   
   # select month to map
   tomap <- rsbntdat %>% 
-    filter(mo %in% bntsel) %>% 
+    filter(modt %in% bntsel) %>% 
     select(station, col, TBBICat) %>% 
     left_join(rsbntpts, ., by = 'station')
 
@@ -1151,7 +1151,7 @@ observeEvent(input$rsbntmap1_marker_click, {
   
   toadd <- rsbntdat %>% 
     filter(station %in% stasel2) %>% 
-    filter(mo %in% bntsel) %>% 
+    filter(modt %in% bntsel) %>% 
     inner_join(rsbntpts, ., by = 'station') %>% 
     select(station, source_lng, TBBICat, col)
   
@@ -1182,7 +1182,7 @@ rsbntdat1 <- reactive({
     stasel2 <- rsbnts[1]
   
   out <- rsbntdat %>% 
-    filter(mo %in% bntsel) %>% 
+    filter(modt %in% bntsel) %>% 
     filter(station %in% stasel2)
   
   return(out)
@@ -2207,7 +2207,7 @@ column(12,
     HTML('<b>Select a station by clicking a marker on the map</b>') 
   ),
   column(4, 
-    selectInput(inputId = 'bntsel', label = HTML('<b>Select sample date:</b>'), choices = rsbntsmo)
+    selectInput(inputId = 'bntsel', label = HTML('<b>Select sample date:</b>'), choices = rsbntsmodt)
   ), 
   column(4, 
        materialSwitch(inputId = 'bntscl', label = 'Show abundance in log-scale?', value = T, width = '100%')     
