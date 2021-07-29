@@ -1208,6 +1208,7 @@ rsbntgge1 <- reactive({
 rsbntplo1 <- reactive({
     
   # input
+  bntscl<- input$bntscl
   rsbntdat1 <- rsbntdat1()
   
   toplo <- rsbntdat1 %>% 
@@ -1220,10 +1221,10 @@ rsbntplo1 <- reactive({
   cols <- c("#FFF5EB", "#FEE6CE", "#FDD0A2", "#FDAE6B", "#FD8D3C", "#F16913", 
             "#D94801", "#A63603", "#7F2704")
   
-  out <- ggplot(toplo, aes(y = reorder(FAMILY, TotalAbundance), x = TotalAbundance)) + 
+  p <- ggplot(toplo, aes(y = reorder(FAMILY, TotalAbundance), x = TotalAbundance)) + 
     geom_bar(stat = 'identity', aes(fill = TotalAbundance), colour = 'black', alpha = 0.6) + 
-    scale_x_log10(expand = c(0, 0), limits = c(1, max(rsbntdat$TotalAbundance))) +
-    scale_fill_gradientn(colours = cols, trans = 'log10') +
+    scale_x_continuous(expand = c(0, 0), limits = c(0, max(rsbntdat$TotalAbundance))) +
+    scale_fill_gradientn(colours = cols) +
     theme_minimal(base_size = 16) + 
     theme(
       legend.position = 'none', 
@@ -1238,7 +1239,12 @@ rsbntplo1 <- reactive({
       x = 'Abundance (indviduals / m2)'
     )
   
-  return(out)
+  if(bntscl)
+    p <- p + 
+      scale_x_log10(expand = c(0, 0), limits = c(1, max(rsbntdat$TotalAbundance))) +
+      scale_fill_gradientn(colours = cols, trans = 'log10')
+  
+  return(p)
 
 })
 
@@ -2197,11 +2203,14 @@ Column {.tabset .tabset-fade}
 <br>
 ```{r}
 column(12, 
-  column(6, 
+  column(4, 
     HTML('<b>Select a station by clicking a marker on the map</b>') 
   ),
-  column(6, 
+  column(4, 
     selectInput(inputId = 'bntsel', label = HTML('<b>Select sample date:</b>'), choices = rsbntsmo)
+  ), 
+  column(4, 
+       materialSwitch(inputId = 'bntscl', label = 'Show abundance in log-scale?', value = T, width = '100%')     
   )
 )
 ```
