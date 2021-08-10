@@ -1453,7 +1453,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ## fldep ------------------------------------------------------------------
 
-fl <- fls[which(fls$name == 'FLDEP_20210803'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210810'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 fldep1 <- flsht %>% 
   clean_names %>% 
@@ -1796,6 +1796,24 @@ out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
     source = case_when(
       station %in% c("TBEP-BH0", "TBEP-BH15", "TBEP-BH25", "TBEP-MCBH02") ~ 'tbep', 
       T ~ source
+    ), 
+    var = case_when( # this is a fix for mislabelled dosat as do and do as dosat
+      var == 'do' & station %in% c("W7-A-21-04", "W7-B-21-02", "W7-C-21-04", "W7-D-21-04", "W8-B-21-04", 
+                                   "W8-C-21-04", "W8-D-21-04", "W8-A-21-04") &
+        date == as.Date('2021-07-08') ~ 'dosat', 
+      var == 'dosat' & station %in% c("W7-A-21-04", "W7-B-21-02", "W7-C-21-04", "W7-D-21-04", "W8-B-21-04", 
+                                   "W8-C-21-04", "W8-D-21-04", "W8-A-21-04") &
+        date == as.Date('2021-07-08') ~ 'do', 
+      T ~ var
+    ), 
+    uni = case_when(
+      var == 'do' & station %in% c("W7-A-21-04", "W7-B-21-02", "W7-C-21-04", "W7-D-21-04", "W8-B-21-04", 
+                                   "W8-C-21-04", "W8-D-21-04", "W8-A-21-04") &
+        date == as.Date('2021-07-08') ~ 'mgl', 
+      var == 'dosat' & station %in% c("W7-A-21-04", "W7-B-21-02", "W7-C-21-04", "W7-D-21-04", "W8-B-21-04", 
+                                      "W8-C-21-04", "W8-D-21-04", "W8-A-21-04") &
+        date == as.Date('2021-07-08') ~ 'per', 
+      T ~ uni
     )
   ) %>%
   select(station, date, source, var, uni, val, qual) %>%
