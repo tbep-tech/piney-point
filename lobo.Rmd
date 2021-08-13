@@ -113,21 +113,26 @@ tsplo <- reactive({
   # inputs
   varsel1 <- input$varsel1
   varsel2 <- input$varsel2
+  addobs <- input$addobs
   addtrn <- input$addtrn
   dtsel <- input$dtsel
   datsel <- datsel()
-  browser()
+
   # dtsel to posix for coord_cartesian
   dtsel <- as.POSIXct(c(dtsel[1], dtsel[2] + 1), tz = attr(datsel$DateTimeStamp, 'tzone'))
   
   lb1 <- names(vrs)[which(unlist(vrs) == varsel1)]
   lb2 <- names(vrs)[which(unlist(vrs) == varsel2)]
 
+  lncol <- 'black'
+  if(!addobs)
+    lncol <- NA
+  
   # y text location
   ytxt <- max(datsel[, varsel1], na.rm = T)
 
   p1 <- ggplot(datsel, aes_string(x = 'DateTimeStamp', y = varsel1)) + 
-    geom_line() + 
+    geom_line(color = lncol) + 
     # geom_point() + 
     annotate('rect', xmin = evnts[1], xmax = evnts[2], ymin = -Inf, ymax = Inf, fill = 'orange', alpha = 0.2) +
     annotate('text', x = evnts[1] + 2e4, y = ytxt, hjust = 0, label = 'Active discharge', color = 'orange', size = 5) +
@@ -139,7 +144,7 @@ tsplo <- reactive({
     )
   
   p2 <- ggplot(datsel, aes_string(x = 'DateTimeStamp', y = varsel2)) + 
-    geom_line() + 
+    geom_line(color = lncol) + 
     # geom_point() + 
     annotate('rect', xmin = evnts[1], xmax = evnts[2], ymin = -Inf, ymax = Inf, fill = 'orange', alpha = 0.2) +
     coord_cartesian(xlim = dtsel) + 
@@ -252,6 +257,9 @@ column(12,
   sliderInput('dtsel', 'Select date range:', min = dtrng[1], max =  dtrng[2], value = dtrng, timeFormat="%Y-%m-%d")
 )
 
+column(12, 
+  materialSwitch(inputId = 'addobs', label = 'Show continuous data?', value = T, width = '100%')       
+)
 column(12, 
   materialSwitch(inputId = 'addtrn', label = 'Add 24hr mean trend?', value = T, width = '100%')       
 )
