@@ -832,8 +832,13 @@ rsphydatfwri <- flphy2 %>%
     othertox_ugl = `Other Toxin (micrograms/L)`
   ) %>% 
   mutate(
-    date = unlist(date),
-    date = as.Date(date), 
+    date = purrr::map(date, function(x){
+      if(inherits(x, 'POSIXct'))
+        as.Date(x)
+      else
+        as.Date(gsub('N/A$', '', x), x, format = '%m/%d/%y')
+    }),
+    date = as.Date(unlist(date), origin = '1970-01-01'),
     source = 'fwri', 
     station = case_when(
       station %in% c('E PP01', 'PP01', 'PP 01') ~ 'PP01', 
