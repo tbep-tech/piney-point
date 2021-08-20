@@ -289,12 +289,16 @@ rswqpopup_plo <- function(station, datin){
   # monitoring data
   toplo1 <- datin %>% 
     filter(station == !!station) %>% 
-    separate(nrmrng, c('minrng', 'maxrng'), sep = '-') %>% 
     mutate(
-      minrng = as.numeric(minrng), 
+      minrng = gsub('(^.*)\\-.*$', '\\1', nrmrng), 
+      maxrng = gsub('^.*\\-(.*)$', '\\1', nrmrng)
+    ) %>% 
+    select(-nrmrng) %>% 
+    mutate(
+      minrng = as.numeric(minrng),
       maxrng = as.numeric(maxrng)
     )
-  
+
   # reference data
   toplo2 <- toplo1 %>% 
     select(date, minrng, maxrng) %>%

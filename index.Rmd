@@ -1849,7 +1849,7 @@ __DO (% saturation)__: A measure of dissolved oxygen in the water column as perc
 
 __NH3, NH4+ (mg/L)__: Total ammonia nitrogen concentration as a component of total nitrogen, includes unionized ammonia (NH3) and ionized ammonium (NH4+).  Excess total ammonia nitrogen can stimulate algal production.
 
-__Nitrate/Nitrite (mg/L)__: Nitrate/nitrite concentration as a component of total nitrogen.  Excess nitrate/nitrite can stimulate algal production.
+__Nitrate/Nitrite (mg/L)__: Nitrate/nitrite concentration as a component of total nitrogen.  Excess nitrate/nitrite can stimulate algal production.  Concentrations are presented as the sum of both.
 
 __Ortho-P (mg/L)__: Orthophosphate concentration as a component of total phosphorus. Excess orthophosphate can stimulate algal production, although this is less of a concern than nitrogen in Tampa Bay.
 
