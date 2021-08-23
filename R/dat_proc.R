@@ -1460,7 +1460,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 fl <- fls[which(fls$name == 'FLDEP_20210820'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
-fldep1 <- flsht %>% 
+out1 <- flsht %>% 
   clean_names %>% 
   select(
     station = station_id, 
@@ -1471,7 +1471,6 @@ fldep1 <- flsht %>%
     dosat_per = d_o_percent_sat_surface, 
     ph_none = p_h_surface, 
     nh34_mgl = ammonia_n_mg_n_l, 
-    no23_mgl = nitrate_nitrite_n_mg_n_l,
     orthop_mgl = orthophosphate_p_mg_p_l, 
     chla_ugl = chlorophyll_a_corrected_aeg_l, # this is ugl, janitor think mu is m
     turb_ntu = turbidity_ntu, 
@@ -1505,6 +1504,36 @@ fldep1 <- flsht %>%
   ) %>% 
   select(station, date, source, var, uni, val, qual) %>% 
   filter(!is.na(val))
+
+# supplement NOx data from temp sheet
+tmpsht <- 'https://publicfiles.dep.state.fl.us/DEAR/DEARweb/_PP_EventResponse/Latest_Analytical_Results.xlsx'
+tmpfl <- tempfile(fileext = '.xlsx')
+download.file(url = tmpsht, destfile = tmpfl, method = 'libcurl', mode = 'wb')
+
+out2 <- read_excel(tmpfl, skip = 8) %>% 
+  select(
+    station = `SITE LOCATION`, 
+    date = `DATE SAMPLED`,
+    var = COMPONENT, 
+    uni = UNITS, 
+    val = RESULT,
+    qual = `QUALIFIER CODE`
+  ) %>% 
+  filter(
+    var == 'NO2NO3-N'
+  ) %>% 
+  mutate(
+    date = as.Date(date), 
+    val = as.numeric(val), 
+    var = 'no23', 
+    uni = 'mgl',
+    source = 'fldep'
+  )
+
+file.remove(tmpfl)
+
+fldep1 <- bind_rows(out1, out2) %>% 
+  arrange(date, var)
 
 ## mpnrd ------------------------------------------------------------------
 
