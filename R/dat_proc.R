@@ -1458,7 +1458,7 @@ fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ## fldep ------------------------------------------------------------------
 
-fl <- fls[which(fls$name == 'FLDEP_20210820'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210826'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 out1 <- flsht %>% 
   clean_names %>% 
@@ -1520,20 +1520,58 @@ out2 <- read_excel(tmpfl, skip = 8) %>%
     qual = `QUALIFIER CODE`
   ) %>% 
   filter(
-    var == 'NO2NO3-N'
+    var %in% c('Ammonia-N', 'Chlorophyll-a, Corrected', 'NO2NO3-N', 'O-Phosphate-P', 'Total-P', 'TSS', 'Turbidity')
   ) %>% 
   mutate(
     date = as.Date(date), 
     val = as.numeric(val), 
-    var = 'no23', 
-    uni = 'mgl',
+    var = case_when(
+      var == 'Ammonia-N' ~ 'nh34', 
+      var == 'Chlorophyll-a, Corrected' ~ 'chla', 
+      var == 'NO2NO3-N' ~ 'no23', 
+      var == 'O-Phosphate-P' ~ 'orthop', 
+      var == 'Total-P' ~ 'tp', 
+      var == 'TSS' ~ 'tss', 
+      var == 'Turbidity' ~ 'turb'
+    ), 
+    uni = case_when(
+      uni == 'mg N/L' ~ 'mgl', 
+      uni == 'mg P/L' ~ 'mgl',
+      uni == 'mg/L' ~ 'mgl', 
+      uni == 'NTU' ~ 'ntu', 
+      uni == 'ug/L' ~ 'ugl'
+    ),
     source = 'fldep'
   )
 
 file.remove(tmpfl)
 
-fldep1 <- bind_rows(out1, out2) %>% 
-  arrange(date, var)
+# remove variables in out1 that are in out2
+# but first check there are more observations in out2 since it's not regularly updated
+vrs <- unique(out2$var)
+tmp1 <- out1 %>% 
+  filter(var %in% vrs)
+tmp2 <- out2
+
+# if there are more variables for the relevant params in out2, remove same from out1
+if(nrow(tmp2) > nrow(tmp1)){
+  
+  out1 <- out1 %>% 
+    filter(!var %in% vrs)
+
+  fldep1 <- bind_rows(out1, out2) %>% 
+    arrange(date, var)
+
+}
+
+# if there are less variables for the relevent params in out2, keep only out1
+if(nrow(tmp2) < nrow(tmp1)){
+  
+  warning('something bad!')
+  fldep1 <- out1 %>% 
+    arrange(date, var)
+
+}
 
 ## mpnrd ------------------------------------------------------------------
 
