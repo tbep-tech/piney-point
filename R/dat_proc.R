@@ -1541,6 +1541,7 @@ out2 <- read_excel(tmpfl, skip = 8) %>%
       uni == 'NTU' ~ 'ntu', 
       uni == 'ug/L' ~ 'ugl'
     ),
+    station = gsub('^Piney\\s\\s', 'Piney ', station),
     source = 'fldep'
   )
 
