@@ -1578,6 +1578,12 @@ if(nrow(tmp2) < nrow(tmp1)){
 
 }
 
+# remove long text strings from qual codes
+fldep1 <- fldep1 %>% 
+  mutate(
+    qual = gsub('(^[A-Z]+)\\s.*$', '\\1', qual)
+  )
+
 ## mpnrd ------------------------------------------------------------------
 
 # mpnrd, creek and outfall samples
