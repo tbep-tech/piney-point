@@ -621,10 +621,14 @@ rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>%
     sav_abundance = factor(sav_abundance, levels = abulevs),
     macroalgae_abundance = factor(macroalgae_abundance, levels = abulevs),
     epibiota_density = factor(epibiota_density, levels = epilevs), 
+    location = case_when( # ESA stations need to be flipped
+      station %in% c('SMB2', 'SMB1', 'STCB1', 'SBH2', 'SBH3') ~ abs(location - 50),
+      T ~ location
+    ),
     station = factor(station), 
     location = factor(location)
-  )
-
+  ) 
+  
 rstrndatsav <- rstrndat %>% 
   select(date, station, location, sav_species, sav_abundance, sav_bb, epibiota_density) %>% 
   group_by(date, station, location) %>% 
