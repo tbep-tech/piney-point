@@ -13,6 +13,7 @@ library(googledrive)
 library(mapview)
 library(httr)
 library(jsonlite)
+library(NADA)
 
 prj <- 4326
 
@@ -122,42 +123,69 @@ epcraw <- readxl::read_xlsx('data/raw/epcdat.xlsx', sheet="RWMDataSpreadsheet",
                                           "text", "text", "text"),
                             na = '')
 
-# get normal epc ranges
-bswqrngsepchc <- epcraw %>% 
+# epc data w/ qualifiers
+epcvalqual <- epcraw %>% 
   clean_names %>% 
-  filter(station_number %in% stations$epchc_station) %>% # from tbeptools
+  filter(station_number %in% c(9, 11, 13, 14, 16, 19, 21, 22, 23, 24, 25, 28, 32, 33, 81, 82, 84, 90, 91, 92, 93, 95)) %>% 
   select(
     station = station_number,
     date = sample_time,
-    lat = latitude, 
-    lng = longitude, 
+    latitude, 
+    longitude, 
     color_pcu = color_345_c_pcu, 
-    tn_mgl = total_nitrogen_mg_l, 
+    color_qual = color_345_c_q,
+    tn_mgl = total_nitrogen_mg_l,
+    tn_qual = total_nitrogen_q,
     nh34_mgl = ammonia_mg_l,
+    nh34_qual = ammonia_q,
     no23_mgl = nitrates_nitrites_mg_l,
+    no23_qual = nitrates_nitrites_q,
     tkn_mgl = kjeldahl_nitrogen_mg_l,
+    tkn_qual = kjeldahl_nitrogen_q,
     orthop_mgl = ortho_phosphates_mg_l,
+    orthop_qual = ortho_phosphates_q,
     tp_mgl = total_phosphorus_mg_l, 
+    tp_qual = total_phosphorus_q,
     bod_mgl = bod_mg_l,
+    bod_qual = bod_q,
     chla_ugl = chlorophyll_a_uncorr_ug_l, 
+    chla_qual = chlorophyll_a_uncorr_q,
     tss_mgl = total_suspended_solids_mg_l, 
+    tss_qual = total_suspended_solids_q,
     turb_ntu = turbidity_jtu_ntu,
+    turb_qual = turbidity_q,
     secchi_m = secchi_depth_m,
+    secchi_qual = secchi_q,
     p_h_bottom, 
-    p_h_mid, 
+    p_h_bottom_qual = p_h_bottom_q,
+    p_h_mid,
+    p_h_mid_qual = p_h_mid_q,
     p_h_top,
+    p_h_top_qual = p_h_top_q,
     do_bottom_mg_l, 
+    do_bottom_qual = do_bottom_q, 
     do_mid_mg_l,
+    do_mid_qual = do_mid_q,
     do_top_mg_l, 
+    do_top_qual = do_top_q,
     do_sat_bottom_percent, 
+    do_sat_bottom_qual = do_percent_sat_bottom_q,
     do_sat_mid_percent, 
-    do_sat_top_percent, 
+    do_sat_mid_qual = do_percent_sat_mid_q,
+    do_sat_top_percent,
+    do_sat_top_qual = do_sat_top_q,
     sal_bottom_ppth,
+    sal_bottom_qual = sal_bottom_q,
     sal_mid_ppth,
+    sal_mid_qual = sal_mid_q,
     sal_top_ppth, 
+    sal_top_qual = sal_top_q,
     temp_water_bottom_deg_c,
+    temp_water_bottom_qual = temp_water_bottom_q,
     temp_water_mid_deg_c,
-    temp_water_top_deg_c
+    temp_water_mid_qual = temp_water_mid_q,
+    temp_water_top_deg_c,
+    temp_water_top_qual = temp_water_top_q
   ) %>% 
   mutate(
     date = as.Date(date), 
@@ -170,28 +198,63 @@ bswqrngsepchc <- epcraw %>%
     dosat_per = mean(c(do_sat_bottom_percent, do_sat_mid_percent, do_sat_top_percent), na.rm = T),
     ph_none = mean(c(p_h_top, p_h_mid, p_h_bottom), na.rm = T),
     temp_c = mean(c(temp_water_bottom_deg_c, temp_water_mid_deg_c, temp_water_top_deg_c), na.rm = T),
-    sal_ppt = mean(c(sal_bottom_ppth, sal_mid_ppth, sal_top_ppth), na.rm = T)
+    sal_ppt = mean(c(sal_bottom_ppth, sal_mid_ppth, sal_top_ppth), na.rm = T), 
+    do_qual = paste0(unique(c(do_bottom_qual, do_mid_qual, do_top_qual)), collapse = ''),
+    do_qual = gsub('NA', '', do_qual),
+    dosat_qual = paste0(unique(c(do_sat_bottom_qual, do_sat_mid_qual, do_sat_top_qual)), collapse = ''), 
+    dosat_qual = gsub('NA', '', dosat_qual),
+    ph_qual = paste0(unique(c(p_h_bottom_qual, p_h_mid_qual, p_h_top_qual)), collapse = ''), 
+    ph_qual = gsub('NA', '', ph_qual),
+    temp_qual = paste0(unique(c(temp_water_bottom_qual, temp_water_mid_qual, temp_water_top_qual)), collapse = ''), 
+    temp_qual = gsub('NA', '', temp_qual),
+    sal_qual = paste0(unique(c(sal_bottom_qual, sal_mid_qual, sal_top_qual)), collapse = ''), 
+    sal_qual = gsub('NA', '', sal_qual)
   ) %>% 
   ungroup() %>% 
-  select(-matches('bottom|mid|top')) %>% 
-  gather('var', 'val', -station, -date, -lat, -lng, -yr, -mo) %>% 
+  select(-matches('bottom|mid|top'))
+
+# separate epc results from qualifiers
+epcval <- epcvalqual %>% 
+  select(-contains('qual')) %>% 
+  gather('var', 'val', -station, -date, -yr, -mo, -latitude, -longitude) %>% 
   separate(var, c('var', 'uni'), sep = '_') %>% 
   mutate(
-    val = as.numeric(val)
-  ) %>% 
+    val = as.numeric(val), 
+    source = 'epchc'
+  ) 
+
+# separate epc qualifiers from results
+epcqual <- epcvalqual %>% 
+  select(station, date, latitude, longitude, yr, mo, contains('qual')) %>% 
+  gather('var', 'qual', -station, -date, -yr, -mo, -latitude, -longitude) %>% 
+  mutate(
+    var = gsub('\\_qual$', '', var), 
+    qual = ifelse(qual == '', NA_character_, qual)
+  )
+
+# combine epcval and epcqual
+epcraw <- full_join(epcval, epcqual, by = c('station', 'date', 'latitude', 'longitude', 'yr', 'mo', 'var'))
+
+# get normal epc ranges
+bswqrngsepchc <- epcraw %>% 
   filter(yr > 2005 & yr < 2021) %>% 
-  group_by(station, mo, var, uni) %>% 
+  mutate(
+    cens = grepl('U', qual)
+  ) %>% 
+  group_by(station, mo, var, uni) %>%
   summarise(
-    lat = mean(lat, na.rm = T), 
-    lng = mean(lng, na.rm = T),
-    avev = mean(val, na.rm = T), 
-    stdv = sd(val, na.rm = T), 
+    lat = mean(latitude, na.rm = T),
+    lng = mean(longitude, na.rm = T),
+    avev = tryCatch(mean(cenfit(val, censored = cens), na.rm = T)[1], error = function(err) NA),
+    stdv = tryCatch(sd(cenfit(val, censored = cens), na.rm = T), error = function(err) NA),
     .groups = 'drop'
   ) %>%
   left_join(parms, by = c('var', 'uni')) %>% 
   mutate(
     avev = round(avev, sigdig), 
+    avev = ifelse(avev == 0, NA, avev),
     stdv = round(stdv, sigdig), 
+    stdv = ifelse(stdv == 0, NA, stdv),
     minv = avev - stdv, 
     minv = pmax(0, minv),
     maxv = avev + stdv,
@@ -215,7 +278,8 @@ bswqrngsmpnrd <- mandat %>%
     lng = actual_longitude,
     var = parameter, 
     val = result_value, 
-    uni = result_unit
+    uni = result_unit, 
+    qual = qa_code
   ) %>% 
   mutate(
     var = case_when(
@@ -236,7 +300,8 @@ bswqrngsmpnrd <- mandat %>%
       var == 'DO_percent' ~ 'dosat_per', 
       var == 'Salinity_ppt' ~ 'sal_ppt', 
       var == 'TempW_C' ~ 'temp_c'
-    )
+    ), 
+    cens = grepl('U', qual)
   ) %>% 
   filter(!is.na(var)) %>% 
   separate(var, c('var', 'uni'), sep = '_', remove = F) %>% 
@@ -262,14 +327,16 @@ bswqrngsmpnrd <- mandat %>%
   summarise(
     lat = mean(lat, na.rm = T), 
     lng = mean(lng, na.rm = T),
-    avev = mean(val, na.rm = T), 
-    stdv = sd(val, na.rm = T), 
+    avev = tryCatch(mean(cenfit(val, censored = cens), na.rm = T)[1], error = function(err) NA),
+    stdv = tryCatch(sd(cenfit(val, censored = cens), na.rm = T), error = function(err) NA),
     .groups = 'drop'
   ) %>%
   left_join(parms, by = c('var', 'uni')) %>% 
   mutate(
     avev = round(avev, sigdig), 
+    avev = ifelse(avev == 0, NA, avev),
     stdv = round(stdv, sigdig), 
+    stdv = ifelse(stdv == 0, NA, stdv),
     minv = avev - stdv, 
     minv = pmax(0, minv),
     maxv = avev + stdv,
@@ -335,7 +402,7 @@ epcraw <- readxl::read_xlsx('data/raw/epcdat.xlsx', sheet="RWMDataSpreadsheet",
 # selected stations close to Piney Point from map (have to select 'hydrology and samples' and then 'sampling location' form hamburger layer selection)
 mandat <- read.table('data/raw/DataDownload_2351804_row.txt', sep = '\t', header = T)
 
-epcraw <- epcraw %>% 
+epcvalqual <- epcraw %>% 
   clean_names %>% 
   filter(station_number %in% c(9, 11, 13, 14, 16, 19, 21, 22, 23, 24, 25, 28, 32, 33, 81, 82, 84, 90, 91, 92, 93, 95)) %>% 
   select(
@@ -344,32 +411,59 @@ epcraw <- epcraw %>%
     latitude, 
     longitude, 
     color_pcu = color_345_c_pcu, 
-    tn_mgl = total_nitrogen_mg_l, 
+    color_qual = color_345_c_q,
+    tn_mgl = total_nitrogen_mg_l,
+    tn_qual = total_nitrogen_q,
     nh34_mgl = ammonia_mg_l,
+    nh34_qual = ammonia_q,
     no23_mgl = nitrates_nitrites_mg_l,
+    no23_qual = nitrates_nitrites_q,
     tkn_mgl = kjeldahl_nitrogen_mg_l,
+    tkn_qual = kjeldahl_nitrogen_q,
     orthop_mgl = ortho_phosphates_mg_l,
+    orthop_qual = ortho_phosphates_q,
     tp_mgl = total_phosphorus_mg_l, 
+    tp_qual = total_phosphorus_q,
     bod_mgl = bod_mg_l,
+    bod_qual = bod_q,
     chla_ugl = chlorophyll_a_uncorr_ug_l, 
+    chla_qual = chlorophyll_a_uncorr_q,
     tss_mgl = total_suspended_solids_mg_l, 
+    tss_qual = total_suspended_solids_q,
     turb_ntu = turbidity_jtu_ntu,
+    turb_qual = turbidity_q,
     secchi_m = secchi_depth_m,
+    secchi_qual = secchi_q,
     p_h_bottom, 
-    p_h_mid, 
+    p_h_bottom_qual = p_h_bottom_q,
+    p_h_mid,
+    p_h_mid_qual = p_h_mid_q,
     p_h_top,
+    p_h_top_qual = p_h_top_q,
     do_bottom_mg_l, 
+    do_bottom_qual = do_bottom_q, 
     do_mid_mg_l,
+    do_mid_qual = do_mid_q,
     do_top_mg_l, 
+    do_top_qual = do_top_q,
     do_sat_bottom_percent, 
+    do_sat_bottom_qual = do_percent_sat_bottom_q,
     do_sat_mid_percent, 
-    do_sat_top_percent, 
+    do_sat_mid_qual = do_percent_sat_mid_q,
+    do_sat_top_percent,
+    do_sat_top_qual = do_sat_top_q,
     sal_bottom_ppth,
+    sal_bottom_qual = sal_bottom_q,
     sal_mid_ppth,
+    sal_mid_qual = sal_mid_q,
     sal_top_ppth, 
+    sal_top_qual = sal_top_q,
     temp_water_bottom_deg_c,
+    temp_water_bottom_qual = temp_water_bottom_q,
     temp_water_mid_deg_c,
-    temp_water_top_deg_c
+    temp_water_mid_qual = temp_water_mid_q,
+    temp_water_top_deg_c,
+    temp_water_top_qual = temp_water_top_q
   ) %>% 
   mutate(
     date = as.Date(date), 
@@ -382,22 +476,42 @@ epcraw <- epcraw %>%
     dosat_per = mean(c(do_sat_bottom_percent, do_sat_mid_percent, do_sat_top_percent), na.rm = T),
     ph_none = mean(c(p_h_top, p_h_mid, p_h_bottom), na.rm = T),
     temp_c = mean(c(temp_water_bottom_deg_c, temp_water_mid_deg_c, temp_water_top_deg_c), na.rm = T),
-    sal_ppt = mean(c(sal_bottom_ppth, sal_mid_ppth, sal_top_ppth), na.rm = T)
+    sal_ppt = mean(c(sal_bottom_ppth, sal_mid_ppth, sal_top_ppth), na.rm = T), 
+    do_qual = paste0(unique(c(do_bottom_qual, do_mid_qual, do_top_qual)), collapse = ''),
+    do_qual = gsub('NA', '', do_qual),
+    dosat_qual = paste0(unique(c(do_sat_bottom_qual, do_sat_mid_qual, do_sat_top_qual)), collapse = ''), 
+    dosat_qual = gsub('NA', '', dosat_qual),
+    ph_qual = paste0(unique(c(p_h_bottom_qual, p_h_mid_qual, p_h_top_qual)), collapse = ''), 
+    ph_qual = gsub('NA', '', ph_qual),
+    temp_qual = paste0(unique(c(temp_water_bottom_qual, temp_water_mid_qual, temp_water_top_qual)), collapse = ''), 
+    temp_qual = gsub('NA', '', temp_qual),
+    sal_qual = paste0(unique(c(sal_bottom_qual, sal_mid_qual, sal_top_qual)), collapse = ''), 
+    sal_qual = gsub('NA', '', sal_qual)
   ) %>% 
   ungroup() %>% 
-  select(-matches('bottom|mid|top')) %>% 
+  select(-matches('bottom|mid|top'))
+
+# separate epc results from qualifiers
+epcval <- epcvalqual %>% 
+  select(-contains('qual')) %>% 
   gather('var', 'val', -station, -date, -yr, -mo, -latitude, -longitude) %>% 
   separate(var, c('var', 'uni'), sep = '_') %>% 
   mutate(
     val = as.numeric(val), 
-    uni = case_when(
-      var == 'sal' ~ 'ppt', 
-      var == 'ph' ~ 'none', 
-      var %in% c('tp', 'tn', 'nh34') ~ 'mg/l', 
-      var %in% 'chla' ~ 'ug/l'
-    ), 
     source = 'epchc'
   ) 
+
+# separate epc qualifiers from results
+epcqual <- epcvalqual %>% 
+  select(station, date, latitude, longitude, yr, mo, contains('qual')) %>% 
+  gather('var', 'qual', -station, -date, -yr, -mo, -latitude, -longitude) %>% 
+  mutate(
+    var = gsub('\\_qual$', '', var), 
+    qual = ifelse(qual == '', NA_character_, qual)
+    )
+
+# combine epcval and epcqual
+epcraw <- full_join(epcval, epcqual, by = c('station', 'date', 'latitude', 'longitude', 'yr', 'mo', 'var'))
 
 # chloropyll includes chla and chlac for pheophytin
 manraw <- mandat %>% 
@@ -409,7 +523,8 @@ manraw <- mandat %>%
     longitude = actual_longitude,
     var = parameter, 
     val = result_value, 
-    uni = result_unit
+    uni = result_unit, 
+    qual = qa_code
   ) %>% 
   mutate(
     var = case_when(
@@ -450,7 +565,8 @@ manraw <- mandat %>%
       var %in% c('tn', 'tp', 'nh34', 'no23', 'tkn') ~ 'mgl', 
       var %in% 'secchi' ~ 'm',
       T ~ uni
-    )
+    ), 
+    qual = ifelse(qual == '', NA, qual)
   ) %>% 
   filter(!grepl('^BH', station)) # these are bishop harbor stations with incomplete data
 
@@ -458,7 +574,7 @@ bswqdat <- bind_rows(epcraw, manraw) %>%
   arrange(station, date) %>% 
   filter(yr > 1995) %>% 
   mutate(date = floor_date(date, unit = 'month')) %>% 
-  group_by(station, date, mo, yr, source, var, uni) %>% 
+  group_by(station, date, mo, yr, source, var, uni, qual) %>% 
   summarise(
     val = mean(val, na.rm = T), 
     .groups = 'drop'
