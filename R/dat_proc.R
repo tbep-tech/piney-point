@@ -245,8 +245,14 @@ bswqrngsepchc <- epcraw %>%
   summarise(
     lat = mean(latitude, na.rm = T),
     lng = mean(longitude, na.rm = T),
-    avev = tryCatch(mean(cenfit(val, censored = cens), na.rm = T)[1], error = function(err) NA),
-    stdv = tryCatch(sd(cenfit(val, censored = cens), na.rm = T), error = function(err) NA),
+    avev = ifelse(
+      any(cens), tryCatch(mean(cenfit(val, censored = cens), na.rm = T)[1], error = function(err) NA),
+      mean(val, na.rm = T)
+    ),
+    stdv = ifelse(
+      any(cens), tryCatch(sd(cenfit(val, censored = cens), na.rm = T), error = function(err) NA),
+      sd(val, na.rm = T)
+    ),
     .groups = 'drop'
   ) %>%
   left_join(parms, by = c('var', 'uni')) %>% 
@@ -327,8 +333,14 @@ bswqrngsmpnrd <- mandat %>%
   summarise(
     lat = mean(lat, na.rm = T), 
     lng = mean(lng, na.rm = T),
-    avev = tryCatch(mean(cenfit(val, censored = cens), na.rm = T)[1], error = function(err) NA),
-    stdv = tryCatch(sd(cenfit(val, censored = cens), na.rm = T), error = function(err) NA),
+    avev = ifelse(
+      any(cens), tryCatch(mean(cenfit(val, censored = cens), na.rm = T)[1], error = function(err) NA),
+      mean(val, na.rm = T)
+    ),
+    stdv = ifelse(
+      any(cens), tryCatch(sd(cenfit(val, censored = cens), na.rm = T), error = function(err) NA),
+      sd(val, na.rm = T)
+    ),
     .groups = 'drop'
   ) %>%
   left_join(parms, by = c('var', 'uni')) %>% 
