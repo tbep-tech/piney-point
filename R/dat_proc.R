@@ -86,6 +86,9 @@ save(sbshed, file = 'data/sbshed.RData', version = 2)
 # normal ranges -----------------------------------------------------------
 
 # 2006 to 2020 by month, epc and manco data
+# secchi on bottom removed (>, L, S)
+# all other non-detects handled by NADA (U, K)
+# county partners use FDEP standards https://floridadep.gov/sites/default/files/62-160_help-document_0.pdf
 
 data(parms)
 
@@ -238,8 +241,9 @@ epcraw <- full_join(epcval, epcqual, by = c('station', 'date', 'latitude', 'long
 # get normal epc ranges
 bswqrngsepchc <- epcraw %>% 
   filter(yr > 2005 & yr < 2021) %>% 
+  filter(!(var == 'secchi' & qual %in% c('L', 'S', '>'))) %>% # remove secchi on bottom
   mutate(
-    cens = grepl('U', qual)
+    cens = grepl('U|K', qual)
   ) %>% 
   group_by(station, mo, var, uni) %>%
   summarise(
@@ -307,10 +311,11 @@ bswqrngsmpnrd <- mandat %>%
       var == 'Salinity_ppt' ~ 'sal_ppt', 
       var == 'TempW_C' ~ 'temp_c'
     ), 
-    cens = grepl('U', qual)
+    cens = grepl('U|K', qual)
   ) %>% 
   filter(!is.na(var)) %>% 
   separate(var, c('var', 'uni'), sep = '_', remove = F) %>% 
+  filter(!(var == 'secchi' & qual %in% c('L', 'S', '>'))) %>% # remove secchi on bottom
   mutate(
     station = gsub('\\=', '', station), 
     date = as.Date(mdy_hms(date)), 
@@ -2542,6 +2547,22 @@ rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1, usf1, uf1, cosp1)
   unique %>%
   filter(!is.na(val)) %>%
   arrange(source, station, date, var)
+
+
+## 
+# clean up qual codes
+# follows these: https://mail.google.com/mail/u/0/#inbox?projector=1
+# all secchi on bottom use S
+rswqdat <- rswqdat %>% 
+  mutate(
+    qual = case_when(
+      var == 'secchi' & grepl('>|Yes|VOB|L|S', qual) ~ 'S', 
+      grepl('LOD', qual) ~ 'U', 
+      qual %in% c('No', 'NULL') ~ NA_character_,
+      T ~ qual
+    ), 
+    qual = gsub('\\,|\\s', '', qual)
+  )
 
 ## 
 # calc tn if tkn, no23 provided 
