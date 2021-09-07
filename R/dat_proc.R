@@ -14,6 +14,9 @@ library(mapview)
 library(httr)
 library(jsonlite)
 library(NADA)
+box::use(
+  stringr[str_count]
+)
 
 prj <- 4326
 
@@ -945,9 +948,7 @@ rsphydatfldep <- flphy1 %>%
   select(
     date = `Site Visit Date and Time`, 
     station = `Sample Location`, 
-    species = `Algal ID`, 
-    microcyst_ugl = `Total Microcystin Toxin (micrograms/L)`, 
-    othertox_ugl = `Other Toxin (micrograms/L)`
+    species = `Algal ID`
   ) %>% 
   mutate(
     date = as.Date(date),
@@ -964,9 +965,7 @@ rsphydatfwri <- flphy2 %>%
   select(
     date = `Site Visit Date and Time`, 
     station = `Sample Location`, 
-    species = `Algal ID`, 
-    microcyst_ugl = `Total Microcystin Toxin (micrograms/L)`, 
-    othertox_ugl = `Other Toxin (micrograms/L)`
+    species = `Algal ID`
   ) %>% 
   mutate(
     date = purrr::map(date, function(x){
@@ -1119,11 +1118,8 @@ rsphydatepc <- bind_rows(rsphydatepc1, rsphydatepc2) %>%
 # combine all
 
 rsphydat <- bind_rows(rsphydatfldep, rsphydatfwri, rsphydatpinco, rsphydatepc) %>% 
-  filter(!valqual == 'Not present/Background' | is.na(valqual)) %>% 
-  mutate(
-    valqual = factor(valqual, levels = c('Very low', 'Low', 'Medium', 'High'))
-  ) 
-  
+  filter(!valqual == 'Not present/Background' | is.na(valqual))
+
 # clean up species list
 rsphydat <- rsphydat %>% 
   mutate(
@@ -1163,32 +1159,39 @@ rsphydat <- rsphydat %>%
     species = gsub('^Dominant\\staxon\\:\\s', '', species), 
     species = gsub('dominant\\sspecies:\\s', '', species), 
     species = gsub('^Thalassiosira sp\\,\\sKarenia brevis$', 'Thalassiosira sp.; Karenia brevis', species),
+    species = gsub('mixed algae;$', 'mixed algae', species),
     species = gsub('sp$|spp$|sp\\.$|spp\\.$', 'sp.', species)
   ) %>% 
   filter(species != 'chains')
 
-# break out karenia samples in separate rows
-tmp <- rsphydat %>% 
+# quantitative samples
+rsphyquan <- rsphydat %>% 
+  filter(typ == 'Quantitative')
+
+# break out multiple species in a row from fldep/fwri to tidy
+rsphyqual <- rsphydat %>% 
+  filter(typ == 'Qualitative')
+
+exspp <- str_count(rsphyqual$species, ';') %>% 
+  max %>% 
+  `+`(1) %>% 
+  seq(1, .) %>% 
+  paste('species', .)
+
+rsphyqual <- rsphyqual %>% 
+  separate(species, into = exspp, sep = '; ', fill = 'right') %>% 
+  select(date, station, matches('^species'), source, typ) %>% 
+  gather('var', 'species', -date, -station, -source, -typ) %>% 
+  select(-var) %>% 
+  filter(!is.na(species))
+  
+# recombine
+rsphydat <- bind_rows(rsphyqual, rsphyquan) %>% 
+  arrange(date, station, species) %>% 
   mutate(
-    species = case_when(
-      !grepl(';', species)  ~ paste0(species, '; nothing'), 
-      T ~ species
-    )
-  ) %>% 
-  separate(species, into = c('species1', 'species2'), sep = '; ')
-  
-tmp1 <- tmp %>% 
-  select(-species2) %>% 
-  rename(species = species1)
+    valqual = factor(valqual, levels = c('Very low', 'Low', 'Medium', 'High'))
+  ) 
 
-tmp2 <- tmp %>% 
-  filter(species2 != 'nothing') %>% 
-  select(-species1) %>%
-  rename(species = species2)
-
-rsphydat <- bind_rows(tmp1, tmp2) %>% 
-  arrange(date, station, species)
-  
 save(rsphydat, file = 'data/rsphydat.RData', version = 2)
 
 # for log
