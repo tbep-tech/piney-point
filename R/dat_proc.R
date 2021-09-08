@@ -1591,14 +1591,14 @@ data(rsstatloc)
 gdrive_pth <- 'https://drive.google.com/drive/folders/1SWlBbZtjZ8SF43MCz5nv5YLCWDvn7T_x'
 
 # sleep time in seconds
-wait <- 10
+wait <- 15
 
 # csv files must be opened/saved as spreadsheet in google sheets
 fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
 
 ## fldep ------------------------------------------------------------------
 
-fl <- fls[which(fls$name == 'FLDEP_20210904'), 'id'] %>% pull(id)
+fl <- fls[which(fls$name == 'FLDEP_20210908'), 'id'] %>% pull(id)
 flsht <- read_sheet(fl)
 out1 <- flsht %>% 
   clean_names %>% 
