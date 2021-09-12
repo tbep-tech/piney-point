@@ -800,6 +800,7 @@ rstrndatmcr <- rstrndat %>%
   select(date, station, location, taxa = macroalgae_group, abundance = macroalgae_abundance, bb = macroalgae_bb) 
 
 # expand all by locations sampled each date to get true zeroes
+# fix some station names
 rstrndat <- bind_rows(rstrndatmcr, rstrndatsav) %>% 
   group_by(date, station) %>% 
   complete(
@@ -811,6 +812,14 @@ rstrndat <- bind_rows(rstrndatmcr, rstrndatsav) %>%
     typ = case_when(
       taxa %in% savlevs ~ 'sav', 
       taxa %in% grplevs ~ 'mcr'
+    ), 
+    station = case_when(
+      station %in% c('CB0', 'CB2', 'CB18', 'JB1', 'JB2', 'JB6') ~ gsub('^([[:alpha:]]+)(\\d+)$', '\\1-\\2', station), 
+      station == 'S4T2A' ~ 'S4T2a', 
+      station == 'S4T2B' ~ 'S4T2b', 
+      station == 'S4T3' ~ 'S4T3a', 
+      station == 'SMB3A' ~ 'SMB3', 
+      T ~ station
     )
   ) %>% 
   select(date, station, location, typ, taxa, abundance, bb) %>% 
