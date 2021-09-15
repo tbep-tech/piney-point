@@ -1090,33 +1090,40 @@ rsphydatepc1 <- flphy %>%
 
 data(bswqdat)
 
-id <- fls[grep('^EPC_PP', fls$name), 'id'] %>% pull(id)
-flphy <- read_sheet(id)
-rsphydatepc2 <- flphy %>%
-  select(
-    date = SampleTime,
-    station = StationNumber,
-    species = NAME,
-    val = COUNT
-  ) %>%
-  filter(!species %in% 'Nanoplankton') %>%
-  mutate(
-    date = date(date),
-    station = as.character(station),
-    val = val * 10, # cells/0.1mL to cells/mL,
-    val = val * 1000, # cells/L
-    valqual = case_when(
-      val < 1e3 ~ 'Not present/Background',
-      val >= 1e3 & val < 1e4 ~ 'Very low',
-      val >= 1e4 & val < 1e5 ~ 'Low',
-      val >= 1e5 & val < 1e6 ~ 'Medium',
-      val >= 1e6 & val ~ 'High'
-    ),
-    source = 'epchc',
-    typ = 'Quantitative',
-    uni = 'cells/L'
-  ) %>% 
-  filter(station %in% bswqdat$station)
+ids <- fls[grep('^EPC_PP', fls$name), 'id'] %>% pull(id)
+rsphydatepc2 <- NULL
+for(id in ids){
+  
+  flphy <- read_sheet(id)
+  out <- flphy %>%
+    select(
+      date = SampleTime,
+      station = StationNumber,
+      species = NAME,
+      val = COUNT
+    ) %>%
+    filter(!species %in% 'Nanoplankton') %>%
+    mutate(
+      date = date(date),
+      station = as.character(station),
+      val = val * 10, # cells/0.1mL to cells/mL,
+      val = val * 1000, # cells/L
+      valqual = case_when(
+        val < 1e3 ~ 'Not present/Background',
+        val >= 1e3 & val < 1e4 ~ 'Very low',
+        val >= 1e4 & val < 1e5 ~ 'Low',
+        val >= 1e5 & val < 1e6 ~ 'Medium',
+        val >= 1e6 & val ~ 'High'
+      ),
+      source = 'epchc',
+      typ = 'Quantitative',
+      uni = 'cells/L'
+    ) %>% 
+    filter(station %in% bswqdat$station)
+
+  rsphydatepc2 <- bind_rows(rsphydatepc2, out)
+  
+}
 
 # there is some overlap between the two files
 rsphydatepc <- bind_rows(rsphydatepc1, rsphydatepc2) %>% 
