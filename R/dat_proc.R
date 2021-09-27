@@ -1730,6 +1730,52 @@ if(nrow(tmp2) < nrow(tmp1)){
 
 }
 
+##
+# file from Nia 
+fl <- fls[which(fls$name == 'FLDEP_NW_20210927'), 'id'] %>% pull(id)
+flsht <- read_sheet(fl)
+out3 <- flsht %>% 
+  select(
+    station = `SITE LOCATION`, 
+    date = `DATE SAMPLED`,
+    var = COMPONENT, 
+    uni = UNITS, 
+    val = RESULT,
+    qual = `QUALIFIER CODE`
+  ) %>% 
+  filter(
+    var %in% c('Ammonia-N', 'Chlorophyll-a, Corrected', 'NO2NO3-N', 'O-Phosphate-P', 'Total-P', 'TSS', 'Turbidity')
+  ) %>% 
+  mutate(
+    date = as.Date(date), 
+    val = as.numeric(val), 
+    var = case_when(
+      var == 'Ammonia-N' ~ 'nh34', 
+      var == 'Chlorophyll-a, Corrected' ~ 'chla', 
+      var == 'NO2NO3-N' ~ 'no23', 
+      var == 'O-Phosphate-P' ~ 'orthop', 
+      var == 'Total-P' ~ 'tp', 
+      var == 'TSS' ~ 'tss', 
+      var == 'Turbidity' ~ 'turb'
+    ), 
+    uni = case_when(
+      uni == 'mg N/L' ~ 'mgl', 
+      uni == 'mg P/L' ~ 'mgl',
+      uni == 'mg/L' ~ 'mgl', 
+      uni == 'NTU' ~ 'ntu', 
+      uni == 'ug/L' ~ 'ugl'
+    ),
+    station = gsub('^Piney\\s\\s', 'Piney ', station),
+    source = 'fldep'
+  )
+
+# find what's in out3 that's not what's in fldep1
+out3 <- anti_join(out3, fldep1, by = c('station', 'date', 'var', 'uni', 'source', 'val', 'qual'))
+
+# join with fldep1
+fldep1 <- bind_rows(fldep1, out3) %>% 
+  arrange(date, var)
+
 # remove long text strings from qual codes
 fldep1 <- fldep1 %>% 
   mutate(
