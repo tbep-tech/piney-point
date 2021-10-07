@@ -815,10 +815,11 @@ rstrndat <- bind_rows(rstrndatmcr, rstrndatsav) %>%
     ), 
     station = case_when(
       station %in% c('CB0', 'CB2', 'CB18', 'JB1', 'JB2', 'JB6') ~ gsub('^([[:alpha:]]+)(\\d+)$', '\\1-\\2', station), 
+      station %in% c('BH-1', 'BH-2', 'BH-3', 'BH-4') ~ paste0('S', gsub('-', '', station)),
       station == 'S4T2A' ~ 'S4T2a', 
       station == 'S4T2B' ~ 'S4T2b', 
       station == 'S4T3' ~ 'S4T3a', 
-      station == 'SMB3A' ~ 'SMB3', 
+      station %in% c('SMB3A', 'SMB3a') ~ 'SMB3', 
       T ~ station
     )
   ) %>% 
