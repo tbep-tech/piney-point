@@ -720,6 +720,7 @@ rstrndat <- read_sheet('1YYJ3c6jzOErt_d5rIBkwPr45sA1FCKyDd7io4ZMy56E') %>%
     macroalgae_group,
     macroalgae_abundance
   ) %>% 
+  filter(!grepl('^SSJS', station)) %>%  # remove control stations
   mutate(
     macroalgae_group = case_when(
       macroalgae_group == 'Geen' ~ 'Green', 
