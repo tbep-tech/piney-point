@@ -1366,7 +1366,7 @@ save(raindat, file = 'data/raindat.RData')
 # wind data ---------------------------------------------------------------
 
 dt2 <- Sys.Date() 
-dt1 <- as.Date('2021-03-21')
+dt1 <- as.Date('2021-01-01')
 dts <- seq.Date(dt1, dt2, by = 'day')
 
 # metric units selected, wind is m/2
