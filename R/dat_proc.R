@@ -1363,6 +1363,54 @@ raindat <- res %>%
 
 save(raindat, file = 'data/raindat.RData')
 
+# wind data ---------------------------------------------------------------
+
+dt2 <- Sys.Date() 
+dt1 <- as.Date('2021-03-21')
+dts <- seq.Date(dt1, dt2, by = 'day')
+
+# metric units selected, wind is m/2
+# station is coast guard facility south side of Albert Whitted, 8726520
+
+out <- NULL
+for(i in seq_along(dts)){
+  
+  cat(i, 'of', length(dts), '\n')
+  
+  if(dts[i] == max(dts))
+    next()
+  
+  dtstr <- dts[i] %>% 
+    as.character %>% 
+    gsub('\\-', '', .)
+  dtend <- dts[i + 1] %>% 
+    as.character %>% 
+    gsub('\\-', '', .)
+  
+  url <- paste('https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=wind&application=NOS.COOPS.TAC.MET&begin_date=', dtstr, '&end_date=', dtend, '&station=8726520&time_zone=LST&units=metric&format=CSV', sep = '')
+  
+  dat <- try({read.table(url, sep = ',', header = T) %>% 
+      .[, c(1:3)]
+  })
+  
+  if(inherits(dat, 'try-error'))
+    next()
+  
+  out <- rbind(out, dat)
+  
+}
+
+winddat <- out %>% 
+  unique %>% 
+  select(
+    datetime = Date.Time,
+    wind_ms = Speed, 
+    wind_dir = Direction
+  ) %>% 
+  mutate(datetime = ymd_hm(datetime, tz = 'America/Jamaica'))
+
+save(winddat, file = 'data/winddat.RData')
+
 # benthic -----------------------------------------------------------------
 
 ## data -------------------------------------------------------------------
