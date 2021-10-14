@@ -1415,7 +1415,7 @@ hydrodat <- res %>%
   unnest('data') %>% 
   unnest('ests') %>% 
   ungroup() %>% 
-  select(year, date = Date, flow_m3 = Flow)
+  select(date = Date, flow_m3 = Flow)
 
 save(hydrodat, file = 'data/hydrodat.RData')
 
