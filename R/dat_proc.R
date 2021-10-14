@@ -1364,6 +1364,61 @@ raindat <- res %>%
 
 save(raindat, file = 'data/raindat.RData')
 
+
+# flow data ---------------------------------------------------------------
+
+# hydrology is sum of flow from six stations
+# flow is returned at ft3/s, we convert it to m3/d
+
+yrs <- seq(1995, 2021)
+
+res <- yrs %>%
+  tibble::enframe('name', 'year') %>%
+  dplyr::group_by(name) %>%
+  tidyr::nest() %>%
+  dplyr::mutate(
+    ests = purrr::map(data, function(x){
+      
+      yr <- x$year
+      cat(yr, '\n')
+      
+      start <- paste0(yr, "-01-01")
+      end <- paste0(yr, "-12-31")
+      
+      # download USGS streamflow data
+      hr <- dataRetrieval::readNWISdv("02303000", "00060", start, end) %>%
+        dataRetrieval::renameNWISColumns()
+      ar <- dataRetrieval::readNWISdv("02301500", "00060", start, end) %>%
+        dataRetrieval::renameNWISColumns()
+      lmr <- dataRetrieval::readNWISdv("02300500", "00060", start, end) %>%
+        dataRetrieval::renameNWISColumns()
+      tar <- dataRetrieval::readNWISdv("02307498", "00060", start, end) %>%
+        dataRetrieval::renameNWISColumns()
+      wl <- dataRetrieval::readNWISdv("02300042", "00060", start, end) %>%
+        dataRetrieval::renameNWISColumns()
+      mr <- dataRetrieval::readNWISdv("02299950", "00060", start, end) %>%
+        dataRetrieval::renameNWISColumns()
+      
+      out <- bind_rows(hr, ar, lmr, tar, wl, mr) %>% 
+        mutate(
+          Flow = Flow * 86400 / 35.3147 # ft3/s to m3/d
+        ) %>% 
+        group_by(Date) %>% 
+        summarise(Flow = sum(Flow, na.rm = T))
+      
+      return(out)
+      
+    })
+  )
+
+hydrodat <- res %>% 
+  unnest('data') %>% 
+  unnest('ests') %>% 
+  ungroup() %>% 
+  select(year, date = Date, flow_m3 = Flow)
+
+save(hydrodat, file = 'data/hydrodat.RData')
+
 # wind data ---------------------------------------------------------------
 
 dt2 <- Sys.Date() 
