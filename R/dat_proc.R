@@ -2783,7 +2783,7 @@ rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1, usf1, uf1, cosp1)
 
 ## 
 # clean up qual codes
-# follows these: https://mail.google.com/mail/u/0/#inbox?projector=1
+# follows these: https://floridadep.gov/sites/default/files/62-160_help-document_0.pdf
 # all secchi on bottom use S
 rswqdat <- rswqdat %>% 
   mutate(
