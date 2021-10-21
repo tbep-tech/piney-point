@@ -1544,12 +1544,13 @@ rsphyplo1 <- reactive({
     
     cols <- RColorBrewer::brewer.pal(length(levels(toplo$valqual)) - 1, 'Greens')
     cols <- c('white', cols)
+    unidts <- length(unique(toplo$date))
     
     out <- ggplot(toplo, aes(y = species, x = val)) + 
       geom_bar(stat = 'identity', aes(fill = valqual), colour = 'black') + 
       scale_x_continuous(expand = c(0, 0), limits = c(0, phymax)) +
       scale_fill_manual(values = cols, drop = F) +
-      facet_wrap(~date) + 
+      facet_wrap(~date, ncol = unidts) + 
       theme_minimal(base_size = 16) + 
       theme(
         legend.position = 'top', 
