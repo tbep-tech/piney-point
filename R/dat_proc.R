@@ -1719,7 +1719,7 @@ bswqloc <- bswqrngs %>%
   as.data.frame(stringsAsFactors = F) %>% 
   st_as_sf(coords = c('lng', 'lat'), crs = prj)
 
-# nearest epc stations to rswq stations
+# nearest ltm stations to rswq stations
 rswqnear <- rsstatloc %>% 
   select(station) %>% 
   mutate(
@@ -1737,11 +1737,15 @@ rswqlns <- rsstatloc %>%
     lns = purrr::map(data, function(x){
 
       out <- st_nearest_points(x, bswqloc) %>% 
-        st_cast('LINESTRING')
-      len <- st_length(out) %>% 
-        which.min
-      out <- out[len]
-
+        st_cast('LINESTRING') %>%
+        st_as_sf() %>% 
+        rename(geometry = x) %>% 
+        mutate(
+          dist = st_length(.)
+        ) %>% 
+        arrange(dist) %>% 
+        .[1, ]
+      
       return(out)
       
     })
@@ -1749,14 +1753,18 @@ rswqlns <- rsstatloc %>%
   select(-data) %>%
   unnest('lns') %>%
   ungroup() %>% 
-  st_as_sf() %>% 
-  st_geometry()
+  mutate(
+    dist = units::set_units(dist, 'km'), 
+    km = as.numeric(dist)
+  ) %>% 
+  select(-dist) %>% 
+  st_as_sf()
 
 bswqloc <- bswqloc %>%
   filter(bswqstation %in% as.character(rswqnear$bswqstation)) %>% 
   mutate(type = 'Long-term')
 
-wqrefmap <- mapview(rswqlns, color = 'grey', homebutton = F, layer.name = 'Distance to closest') +
+wqrefmap <- mapview(rswqlns, color = 'grey', homebutton = F, layer.name = 'Distance to closest', label = paste(round(rswqlns$km, 1), 'km')) +
   mapview(rsstatloc, col.regions = 'lightblue', alpha.regions = 1, lwd = 0.5, cex = 4, label = paste0('Current station ', rsstatloc$station), layer.name = 'Current stations', homebutton = F) +
   mapview(bswqloc, col.regions = 'tomato1', alpha.regions = 1, lwd = 0.5, cex = 4, label = paste0('Reference station ', bswqloc$bswqstation), layer.name = 'Reference stations', homebutton = F)
 
