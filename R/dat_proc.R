@@ -2342,6 +2342,9 @@ pinco1 <- bind_rows(out2) %>%
     val = mean(val, na.rm = T), 
     .groups = 'drop'
   ) %>% 
+  filter(
+    !(var == 'ph' & val > 14)
+  ) %>% 
   select(station, date, source, var, uni, val, qual)
 
 ## ncf --------------------------------------------------------------------
@@ -2779,11 +2782,11 @@ cosp1 <- out1
 
 ## combine all ------------------------------------------------------------
 
-rswqdat <- rswqdat %>%
-  select(station, date, source, var, uni, val, qual) %>%
-  filter(!source %in% c('fldep'))
-rswqdat <- bind_rows(fldep1, rswqdat) %>%
-# rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1, usf1, uf1, cosp1) %>%
+# rswqdat <- rswqdat %>%
+#   select(station, date, source, var, uni, val, qual) %>%
+#   filter(!source %in% c('pinco', 'tbep'))
+# rswqdat <- bind_rows(pinco1, rswqdat) %>%
+rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1, usf1, uf1, cosp1) %>%
   ungroup %>% 
   unique %>%
   filter(!is.na(val)) %>%
