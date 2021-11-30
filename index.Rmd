@@ -1101,13 +1101,16 @@ rsbntmap <- reactive({
   
   # input
   bntsel <- input$bntsel
-  
+
   # select month to map
   tomap <- rsbntdat %>% 
     filter(modt %in% bntsel) %>% 
     select(station, col, TBBICat) %>% 
-    left_join(rsbntpts, ., by = 'station')
+    inner_join(rsbntpts, ., by = 'station')
 
+  if(is.null(stasel2))
+    stasel2 <- rsbnts[1]
+  
   # response benthic sampling base map
   out <- mapview(tomap, homebutton = F, legend = F) %>% 
     .@map %>% 
@@ -1125,7 +1128,7 @@ rsbntmap <- reactive({
       label = ~paste0('Station: ', station, ' (', source_lng, '), ', TBBICat)
     ) %>% 
     addCircleMarkers(
-        data = tomap[tomap$station %in% rsbnts[1], ],
+        data = tomap[tomap$station %in% stasel2, ],
         layerId = 'selpt',
         stroke = TRUE,
         color = 'black',
@@ -1684,7 +1687,7 @@ The primary pollutants of concern for this discharge are phosphorus and nitrogen
 
 The dashboard is a synthesis of data that can be used to assess baseline conditions prior to discharge and to evaluate changing water quality conditions as new data become available.  __All data are provisional and subject to revision.__ The dashboard is arranged as follows:
 
-1) __CURRENT DATA__: Current [water quality](#water-quality-results), [algal surveys](#algal-surveys), [seagrass/macroalgae](https://shiny.tbep.org/piney-point/#section-rapid-response-seagrassmacroalgae-surveys), and [contaminant](#contaminant-results) results are presented.  [Sediment](#benthic-surveys) (biology and chemistry) samples have also been collected, but the data are being processed.
+1) __CURRENT DATA__: Current [water quality](#water-quality-results), [algal surveys](#algal-surveys), [seagrass/macroalgae](#section-rapid-response-seagrassmacroalgae-surveys), [contaminant](#contaminant-results), and [sediment biology](#benthic-biology) results are presented.
 1) __BASELINE DATA__: Long-term [water quality](#water-quality) and [seagrass data](#seagrasses) over a 25 year period.  
 
 #### Additional resources
@@ -2185,7 +2188,7 @@ Use the variable selection menu on the top to view results for a contaminant of 
 
 __All results shown relative to a threshold are provided as reference only and do not indicate regulatory non-compliance.__ The thresholds apply to surface water quality standards from Florida DEP for Class II (shellfish propagation and harvest) or Class III marine waters (fish consumption, recreation, propagation and maintenance of a healthy, well-balanced population of fish and wildlife).  Standards are not available for all contaminants on the dashboard.  The lower standard was used in instances when two different standards for Class II or III waters applied to a parameter.  Some standards are also based on annual averages and not from a single observation.  
 
-BENTHIC SURVEYS {data-navmenu="CURRENT DATA"}
+BENTHIC BIOLOGY {data-navmenu="CURRENT DATA"}
 =======================================================================
 
 Column {data-width=400}
@@ -2235,7 +2238,7 @@ fillCol(flex = c(NA, NA, NA, 1),
 
 Initial sediment samples near Piney Point were collected 2021-04-07. These samples will be compared with samples collected in the fall to determine a potential impact of Piney Point on the benthic communities. 
 
-For each sample at each station, benthic organisms living in the sediment were identified and enumerated.  This information is used to calculate the Tampa Bay Benthic Index (TBBI) to quantify the ecological health of the benthic community as affected by the the quality of the sediments they inhabit.  Samples are scored as Healthy, Intermediate, or Degraded based on continuous TBBI scores from 0 - 100. Contaminants and other pollutants from the Piney Point effluent may negatively impact benthic communities and the TBBI will reflect these changes. 
+For each sample at each station, benthic organisms living in the sediment were identified and enumerated.  This information is used to calculate the Tampa Bay Benthic Index (TBBI) to quantify the ecological health of the benthic community as affected by the the quality of the sediments they inhabit.  Samples are scored as Healthy, Intermediate, or Degraded based on continuous TBBI scores from 0 - 100 (negative scores are possible). Contaminants and other pollutants from the Piney Point effluent may negatively impact benthic communities and the TBBI will reflect these changes. 
 
 The graphics on the __STATION RESULTS__ tab show the estimated TBBI score for the selected site (top) and a plot of the abundances of organisms found at the site (bottom). 
 
