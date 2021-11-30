@@ -21,6 +21,8 @@ box::use(
 
 prj <- 4326
 
+source('R/funcs.R')
+
 # deauth all so it can build with gh actions
 drive_deauth()
 gs4_deauth()
@@ -1474,6 +1476,8 @@ save(winddat, file = 'data/winddat.RData')
 # TBBI scores, pulled code from tbeptools
 # salinity was not available at sites, so estimated from rswqdat
 
+data(rswqdat)
+
 # salinity avg values
 salest <- rswqdat %>% 
   filter(var == 'sal') %>% 
@@ -1488,7 +1492,7 @@ salest <- rswqdat %>%
   deframe
 
 # spring (april) samples
-fltax <- read_sheet('1ilqIhAyNkqjumditq8TYqG4NLsVcO3_AHljip_X1LWs')
+fltax <- read_sheet('1p2qOLsRjKUxMkKxGaT7P30k8vPkfzoR_Wc3OhW46QEs')
 salin <- salest['4'] #  this was the avg salinity in Apr
 rsbntdat1 <- tbbi_fun(fltax, salin)
 
