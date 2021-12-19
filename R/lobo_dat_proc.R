@@ -17,7 +17,7 @@ dtstr <- dt1 %>%
 
 url <- paste('http://tampabay.loboviz.com/cgi-data/nph-data.cgi?node=82&min_date=', dtstr, '&max_date=', dtend, '&y=salinity,temperature,co2,oxygen,pht,par,pressure&data_format=text', sep = '')
 
-# note that do is ml/L, to convert use [mg/L] = [ml/L] * 1.42903 (from email 4/16/21)
+# to convert use [mg/L] = [ml/L] * 1.42903 (from email 4/16/21)
 datraw <- read.table(url, skip = 2, sep = '\t', header = T) %>% 
   clean_names() %>% 
   select(
@@ -25,7 +25,7 @@ datraw <- read.table(url, skip = 2, sep = '\t', header = T) %>%
     Sal = salinity_psu, 
     Temp = temperature_c, 
     co2 = co2_ppm, 
-    DO_obs = dissolved_oxygen_ml_l, 
+    DO_obs = dissolved_oxygen_mg_l, 
     ph = p_ht, 
     par = par_u_m_m_2_sec,
     Tide = pressure_d_bar
@@ -116,11 +116,9 @@ save(lobodat, file = 'data/lobodat.RData', version = 2)
 
 # lobo metabolism ---------------------------------------------------------
 
-# convert do from ml/L go mg/L
 # convert tide from dbar to depth (1dbar is ~1m), sonde is mid-depth at ~2.6m, total depth is 5m
 lobodat <- lobodat %>% 
   mutate(
-    DO_obs = DO_obs * 1.42903, 
     Tide = Tide + 2.4
   )
 

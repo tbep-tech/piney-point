@@ -39,7 +39,7 @@ vrs <- list(
   `Salinity (psu)` = 'Sal', 
   `Water temp (C)` = 'Temp', 
   `CO2 (ppm)` = 'co2', 
-  `DO (ml/L)` = 'DO_obs', 
+  `DO (mg/L)` = 'DO_obs', 
   `pH` = 'ph',
   `PAR (um/m2/s)` = 'par',
   `Tide (dbar)` = 'Tide',
