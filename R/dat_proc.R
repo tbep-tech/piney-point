@@ -1689,7 +1689,7 @@ data(rsstatloc)
 gdrive_pth <- 'https://drive.google.com/drive/folders/1SWlBbZtjZ8SF43MCz5nv5YLCWDvn7T_x'
 
 # sleep time in seconds
-wait <- 15
+wait <- 10
 
 # csv files must be opened/saved as spreadsheet in google sheets
 fls <- drive_ls(gdrive_pth, type = 'spreadsheet')
@@ -2692,11 +2692,11 @@ cosp1 <- out1
 
 ## combine all ------------------------------------------------------------
 
-# rswqdat <- rswqdat %>%
-#   select(station, date, source, var, uni, val, qual) %>%
-#   filter(!source %in% c('fldep'))
-# rswqdat <- bind_rows(fldep1, rswqdat) %>%
-rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1, usf1, uf1, cosp1) %>%
+rswqdat <- rswqdat %>%
+  select(station, date, source, var, uni, val, qual) %>%
+  filter(!source %in% c('epc'))
+rswqdat <- bind_rows(epc1, rswqdat) %>%
+# rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1, usf1, uf1, cosp1) %>%
   ungroup %>% 
   unique %>%
   filter(!is.na(val)) %>%
