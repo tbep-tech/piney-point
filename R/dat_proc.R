@@ -1312,7 +1312,7 @@ save(kbrdat, file = 'data/kbrdat.RData', version = 2)
 
 noaa_key <- Sys.getenv('NOAA_KEY')
 
-yrs <- seq(1995, 2021)
+yrs <- seq(2000, 2021)
 
 res <- yrs %>%
   tibble::enframe('name', 'year') %>%
@@ -1327,31 +1327,31 @@ res <- yrs %>%
       start <- paste0(yr, "-01-01")
       end <- paste0(yr, "-12-31")
       
-      # # download NOAA UWS rainfall station data
-      # sp_rainfall <- rnoaa::ncdc(datasetid = "GHCND", stationid = "GHCND:USW00092806",
-      #                            datatypeid = "PRCP", startdate = start, enddate = end,
-      #                            limit = 500, add_units = TRUE, token = noaa_key)
-      # sp_rain <- sp_rainfall$data %>%
-      #   mutate(
-      #     date = as.Date(date), 
-      #     precip_cm = value / 100, 
-      #     station = 'St. Pete Albert Whitted'
-      #   ) %>% 
-      #   select(station, date, precip_cm)
-      
-      tia_rainfall <- rnoaa::ncdc(datasetid = "GHCND", stationid = "GHCND:USW00012842",
-                                  datatypeid = "PRCP", startdate = start, enddate = end,
-                                  limit = 500, add_units = TRUE, token = noaa_key)
-      tia_rain <- tia_rainfall$data %>%
+      # download NOAA UWS rainfall station data
+      sp_rainfall <- rnoaa::ncdc(datasetid = "GHCND", stationid = "GHCND:USW00092806",
+                                 datatypeid = "PRCP", startdate = start, enddate = end,
+                                 limit = 500, add_units = TRUE, token = noaa_key)
+      sp_rain <- sp_rainfall$data %>%
         mutate(
           date = as.Date(date),
           precip_cm = value / 100,
-          station = 'Tampa International'
+          station = 'St. Pete Albert Whitted'
         ) %>%
         select(station, date, precip_cm)
       
+      # tia_rainfall <- rnoaa::ncdc(datasetid = "GHCND", stationid = "GHCND:USW00012842",
+      #                             datatypeid = "PRCP", startdate = start, enddate = end,
+      #                             limit = 500, add_units = TRUE, token = noaa_key)
+      # tia_rain <- tia_rainfall$data %>%
+      #   mutate(
+      #     date = as.Date(date),
+      #     precip_cm = value / 100,
+      #     station = 'Tampa International'
+      #   ) %>%
+      #   select(station, date, precip_cm)
+
       # out <- bind_rows(sp_rain, tia_rain)
-      out <- tia_rain
+      out <- sp_rain
       
       return(out)
       
@@ -1365,7 +1365,6 @@ raindat <- res %>%
   select(station, date, precip_cm)
 
 save(raindat, file = 'data/raindat.RData')
-
 
 # flow data ---------------------------------------------------------------
 
