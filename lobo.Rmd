@@ -251,7 +251,7 @@ column(12,
 )
 
 column(12, 
-  selectInput('varsel2', 'Select second variable:', choices = vrs, selected = vrs[5])
+  selectInput('varsel2', 'Select second variable:', choices = vrs, selected = vrs[6])
 )
 
 column(12, 
@@ -281,7 +281,6 @@ fillCol(flex = c(NA, NA),
 ```
 
 ### About
-
 
 ```{r}
 loc <- data.frame(
