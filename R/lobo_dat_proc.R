@@ -2,6 +2,9 @@ library(tidyverse)
 library(janitor)
 library(lubridate)
 library(WtRegDO)
+library(here)
+
+source(here('R/funcs.R'))
 
 dt2 <- Sys.Date() 
 dt1 <- as.Date('2021-03-21')
@@ -101,7 +104,8 @@ portsdat <- out %>%
   ) %>% 
   mutate(DateTimeStamp = ymd_hm(DateTimeStamp, tz = 'America/Jamaica'))
 
-# combine ports with lobo -------------------------------------------------
+
+# combine ports w/ lobo, add do sat ---------------------------------------
 
 lobodat <- lobodat %>% 
   left_join(portsdat, by = 'DateTimeStamp') %>% 
@@ -109,7 +113,8 @@ lobodat <- lobodat %>%
     evnt = case_when(
       DateTimeStamp >= as.Date('2021-03-30') & DateTimeStamp <= as.Date('2021-04-08') ~ T, 
       T ~ F
-    )
+    ), 
+    DO_sat = DOsat(DO_obs, Temp, Sal, BP / 1032)
   )
 
 save(lobodat, file = 'data/lobodat.RData', version = 2)
