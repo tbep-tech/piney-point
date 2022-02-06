@@ -469,7 +469,14 @@ tbbi_fun <- function(datin, salin){
 
 }
 
-# Convert DO into % saturation for 1-m depth 
+#' Convert DO into % saturation for 1-m depth 
+#' Use convention of expressing saturation at 1 atm.
+#' data(sfbay)
+#'
+#' @param do, dissolved oxygen mg/l 
+#' @param t tem temperature, degrees C
+#' @param S salinity, on the Practical Salinity Scale
+#' @param P pressure, atm
 DOsat <- function (do, t, S, P = NULL)
 {
   T = t + 273.15
