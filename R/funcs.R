@@ -73,6 +73,12 @@ plo_fun <- function(wqdat, station, cols, parms){
   p <- subplot(p1, p2, p3, p4, p5, p6, nrows = 6, shareX = T, shareY = F, titleY = T) %>% 
     layout(
       xaxis = list(title = NA, range = c(as.Date('1995-01-01'), as.Date('2022-01-01')))
+    ) %>% 
+    plotly::config(
+      toImageButtonOptions = list(
+        format = "svg",
+        filename = "myplot"
+      )
     )
   
   return(p)
