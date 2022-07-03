@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = F, message = F, warning = F)
 # libraries
 library(shiny)
 library(flexdashboard)
-# library(mapview)
+library(mapview)
 library(leaflet)
 library(tidyverse)
 library(sf)
@@ -30,9 +30,7 @@ library(tbeptools)
 library(patchwork)
 library(shinyWidgets)
 library(lubridate)
-library(librarian)
 
-shelf('r-spatial/mapview')
 source('R/funcs.R')
 
 load('data/bswqdat.RData')
@@ -70,9 +68,6 @@ rsbntlog <- readLines('logs/rsbntlog.txt')
 
 # map types
 mptyps <- c("CartoDB.Positron", "CartoDB.DarkMatter", "OpenStreetMap", "Esri.WorldImagery", "OpenTopoMap")
-mapviewOptions(
-    basemaps = c("Stamen.TonerLite", "Esri.OceanBasemap"),
-    platform = "leaflet")
 
 # proj
 prj <- 4326
@@ -644,7 +639,7 @@ rsmap1 <- reactive({
     # hover pt labels
     labs <- paste0('Station: ', tomap$station, ', Date: ', tomap$date, ', ', vrlb, ': ', round(tomap$val, 2))
 
-    m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, popup = NULL, layerId = tomap$id)
+    m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, map.types = mptyps, popup = NULL, layerId = tomap$id)
     
   }
   
