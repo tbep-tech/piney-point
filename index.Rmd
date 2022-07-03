@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = F, message = F, warning = F)
 # libraries
 library(shiny)
 library(flexdashboard)
-library(mapview)
+# library(mapview)
 library(leaflet)
 library(tidyverse)
 library(sf)
@@ -30,7 +30,9 @@ library(tbeptools)
 library(patchwork)
 library(shinyWidgets)
 library(lubridate)
+library(librarian)
 
+shelf('r-spatial/mapview')
 source('R/funcs.R')
 
 load('data/bswqdat.RData')
