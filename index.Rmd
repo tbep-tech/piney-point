@@ -642,7 +642,7 @@ rsmap1 <- reactive({
     # hover pt labels
     labs <- paste0('Station: ', tomap$station, ', Date: ', tomap$date, ', ', vrlb, ': ', round(tomap$val, 2))
 
-    m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, map.types = mptyps, popup = NULL, layerId = tomap$id)
+    m <- mapview(tomap, cex = tomap$cexs, label = labs, legend = F, layer.name = F, col.regions = tomap$cols, homebutton = F, popup = NULL, layerId = tomap$id)
     
   }
   
