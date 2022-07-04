@@ -69,10 +69,6 @@ rsbntlog <- readLines('logs/rsbntlog.txt')
 # map types
 mptyps <- c("CartoDB.Positron", "CartoDB.DarkMatter", "OpenStreetMap", "Esri.WorldImagery", "OpenTopoMap")
 
-mapviewOptions(
-    basemaps = c("Stamen.TonerLite", "Esri.OceanBasemap"),
-    platform = "leaflet")
-
 # proj
 prj <- 4326
 
@@ -672,8 +668,7 @@ rsmap1 <- reactive({
   }
 
   # add legend
-  out <- m %>%
-    .@map %>% 
+  out <- m@map %>% 
     addLegend("bottomright", pal = colfun, title = leglab, opacity = 1, values = varrng1) %>% 
     setView(mapcenter[1], mapcenter[2], zoom = 11) %>% 
     addMarkers(lng = pineypoint[1], lat = pineypoint[2], label = 'Piney Point', options = markerOptions(interactive = FALSE))
