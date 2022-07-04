@@ -30,7 +30,6 @@ library(tbeptools)
 library(patchwork)
 library(shinyWidgets)
 library(lubridate)
-library(leafpop)
 
 source('R/funcs.R')
 
