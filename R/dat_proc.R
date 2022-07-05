@@ -15,6 +15,7 @@ library(httr)
 library(jsonlite)
 library(NADA)
 library(rnoaa)
+library(htmlwidgets)
 box::use(
   stringr[str_count]
 )
@@ -1677,7 +1678,8 @@ wqrefmap <- mapview(rswqlns, color = 'grey', homebutton = F, layer.name = 'Dista
   mapview(rsstatloc, col.regions = 'lightblue', alpha.regions = 1, lwd = 0.5, cex = 4, label = paste0('Current station ', rsstatloc$station), layer.name = 'Current stations', homebutton = F) +
   mapview(bswqloc, col.regions = 'tomato1', alpha.regions = 1, lwd = 0.5, cex = 4, label = paste0('Reference station ', bswqloc$bswqstation), layer.name = 'Reference stations', homebutton = F)
 
-save(wqrefmap, file = 'data/wqrefmap.RData', version = 2)
+saveWidget(wqrefmap@map, file = 'wqrefmap.html', selfcontained = TRUE)
+file.rename('wqrefmap.html', 'data/wqrefmap.html')
 
 # coordinated response data -----------------------------------------------
 
