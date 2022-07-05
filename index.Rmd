@@ -1876,7 +1876,7 @@ __TSS (mg/l)__: Total suspended solids is a general measure of water clarity tha
 ### __REFERENCE STATIONS__
 
 ```{r}
-wqrefmap@map
+wqrefmap
 ```
 
 ALGAL SURVEYS {data-navmenu="CURRENT DATA"}
