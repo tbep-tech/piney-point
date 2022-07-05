@@ -8,7 +8,6 @@ output:
     includes: 
       in_header: google-analytics.html
 runtime: shiny
-css: styles.css
 ---
   
 ```{r setup, include=F}
