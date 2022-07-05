@@ -256,7 +256,7 @@ smsm <- rswqdat %>%
   nrow
 
 # seagrass base map
-bssgmap <- mapview(trnpts, homebutton = F, legend = F) %>% 
+bssgmap <- mapview(trnpts, homebutton = F, legend = F, map.types = mptyps) %>% 
   .@map %>% 
   clearMarkers()
 for(i in unique(trnlns$station))
@@ -307,7 +307,7 @@ rstrnpts <- rstrnpts %>%
   filter(station %in% rstrns)
 rstrnlns <- rstrnlns %>% 
   filter(station %in% rstrns)
-rstrnmap <- mapview(rstrnpts, homebutton = F, legend = F) %>% 
+rstrnmap <- mapview(rstrnpts, homebutton = F, legend = F, map.types = mptyps) %>% 
   .@map %>% 
   clearMarkers()
 for(i in unique(rstrnlns$station))
@@ -1116,7 +1116,7 @@ rsbntmap <- reactive({
     stasel2 <- rsbnts[1]
   
   # response benthic sampling base map
-  out <- mapview(tomap, homebutton = F, legend = F) %>% 
+  out <- mapview(tomap, homebutton = F, legend = F, map.types = mptyps) %>% 
     .@map %>% 
     clearMarkers() %>% 
     addCircleMarkers(
@@ -1291,7 +1291,7 @@ rsphymap <- reactive({
   # update stasel3 with default 
   stasel3 <<- toadd$station
 
-  out <- mapview(tomap, homebutton = F, legend = F) %>% 
+  out <- mapview(tomap, homebutton = F, legend = F, map.types = mptyps) %>% 
     .@map %>% 
     clearMarkers() %>%
     addCircleMarkers(
@@ -1435,7 +1435,7 @@ rsphymap2 <- reactive({
       )
     )
   
-  out <- mapview(rsphypts, homebutton = F, legend = F) %>% 
+  out <- mapview(rsphypts, homebutton = F, legend = F, map.types = mptyps) %>% 
     .@map %>%
     clearMarkers() %>% 
     clearControls() %>% 
