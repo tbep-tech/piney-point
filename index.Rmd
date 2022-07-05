@@ -665,7 +665,7 @@ rsmap1 <- reactive({
         mapview(tomap2, cex = tomap2$cexs, label = labs2, legend = F, layer.name = F, col.regions = tomap2$cols, homebutton = F, map.types = mptyps, layerId = tomap2$id, popup = NULL)
     
   }
-  
+
   # add legend
   out <- m@map %>% 
     addLegend("bottomright", pal = colfun, title = leglab, opacity = 1, values = varrng1) %>% 
