@@ -53,7 +53,7 @@ load('data/rscntdat.RData')
 load('data/rscntthr.RData')
 load('data/rsphydat.RData')
 load('data/rsphypts.RData')
-load('data/wqrefmap.RData')
+# load('data/wqrefmap.RData')
 load('data/rsallpts.RData')
 
 # logs
@@ -1876,7 +1876,7 @@ __TSS (mg/l)__: Total suspended solids is a general measure of water clarity tha
 ### __REFERENCE STATIONS__
 
 ```{r}
-wqrefmap
+# wqrefmap@map
 ```
 
 ALGAL SURVEYS {data-navmenu="CURRENT DATA"}
