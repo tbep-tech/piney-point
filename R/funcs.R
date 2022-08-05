@@ -120,7 +120,7 @@ show_rstransect <- function(savdat, mcrdat, savsel, mcrsel, base_size = 12){
   dts <- c(dts1, dts1) %>% 
     unique %>%
     sort %>% 
-    format('%b %d')
+    format('%b %d, %Y')
 
   # prep sav plot data
   savdatfrm <- savdat %>%
@@ -128,7 +128,7 @@ show_rstransect <- function(savdat, mcrdat, savsel, mcrsel, base_size = 12){
       Year = lubridate::year(date),
       location = as.numeric(as.character(location)),
       pa = ifelse(bb == 0, 0, 1), 
-      date = format(date, '%b %d'), 
+      date = format(date, '%b %d, %Y'), 
       date = factor(date, levels = dts)
     ) %>% 
     dplyr::select(Year, date, location, taxa, abundance, pa, bb)
@@ -207,7 +207,7 @@ show_rstransect <- function(savdat, mcrdat, savsel, mcrsel, base_size = 12){
       Year = lubridate::year(date),
       location = as.numeric(as.character(location)),
       pa = ifelse(bb == 0, 0, 1), 
-      date = format(date, '%b %d'), 
+      date = format(date, '%b %d, %Y'), 
       date = factor(date, levels = dts)
     ) %>% 
     dplyr::select(Year, date, location, taxa, abundance, pa, bb)
