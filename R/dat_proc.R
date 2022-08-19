@@ -1096,7 +1096,7 @@ rsphydatepc1 <- flphy %>%
 
 data(bswqdat)
 
-ids <- fls[grep('^EPC_PP', fls$name), 'id'] %>% pull(id)
+ids <- fls[grep('^EPC_PP_Run', fls$name), 'id'] %>% pull(id)
 rsphydatepc2 <- NULL
 for(id in ids){
   
@@ -1131,8 +1131,40 @@ for(id in ids){
   
 }
 
+# 2022 data
+# has TNTC for nanoplankton (too numerous to count), these are filtered
+# counts in cells/0.1mL, converted to cells/L
+id <- fls[grep('^EPC_PP_SeagrassRun', fls$name), 'id'] %>% pull(id)
+flphy <- read_sheet(id)
+rsphydatepc3 <- flphy %>%
+  select(
+    date = Date,
+    station = Site,
+    species = `Genus Species`,
+    val = Count
+  ) %>%
+  mutate_if(is.list, as.character) %>%
+  filter(!val %in% 'TNTC') %>% # too numerous to count
+  filter(!species %in% 'Nanoplankton') %>%
+  mutate(
+    date = date(date),
+    val = as.numeric(val),
+    val = val * 10, # cells/0.1mL to cells/mL,
+    val = val * 1000, # cells/L
+    valqual = case_when(
+      val < 1e3 ~ 'Not present/Background',
+      val >= 1e3 & val < 1e4 ~ 'Very low',
+      val >= 1e4 & val < 1e5 ~ 'Low',
+      val >= 1e5 & val < 1e6 ~ 'Medium',
+      val >= 1e6 & val ~ 'High'
+    ),
+    source = 'epchc',
+    typ = 'Quantitative',
+    uni = 'cells/L'
+  )
+
 # there is some overlap between the two files
-rsphydatepc <- bind_rows(rsphydatepc1, rsphydatepc2) %>% 
+rsphydatepc <- bind_rows(rsphydatepc1, rsphydatepc2, rsphydatepc3) %>% 
   arrange(date, station) %>% 
   unique
 
