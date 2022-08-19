@@ -1964,7 +1964,7 @@ column(12,
 )
 column(12, 
   column(9,
-    sliderInput('dyssel3', 'Select date range:', min = min(rsphydys), max = max(rsphydys), value = range(rsphydys), animate = T, timeFormat="%m-%d", width = '100%')
+    sliderInput('dyssel3', 'Select date range:', min = min(rsphydys), max = max(rsphydys), value = range(rsphydys), animate = T, timeFormat="%m-%d-%Y", width = '100%')
   )   
 )
 ```
@@ -1984,6 +1984,10 @@ output$physum1 <- renderUI({
   typ <- rsphydat1$phy %>% 
     pull(typ) %>% 
     unique
+  
+  validate(
+    need(length(typ) > 0, 'No data...')
+  )
   
   if(typ == 'Quantitative'){
     plotOutput('rsphyplo1')
