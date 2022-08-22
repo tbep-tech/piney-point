@@ -2189,8 +2189,7 @@ mpnrd1 <- bind_rows(out1all, out2all)
 # }
 
 # compiled results
-ids <- fls[grep('^PINCO_compiledresults', fls$name), 'id'] %>% pull(id)
-for()
+ids <- fls[grep('^PINCO_compiledresults_20210725$', fls$name), 'id'] %>% pull(id)
 flsht1 <- read_sheet(ids)
 pincowide <- flsht1 %>%
   clean_names() %>%
@@ -2359,8 +2358,72 @@ out2 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
 #   filter(!station %in% 'MC- FB') %>% # this is a validation site, no data
 #   unique
 
+
+# compiled results
+ids <- fls[grep('^PINCO_compiledresults_20220815$', fls$name), 'id'] %>% pull(id)
+flsht1 <- read_sheet(ids)
+pincowide <- flsht1 %>%
+  clean_names() %>%
+  select(
+    date = coll_date,
+    station = site,
+    tkn_mgl = tkn_mg_l_as_n,
+    tkn_qual = tkn_flag,
+    nh34_mgl = nh3_mg_l_as_n, 
+    nh34_qual = nh3_flag, 
+    no23_mgl = n_ox_mg_l_as_n, 
+    no23_qual = nox_flag, 
+    tp_mgl = total_p_mg_l_as_p, 
+    tp_qual = tp_flag, 
+    orthop_mgl = dissd_o_p_mg_l_as_p, 
+    orthop_qual = op_flag, 
+    chla_ugl = chlorophyll_a_corrd_mg_m3,
+    chla_qual = cha_flag, 
+    tss_mgl = tss_mg_l, 
+    tss_qual = tss_flag, 
+    turb_ntu = turbidity_ntu, 
+    turb_qual = turb_flag, 
+    bod_mgl = total_bod_mg_l, 
+    bod_qual = bod_flag
+  )
+
+pinco1wq <- pincowide %>%
+  select(-matches('\\_qual$')) %>%
+  gather('var', 'val', -station, -date) %>%
+  separate(var, c('var', 'uni'), sep = '_') %>% 
+  mutate(
+    val = as.character(val), 
+    val = case_when(
+      grepl('^NULL$|^NA$|^\\.$', val) ~ NA_character_, 
+      T ~ val
+    ),
+    val = as.numeric(val)
+  )
+
+pinco1qual <- pincowide %>%
+  select(date, station, matches('\\_qual$')) %>%
+  gather('var', 'qual', -date, -station) %>%
+  mutate(var = gsub('\\_qual$', '', var)) %>%
+  filter(grepl('\\w', qual))
+
+out3 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
+  filter(station != 'Piney Point FB-22-05') %>% # field blanks
+  mutate(
+    source = 'pinco',
+    date = ymd(date),
+    station = case_when(
+      station == 'S3-T5A-22-05' ~ 'S3T5',
+      station == 'S3-T6A-22-05' ~ 'S3T6',
+      station == 'S4-T1C-22-05' ~ 'S4T1',
+      station == 'S4-T3-22-05' ~ 'S4T3'
+    )
+  ) %>%
+  select(station, date, source, var, uni, val, qual) %>%
+  filter(!is.na(val)) %>%
+  unique
+
 # there are diff samples by depth for in situ, avg out
-pinco1 <- bind_rows(out2) %>% 
+pinco1 <- bind_rows(out2, out3) %>% 
   group_by(station, date, source, var, uni, qual) %>% 
   summarise(
     val = mean(val, na.rm = T), 
@@ -2808,8 +2871,8 @@ cosp1 <- out1
 
 rswqdat <- rswqdat %>%
   select(station, date, source, var, uni, val, qual) %>%
-  filter(!source %in% c('fldep'))
-rswqdat <- bind_rows(fldep1, rswqdat) %>%
+  filter(!source %in% c('pinco', 'tbep'))
+rswqdat <- bind_rows(pinco1, rswqdat) %>%
 # rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1, usf1, uf1, cosp1) %>%
   ungroup %>% 
   unique %>%
