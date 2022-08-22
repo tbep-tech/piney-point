@@ -11,8 +11,11 @@ test_that("Check if any stations in rsallpts are not in others", {
   phystas <- rsphypts %>% 
     pull(station) %>% 
     unique
+  bntstas <- rsbntpts %>% 
+    pull(station) %>% 
+    unique
   
-  otherstas <- c(trnstas, wqstas, phystas) %>% 
+  otherstas <- c(trnstas, wqstas, phystas, bntstas) %>% 
     unique
   
   chk <- setdiff(stas, otherstas) %>% 
