@@ -1794,7 +1794,7 @@ column(12,
         pull(date) %>% 
         unique
       
-      sliderInput('dyssel1', 'Select date range:', min = min(dys), max = max(dys), value = range(dys), animate = T, timeFormat="%m-%d", width = '100%')
+      sliderInput('dyssel1', 'Select date range:', min = min(dys), max = max(dys), value = range(dys), animate = T, timeFormat="%m-%d-%Y", width = '100%')
   
     })     
   )

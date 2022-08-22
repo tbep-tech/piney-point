@@ -1887,8 +1887,88 @@ out3 <- flsht %>%
 # find what's in out3 that's not what's in fldep1
 out3 <- anti_join(out3, fldep1, by = c('station', 'date', 'var', 'uni', 'source', 'val', 'qual'))
 
+# 2022 lab samples
+fl <- fls[which(fls$name == 'FLDEP_20220819'), 'id'] %>% pull(id)
+flsht <- read_sheet(fl, sheet = 'Laboratory_Results', skip = 9)
+out4 <- flsht %>% 
+  select(
+    station = `SITE LOCATION`, 
+    date = `DATE SAMPLED`,
+    var = COMPONENT, 
+    uni = UNITS, 
+    val = RESULT,
+    qual = `QUALIFIER`
+  ) %>% 
+  filter(
+    var %in% c('Ammonia-N', 'Chlorophyll-a, Corrected', 'NO2NO3-N', 'O-Phosphate-P', 'Total-P', 'TSS', 'Turbidity')
+  ) %>% 
+  mutate(
+    date = as.Date(date), 
+    val = as.numeric(val), 
+    var = case_when(
+      var == 'Ammonia-N' ~ 'nh34', 
+      var == 'Chlorophyll-a, Corrected' ~ 'chla', 
+      var == 'NO2NO3-N' ~ 'no23', 
+      var == 'O-Phosphate-P' ~ 'orthop', 
+      var == 'Total-P' ~ 'tp', 
+      var == 'TSS' ~ 'tss', 
+      var == 'Turbidity' ~ 'turb'
+    ), 
+    uni = case_when(
+      uni == 'mg N/L' ~ 'mgl', 
+      uni == 'mg P/L' ~ 'mgl',
+      uni == 'mg/L' ~ 'mgl', 
+      uni == 'NTU' ~ 'ntu', 
+      uni == 'ug/L' ~ 'ugl'
+    ),
+    station = gsub('^Piney\\s\\s', 'Piney ', station),
+    source = 'fldep'
+  )
+
+# 2022 field samples
+fl <- fls[which(fls$name == 'FLDEP_20220819'), 'id'] %>% pull(id)
+flsht <- read_sheet(fl, sheet = 'Field_Results ')
+out5 <- flsht %>% 
+  clean_names %>% 
+  select(
+    station = station_id, 
+    date = sample_date, 
+    secchi_m = secchi_m, 
+    temp_c = water_temperature_o_c_surface, 
+    sal_ppt = salinity_pp_th_surface, 
+    dosat_per = d_o_percent_sat_surface, 
+    ph_none = p_h_surface
+  ) %>% 
+  mutate_if(is.list, as.character) %>% 
+  gather('var', 'val', -station, -date) %>% 
+  separate(var, c('var', 'uni'), sep = '_') %>% 
+  mutate(
+    date = as.Date(date), 
+    val = case_when(
+      val %in% c('NULL', 'not detected') ~ '', 
+      T ~ val
+    ),
+    val = gsub('\\"', '', val),
+    qual = gsub('^\\d+\\.\\d+|^\\d+', '', val),
+    qual = gsub('^\\s+', '', qual),
+    qual = case_when(
+      qual == '' ~ NA_character_, 
+      T ~ qual
+    ),
+    val = gsub('(^\\d+\\.\\d+|^\\d+)\\s.*$', '\\1', val),
+    val = as.numeric(val),
+    val = case_when(
+      station == 'Piney 17' & var == 'secchi' & val == 21 ~ 2.1, 
+      T ~ val
+    ),
+    station = gsub('^Piney\\s\\s17$', 'Piney 17', station),
+    source = 'fldep'
+  ) %>% 
+  select(station, date, source, var, uni, val, qual) %>% 
+  filter(!is.na(val))
+
 # join with fldep1
-fldep1 <- bind_rows(fldep1, out3) %>% 
+fldep1 <- bind_rows(fldep1, out3, out4, out5) %>% 
   arrange(date, var)
 
 # remove long text strings from qual codes
@@ -2110,6 +2190,7 @@ mpnrd1 <- bind_rows(out1all, out2all)
 
 # compiled results
 ids <- fls[grep('^PINCO_compiledresults', fls$name), 'id'] %>% pull(id)
+for()
 flsht1 <- read_sheet(ids)
 pincowide <- flsht1 %>%
   clean_names() %>%
@@ -2727,8 +2808,8 @@ cosp1 <- out1
 
 rswqdat <- rswqdat %>%
   select(station, date, source, var, uni, val, qual) %>%
-  filter(!source %in% c('epc'))
-rswqdat <- bind_rows(epc1, rswqdat) %>%
+  filter(!source %in% c('fldep'))
+rswqdat <- bind_rows(fldep1, rswqdat) %>%
 # rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1, usf1, uf1, cosp1) %>%
   ungroup %>% 
   unique %>%
