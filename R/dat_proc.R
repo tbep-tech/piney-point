@@ -2366,7 +2366,7 @@ pincowide <- flsht1 %>%
   clean_names() %>%
   select(
     date = coll_date,
-    station = site,
+    station = station,
     tkn_mgl = tkn_mg_l_as_n,
     tkn_qual = tkn_flag,
     nh34_mgl = nh3_mg_l_as_n, 
@@ -2407,15 +2407,15 @@ pinco1qual <- pincowide %>%
   filter(grepl('\\w', qual))
 
 out3 <- full_join(pinco1wq, pinco1qual, by = c('date', 'station', 'var')) %>%
-  filter(station != 'Piney Point FB-22-05') %>% # field blanks
+  filter(!is.na(station)) %>% # field blanks
   mutate(
     source = 'pinco',
     date = ymd(date),
     station = case_when(
-      station == 'S3-T5A-22-05' ~ 'S3T5',
-      station == 'S3-T6A-22-05' ~ 'S3T6',
-      station == 'S4-T1C-22-05' ~ 'S4T1',
-      station == 'S4-T3-22-05' ~ 'S4T3'
+      station == 'S3T5b' ~ 'S3T5',
+      station == 'S3T6b' ~ 'S3T6',
+      station == 'S4T1c' ~ 'S4T1',
+      station == 'S4T3a' ~ 'S4T3'
     )
   ) %>%
   select(station, date, source, var, uni, val, qual) %>%
