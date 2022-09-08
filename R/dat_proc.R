@@ -1888,8 +1888,9 @@ out3 <- flsht %>%
 out3 <- anti_join(out3, fldep1, by = c('station', 'date', 'var', 'uni', 'source', 'val', 'qual'))
 
 # 2022 lab samples
-fl <- fls[which(fls$name == 'FLDEP_20220819'), 'id'] %>% pull(id)
-flsht <- read_sheet(fl, sheet = 'Laboratory_Results', skip = 9)
+# https://publicfiles.dep.state.fl.us/DEAR/DEARweb/_PP_EventResponse/2022_background/
+fl <- fls[which(fls$name == 'FLDEP_20220908lab'), 'id'] %>% pull(id)
+flsht <- read_sheet(fl, sheet = 'BMR-TAMPA-2022-08-30-01', skip = 9)
 out4 <- flsht %>% 
   select(
     station = `SITE LOCATION`, 
@@ -1897,7 +1898,7 @@ out4 <- flsht %>%
     var = COMPONENT, 
     uni = UNITS, 
     val = RESULT,
-    qual = `QUALIFIER`
+    qual = `REMARK`
   ) %>% 
   filter(
     var %in% c('Ammonia-N', 'Chlorophyll-a, Corrected', 'NO2NO3-N', 'O-Phosphate-P', 'Total-P', 'TSS', 'Turbidity')
@@ -1921,23 +1922,25 @@ out4 <- flsht %>%
       uni == 'NTU' ~ 'ntu', 
       uni == 'ug/L' ~ 'ugl'
     ),
+    station = gsub('^PINEY', 'Piney ', station),
     station = gsub('^Piney\\s\\s', 'Piney ', station),
     source = 'fldep'
   )
 
 # 2022 field samples
-fl <- fls[which(fls$name == 'FLDEP_20220819'), 'id'] %>% pull(id)
-flsht <- read_sheet(fl, sheet = 'Field_Results ')
+# https://publicfiles.dep.state.fl.us/DEAR/DEARweb/_PP_EventResponse/2022_background/
+fl <- fls[which(fls$name == 'FLDEP_20220908field'), 'id'] %>% pull(id)
+flsht <- read_sheet(fl, skip = 1)
 out5 <- flsht %>% 
   clean_names %>% 
   select(
-    station = station_id, 
-    date = sample_date, 
+    station = station, 
+    date = date, 
     secchi_m = secchi_m, 
-    temp_c = water_temperature_o_c_surface, 
-    sal_ppt = salinity_pp_th_surface, 
-    dosat_per = d_o_percent_sat_surface, 
-    ph_none = p_h_surface
+    temp_c = temp_c_8, 
+    sal_ppt = salinity_pp_th_12, 
+    dosat_per = do_percent_sat_7, 
+    ph_none = p_h_9
   ) %>% 
   mutate_if(is.list, as.character) %>% 
   gather('var', 'val', -station, -date) %>% 
@@ -1945,7 +1948,7 @@ out5 <- flsht %>%
   mutate(
     date = as.Date(date), 
     val = case_when(
-      val %in% c('NULL', 'not detected') ~ '', 
+      val %in% c('NULL', 'not detected', 'Not Recorded') ~ '', 
       T ~ val
     ),
     val = gsub('\\"', '', val),
@@ -1957,11 +1960,6 @@ out5 <- flsht %>%
     ),
     val = gsub('(^\\d+\\.\\d+|^\\d+)\\s.*$', '\\1', val),
     val = as.numeric(val),
-    val = case_when(
-      station == 'Piney 17' & var == 'secchi' & val == 21 ~ 2.1, 
-      T ~ val
-    ),
-    station = gsub('^Piney\\s\\s17$', 'Piney 17', station),
     source = 'fldep'
   ) %>% 
   select(station, date, source, var, uni, val, qual) %>% 
@@ -2871,8 +2869,9 @@ cosp1 <- out1
 
 rswqdat <- rswqdat %>%
   select(station, date, source, var, uni, val, qual) %>%
-  filter(!source %in% c('pinco', 'tbep'))
-rswqdat <- bind_rows(pinco1, rswqdat) %>%
+  # filter(!source %in% c('pinco', 'tbep')) %>% 
+  filter(!source %in% c('fldep'))
+rswqdat <- bind_rows(fldep1, rswqdat) %>%
 # rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1, usf1, uf1, cosp1) %>%
   ungroup %>% 
   unique %>%
