@@ -2511,7 +2511,7 @@ for(id in ids){
 }
 
 # rwm, runs (routine monitoring)
-ids <- fls[grep('^EPC\\_RWM\\_', fls$name), 'id'] %>% pull(id)
+ids <- fls[grep('^EPC\\_RWM\\_2021', fls$name), 'id'] %>% pull(id)
 epcout2 <- NULL
 for(id in ids){
 
@@ -2656,8 +2656,152 @@ for(id in ids){
   
 }
 
+##
+# 2022 data
+
+# get current RWM data 2022, TN, Chl, Sd, Sal, Temp, Color
+epcdl <- read_importwq(xlsx = 'data/raw/epc2022.xlsx', download_latest = T)
+epctmp <- epcdl %>% 
+  select(
+    station = epchc_station, 
+    date = SampleTime,
+    secchi_m = Sample_Depth_m, 
+    secchi_qual = sd_q, 
+    temp_c_top = `Temp_Water_Top_degC`,
+    temp_c_mid = `Temp_Water_Mid_degC`,
+    temp_c_bot = `Temp_Water_Bottom_degC`,
+    sal_ppt_top = `Sal_Top_ppth`,
+    sal_ppt_mid = `Sal_Mid_ppth`,
+    sal_ppt_bot = `Sal_Bottom_ppth`,
+    tn_mgl = tn,
+    tn_qual = tn_q,
+    chla_ugl = chla,
+    chla_qual = chla_q,
+    color_pcu = `Color_345_F45_PCU`, 
+    color_qual = `Color_345_F45_Q`,
+    turb_ntu = `Turbidity_JTU-NTU`, 
+    turb_qual = Turbidity_Q
+  ) %>% 
+  rowwise() %>% 
+  mutate(
+    temp_c = mean(c(temp_c_top, temp_c_mid, temp_c_bot), na.rm = T), 
+    sal_ppt = mean(c(sal_ppt_top, sal_ppt_mid, sal_ppt_bot), na.rm = T),
+  ) %>% 
+  ungroup() %>% 
+  select(-matches('bot$|mid$|top$'))
+
+epctmpwq <- epctmp %>%
+  select(-matches('\\_qual$')) %>%
+  gather('var', 'val', -station, -date) %>%
+  separate(var, c('var', 'uni'), sep = '_')
+
+epctmpqual <- epctmp %>%
+  select(date, station, matches('\\_qual$')) %>%
+  gather('var', 'qual', -date, -station) %>%
+  mutate(var = gsub('\\_qual$', '', var)) 
+
+epcout4 <- full_join(epctmpwq, epctmpqual, by = c('date', 'station', 'var')) %>% 
+  mutate(
+    date = date(date), 
+    source = 'epchc', 
+    station = as.character(station),
+    station = gsub('^PP', '', station), 
+    val = as.numeric(val)
+  ) %>% 
+  filter(year(date) == 2022) %>% 
+  group_by(station, date, source, var, uni, qual) %>% 
+  summarise(val = mean(val, na.rm = T), .groups = 'drop') %>% 
+  select(station, date, source, var, uni, val, qual) %>% 
+  filter(!is.na(val)) %>% 
+  filter(station %in% rsstatloc[rsstatloc$source == 'epchc', 'station', drop = T]) # filter those stations already in the dash
+  
+# rwm Aug provisional
+id <- fls[grep('^EPC\\_RWM\\_2022', fls$name), 'id'] %>% pull(id)
+flsht <- read_sheet(id, na = 'NULL')
+epctmp <- flsht %>% 
+  select(
+    station = `StationNumber`, 
+    date = `SampleTime`, 
+    secchi_m = SecchiDepth, 
+    secchi_qual = Secchi_Q, 
+    temp_c_top = `TempWater-T`,
+    temp_c_mid = `TempWater-M`,
+    temp_c_bot = `TempWater-B`,
+    ph_none_top = `pH-T`, 
+    ph_none_mid = `pH-M`, 
+    ph_none_bot = `pH-B`, 
+    sal_ppt_top = `Sal-T`,
+    sal_ppt_mid = `Sal-M`,
+    sal_ppt_bot = `Sal-B`,
+    do_mgl_top = `DO-T`,
+    do_mgl_mid = `DO-M`,
+    do_mgl_bot = `DO-B`,
+    dosat_per_top = `DOp-T`,
+    dosat_per_mid = `DOp-M`,
+    dosat_per_bot = `DOp-B`,
+    nh34_mgl = `Ammonia`,
+    nh34_qual = `AmmoniaQ`, 
+    tkn_mgl = Kjeldahl_Nitrogen,
+    tkn_qual = Kjeldahl_NitrogenQ,
+    no23_mgl = Nitrates_Nitrites, 
+    no23_qual = Nitrates_NitritesQ,
+    tn_mgl = Total_Nitrogen,
+    tn_qual = Total_NitrogenQ,
+    tp_mgl = Total_Phosphorus, 
+    tp_qual = Total_PhosphorusQ, 
+    bod_mgl = BOD, 
+    bod_qual = BODQ,
+    orthop_mgl = Ortho_Phosphates, 
+    orthop_qual = Ortho_PhosphatesQ, 
+    chla_ugl = Chlorophylla_Corr,
+    chla_qual = Chlorophylla_CorrQ,
+    color_pcu = `Color(345)C`, 
+    color_qual = `Color(345)CQ`,
+    tss_mgl = Total_Suspended_Solids, 
+    tss_qual = Total_Suspended_SolidsQ, 
+    turb_ntu = Turbidity, 
+    turb_qual = TurbidityQ
+  ) %>% 
+  rowwise() %>% 
+  mutate(
+    temp_c = mean(c(temp_c_top, temp_c_mid, temp_c_bot), na.rm = T),
+    ph_none = mean(c(ph_none_top, ph_none_mid, ph_none_bot), na.rm = T), 
+    sal_ppt = mean(c(sal_ppt_top, sal_ppt_mid, sal_ppt_bot), na.rm = T),
+    do_mgl = mean(c(do_mgl_top, do_mgl_mid, do_mgl_bot), na.rm = T),
+    dosat_per = mean(c(dosat_per_top, dosat_per_mid, dosat_per_bot), na.rm = T),
+    dosat_per = mean(c(dosat_per_top, dosat_per_mid, dosat_per_bot), na.rm = T)
+  ) %>% 
+  ungroup() %>% 
+  select(-matches('bot$|mid$|top$'))
+
+epctmpwq <- epctmp %>%
+  select(-matches('\\_qual$')) %>%
+  gather('var', 'val', -station, -date) %>%
+  separate(var, c('var', 'uni'), sep = '_')
+
+epctmpqual <- epctmp %>%
+  select(date, station, matches('\\_qual$')) %>%
+  gather('var', 'qual', -date, -station) %>%
+  mutate(var = gsub('\\_qual$', '', var)) 
+
+epcout5 <- full_join(epctmpwq, epctmpqual, by = c('date', 'station', 'var')) %>% 
+  mutate(
+    date = date(date), 
+    source = 'epchc', 
+    station = as.character(station),
+    station = gsub('^PP', '', station), 
+    val = as.numeric(val)
+  ) %>% 
+  group_by(station, date, source, var, uni, qual) %>% 
+  summarise(val = mean(val, na.rm = T), .groups = 'drop') %>% 
+  select(station, date, source, var, uni, val, qual) %>% 
+  filter(!is.na(val)) %>% 
+  filter(station %in% rsstatloc[rsstatloc$source == 'epchc', 'station', drop = T]) # filter those stations already in the dash
+
+# epc stations
+
 # combine
-epc1 <- bind_rows(epcout1, epcout2, epcout3)
+epc1 <- bind_rows(epcout1, epcout2, epcout3, epcout4, epcout5)
 
 ## esa --------------------------------------------------------------------
 
@@ -2871,8 +3015,8 @@ cosp1 <- out1
 rswqdat <- rswqdat %>%
   select(station, date, source, var, uni, val, qual) %>%
   # filter(!source %in% c('pinco', 'tbep')) %>% 
-  filter(!source %in% c('fldep'))
-rswqdat <- bind_rows(fldep1, rswqdat) %>%
+  filter(!source %in% c('epchc'))
+rswqdat <- bind_rows(epc1, rswqdat) %>%
 # rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1, usf1, uf1, cosp1) %>%
   ungroup %>% 
   unique %>%
