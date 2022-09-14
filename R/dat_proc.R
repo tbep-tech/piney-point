@@ -1889,8 +1889,8 @@ out3 <- anti_join(out3, fldep1, by = c('station', 'date', 'var', 'uni', 'source'
 
 # 2022 lab samples
 # https://publicfiles.dep.state.fl.us/DEAR/DEARweb/_PP_EventResponse/2022_background/
-fl <- fls[which(fls$name == 'FLDEP_20220908lab'), 'id'] %>% pull(id)
-flsht <- read_sheet(fl, sheet = 'BMR-TAMPA-2022-08-30-01', skip = 9)
+fl <- fls[which(fls$name == 'FLDEP_20220909lab'), 'id'] %>% pull(id)
+flsht <- read_sheet(fl, sheet = 'BMR-TAMPA-2022-08-30-01', skip = 6)
 out4 <- flsht %>% 
   select(
     station = `SITE LOCATION`, 
@@ -1929,18 +1929,19 @@ out4 <- flsht %>%
 
 # 2022 field samples
 # https://publicfiles.dep.state.fl.us/DEAR/DEARweb/_PP_EventResponse/2022_background/
-fl <- fls[which(fls$name == 'FLDEP_20220908field'), 'id'] %>% pull(id)
-flsht <- read_sheet(fl, skip = 1)
+fl <- fls[which(fls$name == 'FLDEP_20220909field'), 'id'] %>% pull(id)
+flsht <- read_sheet(fl, skip = 0)
 out5 <- flsht %>% 
   clean_names %>% 
   select(
     station = station, 
     date = date, 
-    secchi_m = secchi_m, 
-    temp_c = temp_c_8, 
-    sal_ppt = salinity_pp_th_12, 
-    dosat_per = do_percent_sat_7, 
-    ph_none = p_h_9
+    secchi_m = secchi_m_surface, 
+    temp_c = temp_c_surface, 
+    sal_ppt = salinity_pp_th_surface, 
+    do_mgl = do_mg_l_6,
+    dosat_per = do_percent_sat_surface, 
+    ph_none = p_h_surface
   ) %>% 
   mutate_if(is.list, as.character) %>% 
   gather('var', 'val', -station, -date) %>% 
