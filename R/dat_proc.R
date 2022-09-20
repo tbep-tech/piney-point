@@ -2107,7 +2107,53 @@ out2all <- out2 %>%
   filter(!type %in% 'EQB') %>% # remove field blanks (other are duplicates FD)
   select(station, date, source, var, uni, val, qual)
 
-mpnrd1 <- bind_rows(out1all, out2all)
+# 2022 monitoring
+
+# existing manco stations 
+manco_stations <- read.csv('data/raw/manco_stations.csv')
+
+id <- fls[grep('MANCO_provisional', fls$name), 'id'] %>% pull(id)
+tmp <- read_sheet(id)
+out3all <- tmp %>% 
+  clean_names() %>% 
+  select(
+    station = monitoring_location_id, 
+    date = activity_start_date_time, 
+    var = org_analyte_name,
+    uni = org_result_unit,
+    val = org_result_value, 
+    qual = value_qualifier,
+    type = activity_type
+  ) %>% 
+  filter(type %in% c('Sample', 'Field')) %>% 
+  mutate(
+    station = unlist(station), 
+    date = as.Date(date), 
+    var = case_when(
+      var == 'Chlorophyll a, free of pheophytin' ~ 'chla_ugl', 
+      var == 'Color- True' ~ 'color_pcu', 
+      var == 'Depth, Secchi Disk Depth' ~ 'secchi_m',
+      var == 'Dissolved Oxygen' ~ 'do_mgl',
+      var == 'Dissolved Oxygen Saturation' ~ 'dosat_per',
+      var == 'Nitrogen, ammonia as N' ~ 'nh34_mgl',
+      var == 'Nitrogen, Kjeldahl' ~ 'tkn_mgl',
+      var == 'Nitrogen, Nitrite (NO2) + Nitrate (NO3) as N' ~ 'no23_mgl',
+      var == 'pH' ~ 'ph_none',
+      var == 'Phosphorus as P' ~ 'tp_mgl',
+      var == 'Salinity' ~ 'sal_ppt',
+      var == 'Temperature, Water' ~ 'temp_c',
+      var == 'Turbidity' ~ 'turb_ntu',
+      T ~ NA_character_
+    ), 
+    source = 'mpnrd'
+  ) %>% 
+  select(-uni, -type) %>% 
+  filter(!is.na(var)) %>% 
+  separate(var, c('var', 'uni'), sep = '_') %>% 
+  filter(station %in% manco_stations$station) %>% 
+  select(station, date, source, var, uni, val, qual)
+  
+mpnrd1 <- bind_rows(out1all, out2all, out3all)
 
 ## pinco ------------------------------------------------------------------
 
@@ -3015,8 +3061,8 @@ cosp1 <- out1
 rswqdat <- rswqdat %>%
   select(station, date, source, var, uni, val, qual) %>%
   # filter(!source %in% c('pinco', 'tbep')) %>% 
-  filter(!source %in% c('epchc'))
-rswqdat <- bind_rows(epc1, rswqdat) %>%
+  filter(!source %in% c('mpnrd'))
+rswqdat <- bind_rows(mpnrd1, rswqdat) %>%
 # rswqdat <- bind_rows(fldep1, mpnrd1, pinco1, ncf1, epc1, esa1, usf1, uf1, cosp1) %>%
   ungroup %>% 
   unique %>%
