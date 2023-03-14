@@ -1,37 +1,32 @@
-@import url("//fonts.googleapis.com/css?family=Lobster|Cabin:400,700");
+/* Rubik */
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@600;700&display=swap');
 
 /* Frutiger Light approximate */
-@import url("//fonts.googleapis.com/css?family=Lato:100,300,500,700,900"); 
+@import url("//fonts.googleapis.com/css?family=Lato:100,300,500,700,900");
 
 /* DIN condensed approximate */
 @import url("//fonts.googleapis.com/css?family=Roboto+Condensed&display=swap");
 
-/* Fira Mono, for centering bar plots in reactable */
-@import url("//fonts.googleapis.com/css?family=Karla:400,700|Fira+Mono&display=fallback");
+/* Whole document: */
+
+body{
+  font-family: 'Roboto';
+  font-size: 17px;
+  font-weight: 400;
+}
 
 /* header styles */
 
-h1 {
-  font-family: 'Lato';
-  font-weight: 500;
+h1{
+  font-family: 'Rubik';
+  font-weight: 700;
+  color: #005293;
 }
-h2 {
-  font-family: 'Lato';
-  font-weight: 500;
-}
-h3 {
-  font-family: 'Lato';
-  font-weight: 500;
-}
-h4 {
-  font-family: 'Lato';
-  font-weight: 500;
-  font-style: italic;
-}
-h5 {
-  font-family: 'Lato';
-  font-weight: 500;
-  font-style: italic;
+
+h2,h3,h4,h5 {
+  font-family: 'Roboto';
+  font-weight: 800;
+  color: #00806E
 }
 
 /* top navbar styles */
@@ -39,8 +34,8 @@ h5 {
 .navbar {
   background-color:#00806E;
   border-color: black;
-  font-family: 'Lato'; /* main tab fonts */
-  font-weight: 500;
+  font-family: 'Roboto'; /* main tab fonts */
+  font-weight: 300;
 }
 
 .navbar-brand { /* dashboard title */
@@ -58,8 +53,9 @@ h5 {
 /* sidebar */
 
 .sidebar {
-  font-family: 'Lato';
-  font-weight: 500;
+  font-family: 'Roboto';
+  font-weight: 300;
+  color: #958984;
 }
 
 .section.sidebar {
@@ -68,64 +64,76 @@ h5 {
 
 #editor-map { /* this sets map editor height dynamically if in sidebar */
   height: calc(100vh - 60px) !important;
-} 
+}
 
 #map { /* this sets map height dynamically if in sidebar */
   height: calc(100vh - 60px) !important;
-} 
+}
 
 /* sub sections */
 
 .level3 {
-  font-family: 'Lato';
-  font-weight: 500;
+  font-family: 'Roboto';
+  font-weight: 300;
+  color: #958984;
 }
 
 .chart-title {
-  font-family: 'Lato';
-  font-weight: 500;
+  font-family: 'Roboto';
+  font-weight: 300;
   font-style: italic;
-
+  color: #958984;
 }
 
 .nav-tabs {
-  font-family: 'Lato';
-  font-weight: 500;
+  font-family: 'Roboto';
+  font-weight: 300;
   font-style: italic;
+  color: #958984;
 }
 
 .control-label {
-  font-family: 'Lato';
-  font-weight: 500;
+  font-family: 'Roboto';
+  font-weight: 300;
+  color: #958984;
 }
 
 .shiny-text-output {
-  font-family: 'Lato';
-  font-weight: 500;
-
+  font-family: 'Roboto';
+  font-weight: 300;
+  color: #958984;
 }
 
 .material-switch {
-  font-family: 'Lato';
-  font-weight: 500;
+  font-family: 'Roboto';
+  font-weight: 300;
+  color: #958984;
 }
 
 /* shiny slider stuff */
 
 .irs-bar {
-  background: #00806E
+  background: #00806E !important
 }
 .irs-bar {
-  border-top: 1px #00806E
+  border-top: 1px #00806E !important
 }
 .irs-bar-edge {
-  background: #00806E
+  background: #00806E !important
 }
 .irs-bar-edge {
-  border: 1px #00806E
+  border: 1px #00806E !important
 }
 .irs-single {
-  background: #00806E;
+  background: #00806E !important
+}
+
+.irs-to {
+  background: #00806E !important
+}
+
+.irs-from {
+  background: #00806E !important
 }
 
 /* tabset top border */
@@ -156,16 +164,9 @@ h5 {
 /* leaflet */
 
 .leaflet-control { /* leaflet legends, control boxes */
-  font-family: 'Lato';
-  font-weight: 500;
-}
-
-/* figure captions */
-
-.caption {
-  font-family: 'Lato';
-  font-weight: 500;
-  font-style: italic;
+  font-family: 'Roboto';
+  font-weight: 300;
+  color: #958984;
 }
 
 /* removes all but one trace from the rangeslider */
@@ -173,6 +174,89 @@ h5 {
     display:none;
 }
 
-.modal-backdrop { 
-    display: none;
+/* figure captions */
+
+.caption {
+  font-family: 'Roboto';
+  font-weight: 300;
+  color: #958984;
+  font-style: italic;
+}
+
+/* reactable fixed columns*/
+
+.sticky {
+  position: sticky !important;
+  background: #fff;
+  z-index: 1;
+}
+
+.left-col-1 {
+  left: 0px;
+}
+
+.left-col-2 {
+  left: 170px;
+  border-right: 1px solid #eee !important;
+}
+
+.left-col-3 {
+  left: 370px;
+  border-right: 1px solid #eee !important;
+}
+
+.left-col-1-bord {
+  left: 0px;
+  border-right: 1px solid #eee !important;
+}
+
+.right-col-1 {
+  right: 0px;
+}
+
+.right-col-2 {
+  right: 85px;
+  border-left: 1px solid #eee !important;
+}
+
+.right-col-3 {
+  right: 225px;
+  border-left: 1px solid #eee !important;
+}
+
+.right-col-2a {
+  right: 100px;}
+
+.right-col-3a {
+  right: 200px;
+  border-left: 1px solid #eee !important;
+}
+
+/* wrapper class for centering images */
+#wrapper{
+ text-align:center;
+}
+
+.center {
+  display: block;
+  text-align:center;
+}
+
+/* change link colors to match wordpress */
+a:link {
+  color: #ea6f17;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+a:visited {
+  color: #ea6f17;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #0078db;
+  background-color: transparent;
+  text-decoration: none;
 }
