@@ -66,7 +66,7 @@ rsbntlog <- readLines('logs/rsbntlog.txt')
 # globals
 
 # map types
-mptyps <- c("CartoDB.Positron", "CartoDB.DarkMatter", "OpenStreetMap", "Esri.WorldImagery", "OpenTopoMap")
+mptyps <- c("Esri.WorldGrayCanvas", "OpenStreetMap", "Esri.WorldImagery", "OpenTopoMap")
 
 mapviewOptions(
     basemaps = c("Stamen.TonerLite", "Esri.OceanBasemap"),

@@ -1705,10 +1705,11 @@ rswqlns <- rsstatloc %>%
 bswqloc <- bswqloc %>%
   filter(bswqstation %in% as.character(rswqnear$bswqstation)) %>% 
   mutate(type = 'Long-term')
+mptyps <- c("Esri.WorldGrayCanvas", "OpenStreetMap", "Esri.WorldImagery", "OpenTopoMap")
 
-wqrefmap <- mapview(rswqlns, color = 'grey', homebutton = F, layer.name = 'Distance to closest', label = paste(round(rswqlns$km, 1), 'km')) +
+wqrefmap <- mapview(rswqlns, color = 'grey', homebutton = F, layer.name = 'Distance to closest', label = paste(round(rswqlns$km, 1), 'km'), map.types = mptyps) +
   mapview(rsstatloc, col.regions = 'lightblue', alpha.regions = 1, lwd = 0.5, cex = 4, label = paste0('Current station ', rsstatloc$station), layer.name = 'Current stations', homebutton = F) +
-  mapview(bswqloc, col.regions = 'tomato1', alpha.regions = 1, lwd = 0.5, cex = 4, label = paste0('Reference station ', bswqloc$bswqstation), layer.name = 'Reference stations', homebutton = F)
+  mapview(bswqloc, col.regions = 'tomato1', alpha.regions = 1, lwd = 0.5, cex = 4, label = paste0('Reference station ', bswqloc$bswqstation), layer.name = 'Reference stations', homebutton = F, map.types = mptyps)
 
 saveWidget(wqrefmap@map, file = 'wqrefmap.html', selfcontained = TRUE)
 file.rename('wqrefmap.html', 'data/wqrefmap.html')
